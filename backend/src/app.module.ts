@@ -5,6 +5,9 @@ import { GraphQLModule } from '@nestjs/graphql'
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import configuration from './config/configuration'
+import { ThrottlerModule } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
+import { GqlThrottlerGuard } from './guard/throttler.guard'
 
 @Module({
   imports: [
@@ -23,7 +26,21 @@ import configuration from './config/configuration'
       }),
       inject: [ConfigService]
     }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => [{
+        ttl: config.get<number>('throttler.ttl'),
+        limit: config.get<number>('throttler.limit')
+      }],
+      inject: [ConfigService],
+    }),
     UsersModule
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GqlThrottlerGuard
+    }
+  ]
 })
 export class AppModule {}
