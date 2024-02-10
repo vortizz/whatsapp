@@ -1,6 +1,6 @@
-import { Field, InputType } from "@nestjs/graphql"
-import { IsEmail, IsMongoId, IsNotEmpty, IsOptional, IsString, IsStrongPassword } from "class-validator"
-import * as mongoose from "mongoose"
+import { Field, InputType } from '@nestjs/graphql'
+import { IsEmail, IsMongoId, IsOptional, IsString, IsStrongPassword } from 'class-validator'
+import * as mongoose from 'mongoose'
 
 @InputType()
 export class UpdateUserInput {

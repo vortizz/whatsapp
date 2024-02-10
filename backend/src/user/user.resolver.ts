@@ -4,6 +4,7 @@ import { CreateUserInput } from './dtos/create-user.input'
 import { UpdateUserInput } from './dtos/update-user.input'
 import * as mongoose from 'mongoose'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { Auth } from 'src/decorator/auth.decorator'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -15,6 +16,7 @@ export class UserResolver {
     }
 
     @Query(() => [User])
+    @Auth()
     async users(): Promise<User[]> {
         return await this.userService.getAll()
     }
