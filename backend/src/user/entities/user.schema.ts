@@ -13,7 +13,8 @@ export class User {
     @Field(() => String)
     @Prop({
         type: String,
-        required: true
+        required: true,
+        trim: true
     })
     name: string
 
@@ -21,7 +22,8 @@ export class User {
     @Prop({
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true
     })
     email: string
 
@@ -29,7 +31,13 @@ export class User {
     @Prop({
         type: String
     })
-    password: string
+    password?: string
+
+    @Field(() => String, { nullable: true })
+    @Prop({
+        type: String
+    })
+    token?: string;
 
     @Field(() => Date)
     createdAt: Date

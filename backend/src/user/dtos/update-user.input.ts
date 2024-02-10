@@ -11,12 +11,12 @@ export class UpdateUserInput {
     @Field(() => String, { nullable: true })
     @IsOptional()
     @IsString()
-    name: string
+    name?: string
 
     @Field(() => String, { nullable: true })
     @IsOptional()
     @IsEmail()
-    email: string
+    email?: string
 
     @Field(() => String, { nullable: true })
     @IsOptional()
@@ -28,5 +28,5 @@ export class UpdateUserInput {
         minSymbols: 1,
         minUppercase: 1
     })
-    password: string
+    password?: string
 }

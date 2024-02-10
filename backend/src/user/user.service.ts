@@ -15,15 +15,18 @@ export class UserService {
     ) {}
 
     async create(createUserInput: CreateUserInput): Promise<User> {
+        // CHECK IF EMAIL ALREADY EXISTS
         const userFound = await this.findByEmail(createUserInput.email)
 
         if (userFound) {
             throw new BadRequestException('User already registered')
         }
 
+        // ENCRYPT THE USER'S PASSWORD
         const saltRound: number = this.configService.get<number>('app.saltRound')
         const hash = await bcrypt.hash(createUserInput.password, saltRound)
 
+        // CREATE USER
         const createdUser = new this.userModel({
             ...createUserInput,
             password: hash
@@ -44,10 +47,20 @@ export class UserService {
     }
 
     async update(_id: mongoose.Schema.Types.ObjectId, updateUserInput: UpdateUserInput): Promise<User> {
-        const userFound = await this.findById(_id)
+        // CHECK IF USER IS REGISTERED
+        const userFoundById = await this.findById(_id)
 
-        if (!userFound) {
+        if (!userFoundById) {
             throw new NotFoundException('User not found')
+        }
+
+        // CHECK IF EMAIL ALREADY EXISTS
+        if (updateUserInput.email) {
+            const userFoundByEmail = await this.findByEmail(updateUserInput.email)
+
+            if (userFoundByEmail._id !== _id) {
+                throw new BadRequestException('Email is already registered')
+            }
         }
 
         return await this.userModel.findByIdAndUpdate(
@@ -55,6 +68,14 @@ export class UserService {
             { $set: updateUserInput },
             { new: true }
         )      
+    }
+
+    async updateToken(_id: mongoose.Schema.Types.ObjectId, token: string): Promise<User> {
+        return await this.userModel.findByIdAndUpdate(
+            _id,
+            { $set: { token } },
+            { new: true }
+        )
     }
 
     async findByEmail(email: string): Promise<User> {
