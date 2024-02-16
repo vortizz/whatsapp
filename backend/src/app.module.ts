@@ -4,10 +4,10 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { GraphQLModule } from '@nestjs/graphql'
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import configuration from './config/configuration'
+import configuration from './common/config/configuration'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
-import { GqlThrottlerGuard } from './guard/throttler.guard'
+import { GqlThrottlerGuard } from './common/guard/throttler.guard'
 import { AuthModule } from './auth/auth.module'
 
 @Module({
