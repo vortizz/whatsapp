@@ -2,8 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose'
 import { User } from './entities/user.schema'
 import * as mongoose from 'mongoose'
-import { CreateUserInput } from './dtos/create-user.input'
-import { UpdateUserInput } from './dtos/update-user.input'
+import { CreateUserDto } from './dtos/create-user.dto'
+import { UpdateUserDto } from './dtos/update-user.dto'
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config'
 
@@ -14,7 +14,7 @@ export class UserService {
         @InjectModel(User.name) private userModel: mongoose.Model<User>
     ) {}
 
-    async create(createUserInput: CreateUserInput): Promise<User> {
+    async create(createUserInput: CreateUserDto): Promise<User> {
         // CHECK IF EMAIL ALREADY EXISTS
         const userFound = await this.findByEmail(createUserInput.email)
 
@@ -38,15 +38,15 @@ export class UserService {
         return await this.userModel.find()
     }
 
-    async findById(_id: mongoose.Schema.Types.ObjectId): Promise<User> {
+    async findById(_id: string): Promise<User> {
         return await this.userModel.findById(_id)
     }
 
-    async delete(_id: mongoose.Schema.Types.ObjectId): Promise<User> {
+    async delete(_id: string): Promise<User> {
         return await this.userModel.findByIdAndDelete(_id)
     }
 
-    async update(_id: mongoose.Schema.Types.ObjectId, updateUserInput: UpdateUserInput): Promise<User> {
+    async update(_id: string, updateUserInput: UpdateUserDto): Promise<User> {
         // CHECK IF USER IS REGISTERED
         const userFoundById = await this.findById(_id)
 
@@ -58,9 +58,15 @@ export class UserService {
         if (updateUserInput.email) {
             const userFoundByEmail = await this.findByEmail(updateUserInput.email)
 
-            if (userFoundByEmail._id !== _id) {
+            if (userFoundByEmail._id?.toString() !== _id) {
                 throw new BadRequestException('Email is already registered')
             }
+        }
+
+        if (updateUserInput.password) {
+            // ENCRYPT THE USER'S PASSWORD
+            const saltRound: number = this.configService.get<number>('app.saltRound')
+            updateUserInput.password = await bcrypt.hash(updateUserInput.password, saltRound)
         }
 
         return await this.userModel.findByIdAndUpdate(
@@ -70,7 +76,7 @@ export class UserService {
         )      
     }
 
-    async updateToken(_id: mongoose.Schema.Types.ObjectId, token: string): Promise<User> {
+    async updateToken(_id: string, token: string): Promise<User> {
         return await this.userModel.findByIdAndUpdate(
             _id,
             { $set: { token } },

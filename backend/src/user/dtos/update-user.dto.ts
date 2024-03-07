@@ -1,24 +1,18 @@
-import { Field, InputType } from '@nestjs/graphql'
 import { IsEmail, IsMongoId, IsOptional, IsString, IsStrongPassword } from 'class-validator'
 import * as mongoose from 'mongoose'
 
-@InputType()
-export class UpdateUserInput {
-    @Field(() => String)
+export class UpdateUserDto {
     @IsMongoId()
-    _id: mongoose.Schema.Types.ObjectId
+    _id: string
 
-    @Field(() => String, { nullable: true })
     @IsOptional()
     @IsString()
     name?: string
 
-    @Field(() => String, { nullable: true })
     @IsOptional()
     @IsEmail()
     email?: string
 
-    @Field(() => String, { nullable: true })
     @IsOptional()
     @IsString()
     @IsStrongPassword({

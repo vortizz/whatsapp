@@ -5,8 +5,4 @@ export default () => ({
         jwtSecretKey: process.env.JWT_SECRET_KEY
     },
     mongoStringConnection: `${process.env.APP_MONGO_PREFIX}://${process.env.APP_MONGO_USERNAME}:${process.env.APP_MONGO_PASSWORD}@${process.env.APP_MONGO_HOST}/${process.env.APP_MONGO_DATABASE}`,
-    throttler: {
-        ttl: Number(process.env.APP_THROTTLE_TTL),
-        limit: Number(process.env.APP_THROTTLE_LIMIT)
-    }
 })
