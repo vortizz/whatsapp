@@ -1,0 +1,59 @@
+<template>
+  <div class="px-3 py-1.5 border-b border-gray-200 flex flex-row items-center bg-white">
+    <div class="flex-1 relative">
+      <input
+        ref="rtextinput"
+        type="text"
+        placeholder="Search or start new chat"
+        class="bg-gray-100 pl-16 pr-8 py-2 text-sm rounded-md w-full placeholder:text-gray-600 focus:outline-none"
+        v-model="text"
+        @focus="isSearching = true"
+        @blur="() => !text ? isSearching = false : null"
+      >
+      <div class="absolute left-3.5 top-0.5">
+        <button
+          v-if="!isSearching"
+          @click="isSearching = !isSearching"
+          class="text-xl"
+        >
+          <Icon name="material-symbols:search" />
+        </button>
+        <button v-else @click="isSearching = !isSearching" class="text-teal-600 text-xl">
+          <Icon name="material-symbols:arrow-back" />
+        </button>
+        
+      </div>
+    </div>
+    <div class="w-11 flex justify-center">
+      <button>
+        <Icon name="fluent-mdl2:sort-lines" />
+      </button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      isSearching: false,
+      text: '',
+    }
+  },
+  watch: {
+    isSearching: {
+      handler(newValue) {
+        if (newValue) {
+          return this.$refs.rtextinput.focus()
+        }
+        this.text = ''
+        return this.$refs.rtextinput.blur()
+      }
+    }
+  }
+}
+
+</script>
+
+<style scoped>
+</style>
