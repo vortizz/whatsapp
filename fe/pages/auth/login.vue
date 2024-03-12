@@ -27,7 +27,7 @@
             v-model="form.password"
             :class="errors.password ? 'focus:border-red-600' : 'focus:border-teal-600'"
           />
-          <button class='absolute inset-y-0 right-0 text-slate-400 px-4 text-lg' @click="isPasswordVisible = !isPasswordVisible">
+          <button type="button" class='absolute inset-y-0 right-0 text-slate-400 px-4 text-lg' @click="isPasswordVisible = !isPasswordVisible">
             <Icon v-if="isPasswordVisible" name="mdi:eye-outline" />  
             <Icon v-else name="mdi:eye-off-outline" />
           </button>
@@ -62,10 +62,12 @@
   
 <script>
 import * as yup from 'yup'
+import { mapActions } from 'pinia'
 import { useUserStore } from '../../store/user'
 
 definePageMeta({
-  layout: 'auth'
+  layout: 'auth',
+  middleware: 'auth'
 })
 
 export default {
@@ -105,6 +107,7 @@ export default {
     }  
   },
   methods: {
+    ...mapActions(useUserStore, ['setUser']),
     clearError() {
       this.errors = {
         email: '',
@@ -139,14 +142,14 @@ export default {
         if (!data.token) {
           throw new Error('Error')
         }
-        const { setUser } = useUserStore()
-        setUser({
+        this.setUser({
           _id: data._id,
           name: data.name,
           email: data.email,
+          about: data.about,
           token: data.token
-        })
-        this.$router.push('')
+        })  
+        this.$router.push('/')
       } catch (error) {
         const data = error?.data || {}
         const message = Array.isArray(data.message) ? data.message[0] : data.message

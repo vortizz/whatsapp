@@ -4,5 +4,10 @@ export default () => ({
         saltRound: Number(process.env.APP_SALT_ROUND),
         jwtSecretKey: process.env.JWT_SECRET_KEY
     },
-    mongoStringConnection: `${process.env.APP_MONGO_PREFIX}://${process.env.APP_MONGO_USERNAME}:${process.env.APP_MONGO_PASSWORD}@${process.env.APP_MONGO_HOST}/${process.env.APP_MONGO_DATABASE}`,
+    mongo: {
+        uri: `${process.env.APP_MONGO_PREFIX}://${process.env.APP_MONGO_HOST}/`,
+        user: process.env.APP_MONGO_USERNAME,
+        password: process.env.APP_MONGO_PASSWORD,
+        db: process.env.APP_MONGO_DATABASE
+    }
 })

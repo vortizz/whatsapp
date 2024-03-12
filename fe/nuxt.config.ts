@@ -1,6 +1,11 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  modules: ['nuxt-icon', '@nuxtjs/google-fonts', '@pinia/nuxt'],
+  modules: [
+    'nuxt-icon',
+    '@nuxtjs/google-fonts',
+    '@pinia/nuxt',
+    '@pinia-plugin-persistedstate/nuxt'
+  ],
   css: ['~/assets/css/tailwind.css'],
   postcss: {
     plugins: {

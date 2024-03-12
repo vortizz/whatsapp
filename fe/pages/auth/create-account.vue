@@ -109,7 +109,8 @@
 import * as yup from 'yup'
 
 definePageMeta({
-    layout: 'auth'
+    layout: 'auth',
+    middleware: 'auth'
 })
 
 export default {
@@ -197,7 +198,9 @@ export default {
             this.isLoading = true
             try {
                 await useMyFetch('user', { method: 'POST', body })
-                useNuxtApp().$toast.success('Successfully registered user')
+                setTimeout(() => {
+                    useNuxtApp().$toast.success('Successfully registered user')
+                }, 100);
                 this.$router.push('/auth/login')
             } catch (error) {
                 const data = error?.data || {}

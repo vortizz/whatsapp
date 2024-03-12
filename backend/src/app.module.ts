@@ -13,8 +13,10 @@ import { AuthModule } from './auth/auth.module'
     }),
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('mongoStringConnection'),
-        retryWrites: true
+        uri: config.get<string>('mongo.uri'),
+        user: config.get<string>('mongo.user'),
+        pass: config.get<string>('mongo.password'),
+        dbName: config.get<string>('mongo.db')
       }),
       inject: [ConfigService]
     }),

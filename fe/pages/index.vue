@@ -45,7 +45,8 @@
 
 <script>
 definePageMeta({
-    layout: 'home'
+    layout: 'home',
+    middleware: 'auth'
 })
 export default {
     data() {

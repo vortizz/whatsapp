@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt'
 import { compareSync } from 'bcrypt'
 import { User } from 'src/user/entities/user.schema'
 import { UserService } from 'src/user/user.service'
-import { LoginResponse } from './models/login.response'
 
 @Injectable()
 export class AuthService {
@@ -12,10 +11,9 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) {}
 
-    async login({ id, email }): Promise<LoginResponse> {
+    async login({ id, email }): Promise<User> {
         const token = this.jwtService.sign({ id, email })
-        await this.userService.updateToken(id, token)
-        return { token }
+        return await this.userService.updateToken(id, token)
     }
 
     async validateUser(email: string, password: string): Promise<User> {
