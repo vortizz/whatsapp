@@ -23,6 +23,14 @@ export class User {
     email: string
 
     @Prop({
+        type: String,
+        trim: true,
+        default: 'Hey there! I am using WhatsApp.',
+        required: true
+    })
+    about: string
+
+    @Prop({
         type: String
     })
     password?: string

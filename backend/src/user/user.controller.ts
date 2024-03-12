@@ -2,7 +2,6 @@ import { UserService } from './user.service'
 import { User } from './entities/user.schema'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
-import * as mongoose from 'mongoose'
 import { Auth } from 'src/common/decorator/auth.decorator'
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 

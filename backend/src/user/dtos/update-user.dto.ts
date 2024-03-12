@@ -1,5 +1,4 @@
-import { IsEmail, IsMongoId, IsOptional, IsString, IsStrongPassword } from 'class-validator'
-import * as mongoose from 'mongoose'
+import { IsEmail, IsMongoId, IsOptional, IsString, IsStrongPassword, MaxLength } from 'class-validator'
 
 export class UpdateUserDto {
     @IsMongoId()
@@ -7,11 +6,17 @@ export class UpdateUserDto {
 
     @IsOptional()
     @IsString()
+    @MaxLength(25)
     name?: string
 
     @IsOptional()
     @IsEmail()
     email?: string
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(150)
+    about?: string
 
     @IsOptional()
     @IsString()
