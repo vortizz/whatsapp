@@ -1,12 +1,22 @@
 <template>
     <div class="h-full flex flex-row text-gray-600">
-        <aside class="flex-1 min-w-80 bg-white border-r border-gray-200 flex flex-col">
+        <aside v-if="!isDisplayingProfile" class="flex-1 min-w-80 bg-white border-r border-gray-200 flex flex-col">
             <header class="sticky top-0">
-                <HomeSidebarHeader />
+                <HomeSidebarHeader @openprofile="isDisplayingProfile = true" />
                 <HomeSidebarSubHeader />
             </header>
             <main class="border-r-2 border-transparent overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
                 <HomeSidebarChats />
+            </main>
+        </aside>
+        <aside v-else class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
+            <header class="sticky top-0">
+                <HomeProfileHeader @close="isDisplayingProfile = false" />
+            </header>
+            <main class="flex flex-col gap-7 pt-7">
+                <HomeProfileAvatar />
+                <HomeProfileName />
+                <HomeProfileAbout />
             </main>
         </aside>
         <main class="flex-2 bg-orange-50 flex flex-col">
@@ -40,7 +50,8 @@ definePageMeta({
 export default {
     data() {
         return {
-            isDisplayingContactInfo: true
+            isDisplayingContactInfo: false,
+            isDisplayingProfile: true
         }
     }
 }

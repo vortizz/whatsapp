@@ -1,8 +1,8 @@
 <template>
     <div class="px-4 py-2.5 bg-gray-100 flex items-center justify-between">
-        <div class="size-10 border border-black rounded-full">
+        <button class="size-10 border border-black rounded-full" @click="$emit('openprofile')">
             <!-- AVATAR -->
-        </div>
+        </button>
         <div class="flex flex-row gap-2.5 items-center justify-center">
             <div>
                 <button class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100'>
