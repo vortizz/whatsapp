@@ -29,7 +29,11 @@
                             <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
                                 Settings
                             </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
+                            <button
+                                type="button"
+                                @click="signout"
+                                class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100"
+                            >
                                 Log out
                             </button>
                         </div>
@@ -41,10 +45,20 @@
 </template>
 
 <script>
+import { mapActions } from 'pinia'
+import { useUserStore } from '../../../store/user'
+
 export default {
     data() {
         return {
             isMenuButton: false
+        }
+    },
+    methods: {
+        ...mapActions(useUserStore, ['logout']),
+        signout() {
+            this.logout()
+            this.$router.push('/auth/login')
         }
     }
 }

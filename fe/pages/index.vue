@@ -52,7 +52,7 @@ export default {
     data() {
         return {
             isDisplayingContactInfo: false,
-            isDisplayingProfile: true
+            isDisplayingProfile: false
         }
     }
 }

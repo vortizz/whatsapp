@@ -18,10 +18,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
     }
 
-    // if (token.value && to?.name && toAuth.includes(to?.name?.toString())) {
-    //     return navigateTo('/')
-    // }
-
     if (!token.value && to?.name && !toAuth.includes(to?.name?.toString())) {
         abortNavigation()
         return navigateTo('/auth/login')
