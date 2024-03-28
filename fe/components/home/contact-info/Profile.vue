@@ -4,16 +4,26 @@
             <div class="size-52 border border-black rounded-full" />
         </div>
         <div class="text-2xl">
-            Aide
+            {{ chatUser.name }}
         </div>
         <div class="text-base mt-1 text-gray-500">
-            +55 11 97417-5476
+            {{ chatUser.email }}
         </div>
     </div>
 </template>
 
-<script lang="ts" setup>
+<script>
+import { mapState } from 'pinia'
+import { useChatStore } from '../../../store/chat'
 
+export default {
+    computed: {
+        ...mapState(useChatStore, {
+            chatId: '_id',
+            chatUser: 'user'
+        }),
+    },
+}
 </script>
 
 <style>

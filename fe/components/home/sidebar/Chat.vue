@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-row px-3.5 pt-3.5 gap-3.5 hover:bg-gray-100 group">
+  <div class="flex flex-row px-3.5 pt-3.5 gap-3.5 hover:bg-gray-100 group cursor-pointer" :class="active ? 'bg-gray-100' : ''">
     <div>
         <div class="w-12 h-12 border border-black rounded-full" />
     </div>
@@ -7,7 +7,7 @@
         <div>
             <div class="flex items-center">
                 <div class="text-base max-h-6 text-black grow text-ellipsis overflow-hidden">
-                    Aide Camillo {{ name }}
+                    {{ name }}
                 </div>
                 <div class="text-xs flex-none ">
                     01/03/2024
@@ -35,7 +35,7 @@
 
 <script>
 export default {
-    props: ['name']
+    props: ['name', 'active']
 }
 </script>
 

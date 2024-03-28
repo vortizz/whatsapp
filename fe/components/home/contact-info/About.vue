@@ -4,13 +4,22 @@
             About
         </div>
         <div class="text-base text-black">
-            Nothing to say
+            {{ chatUser.about }}
         </div>
     </div>
 </template>
 
-<script lang="ts" setup>
+<script>
+import { mapState } from 'pinia'
+import { useChatStore } from '../../../store/chat'
 
+export default {
+    computed: {
+        ...mapState(useChatStore, {
+            chatUser: 'user'
+        }),
+    },
+}
 </script>
 
 <style>

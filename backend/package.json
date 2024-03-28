@@ -36,6 +36,8 @@
     "class-validator": "^0.14.1",
     "graphql": "^16.8.1",
     "mongoose": "^8.1.1",
+    "mongoose-autopopulate": "^1.1.0",
+    "mongoose-sequence": "^6.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

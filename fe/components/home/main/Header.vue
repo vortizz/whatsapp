@@ -5,7 +5,7 @@
                 <!-- AVATAR -->
             </div>
             <div class="text-base text-black">
-                Aide
+                {{ chatUser.name }}
             </div>
         </div>
         <div class="flex flex-row items-center justify-center gap-2.5">
@@ -52,11 +52,20 @@
 </template>
 
 <script>
+import { mapState } from 'pinia'
+import { useChatStore } from '../../../store/chat'
+
 export default {
     data() {
         return {
             isMenuButton: false
         }
+    },
+    computed: {
+        ...mapState(useChatStore, {
+            chatId: '_id',
+            chatUser: 'user'
+        }),
     },
     methods: {
         blurMenuButton() {
