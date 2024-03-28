@@ -6,6 +6,7 @@ import configuration from './common/config/configuration'
 import { AuthModule } from './auth/auth.module'
 import { ChatModule } from './chat/chat.module'
 import { MessageModule } from './message/message.module'
+import { WebsocketModule } from './websocket/websocket.module'
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { MessageModule } from './message/message.module'
     UserModule,
     AuthModule,
     ChatModule,
-    MessageModule
+    MessageModule,
+    WebsocketModule
   ]
 })
 export class AppModule {}

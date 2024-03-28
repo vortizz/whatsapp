@@ -87,4 +87,12 @@ export class UserService {
     async findByEmail(email: string): Promise<User> {
         return await this.userModel.findOne({ email })
     }
+
+    async updateIsConnected(_id: string, isConnected: boolean): Promise<User> {
+        return await this.userModel.findByIdAndUpdate(
+            _id,
+            { $set: { isConnected } },
+            { new: true }
+        )
+    }
 }

@@ -40,6 +40,12 @@ export class User {
     })
     token?: string
 
+    @Prop({
+        type: Boolean,
+        default: false
+    })
+    isConnected: Boolean
+
     createdAt: Date
     updatedAt: Date
 }
