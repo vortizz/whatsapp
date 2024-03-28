@@ -9,7 +9,7 @@
             >
         </div>
         <div>
-            <button class='text-2xl p-2 leading-6 rounded-full active:bg-gray-300 duration-100'>
+            <button @click="send" :disabled="!message.trim()" class='text-2xl p-2 leading-6 rounded-full active:bg-gray-300 duration-100'>
                 <Icon name="material-symbols:send" />
             </button>
         </div>
@@ -17,10 +17,35 @@
 </template>
 
 <script>
+import { mapState } from 'pinia'
+import { useWsStore } from '../../../store/websocket'
+import { useChatStore } from '../../../store/chat'
+
 export default {
     data() {
         return {
             message: ''
+        }
+    },
+    computed: {
+        ...mapState(useWsStore, ['conn']),
+        ...mapState(useChatStore, {
+            chatId: '_id',
+            chatUser: 'user'
+        }),
+    },
+    methods: {
+        send() {
+            const data = {
+                event: 'send_message',
+                data: {
+                    chat: this.chatId,
+                    to: this.chatUser._id,
+                    text: this.message
+                }
+            }
+            this.conn.send(JSON.stringify(data))
+            this.message = ''
         }
     }
 }

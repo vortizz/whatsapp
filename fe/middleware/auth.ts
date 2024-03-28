@@ -1,4 +1,5 @@
 import { useUserStore } from '../store/user'
+import { useWsStore } from '../store/websocket'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
     const token = useCookie('token')
@@ -13,7 +14,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
         if (!isAuth && to?.name && !toAuth.includes(to?.name?.toString())) {
             const userStore = useUserStore()
+            const wsStore = useWsStore()
             userStore.logout()
+            wsStore.disconnectWs()
             return navigateTo('/auth/login')
         }
     }

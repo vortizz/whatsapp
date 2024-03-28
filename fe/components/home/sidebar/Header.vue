@@ -47,6 +47,7 @@
 <script>
 import { mapActions } from 'pinia'
 import { useUserStore } from '../../../store/user'
+import { useWsStore } from '../../../store/websocket'
 
 export default {
     data() {
@@ -56,8 +57,10 @@ export default {
     },
     methods: {
         ...mapActions(useUserStore, ['logout']),
+        ...mapActions(useWsStore, ['disconnectWs']),
         signout() {
             this.logout()
+            this.disconnectWs()
             this.$router.push('/auth/login')
         }
     }

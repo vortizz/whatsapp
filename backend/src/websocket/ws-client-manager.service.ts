@@ -47,7 +47,7 @@ export class WsClientManager {
             return
         }
 
-        this.logger.debug('Remove ws connection: ', client.userId)
+        this.logger.debug('Remove ws connection: ' + client.userId)
 
         // SET DISCONNECTED USER
         await this.userService.updateIsConnected(client.userId, false)
@@ -56,7 +56,9 @@ export class WsClientManager {
 
     async sendMessageToClient(wsAuthUserId: string, sendMessageDto: SendMessageDto) {
         const connectedClient = this.connectedClients.get(sendMessageDto.to)
-        if (!connectedClient) {
+        const ownConnectedClient = this.connectedClients.get(wsAuthUserId)
+
+        if (!connectedClient || !ownConnectedClient) {
             return
         }
 
@@ -65,5 +67,6 @@ export class WsClientManager {
         from._id = wsAuthUserId
         const message = await this.messageService.create(from, sendMessageDto)
         connectedClient.send(JSON.stringify(message))
+        ownConnectedClient.send(JSON.stringify(message))
     }
 }

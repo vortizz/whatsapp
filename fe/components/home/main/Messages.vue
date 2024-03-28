@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col px-16 py-3 gap-3">
+  <div class="flex flex-col px-16 py-3 gap-3" id="mainMsg">
     <template v-for="(msg, i) in messages" :key="i">
       <HomeMainDateMessage
         v-if="i === 0 || !isSameDay(msg.createdAt, messages[i-1].createdAt)"
@@ -16,57 +16,7 @@
         :date="msg.createdAt"
       />
     </template>
-    <!-- <HomeMainDateMessage :date="'27/03/2024'"/>
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainDateMessage :date="'28/03/2024'"/>
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainDateMessage :date="'29/03/2024'"/>
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo />
-    <HomeMainMessageFrom />
-    <HomeMainMessageTo /> -->
+    <div ref="bottomEl"></div>
   </div>
 </template>
 
@@ -74,6 +24,7 @@
 import { mapState } from 'pinia'
 import { useUserStore } from '../../../store/user'
 import { useChatStore } from '../../../store/chat'
+import { useWsStore } from '../../../store/websocket'
 
 export default {
   data() {
@@ -89,11 +40,28 @@ export default {
       chatId: '_id',
       chatUser: 'user'
     }),
+    ...mapState(useWsStore, ['conn']),
   },
   watch: {
     chatId(value, oldValue) {
       if (!value || value === oldValue) return
       this.getMessages()
+
+      this.conn.onmessage = (event) => {
+        console.log('MSG RECEIVED -> ', event.data)
+        const msg = JSON.parse(event.data)
+
+        if (msg.chat._id === value) {
+          this.messages.push({
+            ...msg,
+            isMine: msg.from._id === this.userId
+          })
+        }
+
+        this.$nextTick(() => {
+          this.$refs.bottomEl.scrollIntoView({ behavior: 'smooth' })
+        })
+      }
     }
   },
   methods: {
@@ -109,7 +77,9 @@ export default {
           ...msg,
           isMine: msg.from._id === this.userId
         }))
-        console.log(this.messages)
+        this.$nextTick(() => {
+          this.$refs.bottomEl.scrollIntoView()
+        })
       } catch (error) {
         const data = error?.data || {}
         const message = Array.isArray(data.message) ? data.message[0] : data.message

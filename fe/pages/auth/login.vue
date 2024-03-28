@@ -64,6 +64,7 @@
 import * as yup from 'yup'
 import { mapActions } from 'pinia'
 import { useUserStore } from '../../store/user'
+import { useWsStore } from '../../store/websocket'
 
 definePageMeta({
   layout: 'auth',
@@ -108,6 +109,7 @@ export default {
   },
   methods: {
     ...mapActions(useUserStore, ['setUser']),
+    ...mapActions(useWsStore, ['connectWs']),
     clearError() {
       this.errors = {
         email: '',
@@ -148,7 +150,8 @@ export default {
           email: data.email,
           about: data.about,
           token: data.token
-        })  
+        })
+        this.connectWs({ token: data.token })
         this.$router.push('/')
       } catch (error) {
         const data = error?.data || {}

@@ -28,7 +28,7 @@
                 />
             </header>
             <main class="border-r-2 border-transparent flex-1 overflow-y-auto scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                <HomeMainMessages ref="rMainMessages" />
+                <HomeMainMessages />
             </main>
             <footer class="sticky bottom-0">
                 <HomeMainTyping />
@@ -51,6 +51,7 @@
 <script>
 import { mapActions, mapState } from 'pinia'
 import { useChatStore } from '../store/chat'
+import { useWsStore } from '../store/websocket'
 
 definePageMeta({
     layout: 'home',
@@ -68,12 +69,21 @@ export default {
             chatId: '_id',
             chatUser: 'user'
         }),
+        ...mapState(useWsStore, ['conn']),
     },
     mounted() {
         this.clearChat()
+        if (this.conn?.readyState !== WebSocket.OPEN) {
+            const token = useCookie('token').value
+            this.connectWs({ token })
+        }
     },
     methods: {
-        ...mapActions(useChatStore, ['clearChat'])
+        ...mapActions(useChatStore, ['clearChat']),
+        ...mapActions(useWsStore, ['connectWs', 'disconnectWs'])
+    },
+    beforeUnmount() {
+        this.disconnectWs()
     }
 }
 </script>
