@@ -26,7 +26,43 @@ export class ChatService {
     }
 
     async findByUser(user: User): Promise<Chat[]> {
-        return await this.chatModel.find({ users: user })
+        // GET CHATS BY FILTERED USER
+        const chats = await this.chatModel.find({ users: user })
+
+        if (!chats.length) {
+            return []
+        }
+        
+        // GET LAST MESSAGE SENT
+        const lastMessagesChat = await this.chatModel.aggregate([
+            { $match: { _id: { $in: chats.map(chat => chat._id) } } },
+            { $lookup: {
+                from: 'messages',
+                localField: '_id',
+                foreignField: 'chat',
+                as: 'messages'
+            } },
+            { $unwind: '$messages' },
+            { $sort: { 'messages.createdAt': -1 } },
+            { $group: { _id: '$_id', lastMessage: { $first: '$messages' }} } 
+        ])
+
+        // MERGE CHAT DATA WITH USERS DATA
+        return chats.map(chat => {
+            const lastMessage = lastMessagesChat.find(lastMsg => lastMsg._id.toString() === chat._id.toString())
+            return {
+                ...JSON.parse(JSON.stringify(chat)),
+                ...lastMessage
+            }
+        }).sort((a, b) => {
+            if (a.lastMessage.createdAt > b.lastMessage.createdAt) {
+                return -1
+            }
+            if (a.lastMessage.createdAt < b.lastMessage.createdAt) {
+                return 1
+            }
+            return 0
+        })
     }
 
     async findByUsers(users: User[]): Promise<Chat> {

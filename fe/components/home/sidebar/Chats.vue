@@ -5,6 +5,7 @@
             :key="i"
             :name="chat.user.name"
             :active="chatId === chat._id"
+            :lastMessage="chat.lastMessage"
             @click="setChat(chat)"
         />
         <div class="text-center text-xs p-3">
@@ -46,7 +47,11 @@ export default {
                 const chats = await useMyAuthFetch('chat', { method: 'GET' })
                 this.chats = chats.map(chat => ({
                     _id: chat._id,
-                    user: chat.users.find(user => user._id !== this.userId)
+                    user: chat.users.find(user => user._id !== this.userId),
+                    lastMessage: {
+                        text: chat.lastMessage.text,
+                        createdAt: chat.lastMessage.createdAt
+                    }
                 }))
             } catch (error) {
                 const data = error?.data || {}

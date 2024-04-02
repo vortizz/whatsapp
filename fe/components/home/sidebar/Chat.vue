@@ -10,12 +10,12 @@
                     {{ name }}
                 </div>
                 <div class="text-xs flex-none ">
-                    01/03/2024
+                    {{ formattedDatetime }}
                 </div>
             </div>
             <div class="flex place-items-center">
                 <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden">
-                    Let me know Let me know Let me know Let me know Let me know
+                    {{ lastMessage.text }}
                 </div>
                 <div class="flex-none">
                     <div class="flex flex-row items-center gap-0.5">
@@ -35,7 +35,37 @@
 
 <script>
 export default {
-    props: ['name', 'active']
+    props: ['name', 'active', 'lastMessage'],
+    computed: {
+        formattedDatetime() {
+            if (!this.lastMessage?.createdAt) {
+                return ''
+            }
+            if (this.isToday) {
+                return this.formattedTime
+            }
+            if (this.isYesterday) {
+                return 'Yesterday'
+            }
+            const date = new Date(this.lastMessage.createdAt)
+            return date.toLocaleDateString(navigator.language)
+        },
+        isToday() {
+            const today = new Date()
+            const date = new Date(this.lastMessage.createdAt)
+            return today.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
+        },
+        isYesterday() {
+            const yesterday = new Date()
+            yesterday.setDate(yesterday.getDate() - 1)
+            const date = new Date(this.lastMessage.createdAt)
+            return yesterday.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
+        },
+        formattedTime() {
+            const date = new Date(this.lastMessage.createdAt)
+            return date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' })
+        }
+    }
 }
 </script>
 
