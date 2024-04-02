@@ -5,6 +5,13 @@
         v-if="i === 0 || !isSameDay(msg.createdAt, messages[i-1].createdAt)"
         :date="msg.createdAt"
       />
+      <HomeMainUnreadMessage
+        v-if="
+          !messages[i].isMine && messages[i].status === StatusMessage.RECEIVED &&
+          !(!messages[i-1].isMine && messages[i-1].status === StatusMessage.RECEIVED)
+        "
+        :count="messages.length - i"
+      />
       <HomeMainMessageFrom
         v-if="!msg.isMine"
         :text="msg.text"
@@ -48,21 +55,8 @@ export default {
       if (!value || value === oldValue) return
       this.getMessages()
 
-      this.conn.addEventListener('message', (event) => {
-        console.log('MSG RECEIVED (MESSAGES.VUE) -> ', JSON.parse(event.data))
-        const data = JSON.parse(event.data)
-
-        const name = data.name
-        const msg = data.data
-
-        if (name === 'new-message') {
-          this.newMessage(msg)
-        } else if (name === 'received-message') {
-          this.receivedMessage(msg)
-        } else if (name === 'read-message') {
-          this.readMessage(msg)
-        }
-      })
+      this.conn.removeEventListener('message', this.handleEvent)
+      this.conn.addEventListener('message', this.handleEvent)
     }
   },
   methods: {
@@ -87,12 +81,30 @@ export default {
         useNuxtApp().$toast.error(message)
       }
     },
+    handleEvent(event) {
+      console.log('MSG RECEIVED (MESSAGES.VUE) -> ', JSON.parse(event.data))
+      const data = JSON.parse(event.data)
+
+      const name = data.name
+      const msg = data.data
+
+      if (name === 'new-message') {
+        this.newMessage(msg)
+      } else if (name === 'received-message') {
+        this.receivedMessage(msg)
+      } else if (name === 'read-message') {
+        this.readMessage(msg)
+      }
+    },
     newMessage(message) {
       if (message.chat._id === this.chatId) {
-        this.messages.push({
-          ...message,
-          isMine: message.from._id === this.userId
-        })
+        const isMine = message.from._id === this.userId
+        this.messages.push({ ...message, isMine })
+
+        const messages = this.messages.filter(msg => !msg.isMine && msg.status === StatusMessage.RECEIVED)
+        for (const msg of messages) {
+          msg.status = StatusMessage.READ
+        }
       }
 
       this.$nextTick(() => {

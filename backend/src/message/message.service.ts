@@ -75,7 +75,11 @@ export class MessageService {
 
     async updateStatusToRead(user: User, chat: string) {
         const messagesToBeUpdated = await this.messageModel.aggregate([
-            { $match: { to: new mongoose.Types.ObjectId(user._id), status: Status.RECEIVED } },
+            { $match: {
+                to: new mongoose.Types.ObjectId(user._id),
+                chat: new mongoose.Types.ObjectId(chat),
+                status: Status.RECEIVED
+            } },
             { $group: {
                 _id: { chat: '$chat', from: '$from' },
                 messages: { $push: '$$ROOT' }
@@ -84,7 +88,7 @@ export class MessageService {
         ])
 
         await this.messageModel.updateMany(
-            { to: user._id, status: Status.RECEIVED },
+            { to: user._id, chat, status: Status.RECEIVED },
             { $set: { status: Status.READ } }
         )
 
