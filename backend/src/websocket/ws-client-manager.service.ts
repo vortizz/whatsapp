@@ -1,8 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { SendMessageDto } from "./dtos/send-message.dto";
 import { UserService } from "src/user/user.service";
-import { MessageService } from "src/message/message.service";
-import { User } from "src/user/entities/user.schema";
+import { Message } from "src/message/entities/message.schema";
 
 export type DecodedAuthToken = {
     id: string
@@ -17,8 +15,7 @@ export class WsClientManager {
     private readonly connectedClients = new Map<string, any>()
 
     constructor(
-        private readonly userService: UserService,
-        private readonly messageService: MessageService
+        private readonly userService: UserService
     ) {}
     
     async addConnection(client: any, decodedAuthToken: DecodedAuthToken) {
@@ -33,6 +30,7 @@ export class WsClientManager {
 
         // SET CONNECTED USER
         await this.userService.updateIsConnected(client.userId, true)
+        // await this.messageService.updateStatusToReceived(client.userId)
         this.connectedClients.set(decodedAuthToken.id, client)
 
         setTimeout(() => {
@@ -54,19 +52,39 @@ export class WsClientManager {
         this.connectedClients.delete(client.userId)
     }
 
-    async sendMessageToClient(wsAuthUserId: string, sendMessageDto: SendMessageDto) {
-        const connectedClient = this.connectedClients.get(sendMessageDto.to)
-        const ownConnectedClient = this.connectedClients.get(wsAuthUserId)
+    // async sendMessageToClient(wsAuthUserId: string, sendMessageDto: SendMessageDto) {
+    //     const connectedClient = this.connectedClients.get(sendMessageDto.to)
+    //     const ownConnectedClient = this.connectedClients.get(wsAuthUserId)
 
-        if (!connectedClient || !ownConnectedClient) {
-            return
+    //     if (!ownConnectedClient) {
+    //         return
+    //     }
+
+    //     // SAVE INTO THE DATABASE
+    //     const from = new User()
+    //     from._id = wsAuthUserId
+    //     const status = connectedClient ? Status.RECEIVED : Status.SENT
+    //     const message = await this.messageService.create(from, sendMessageDto, status)
+    //     if (connectedClient) {
+    //         connectedClient.send(JSON.stringify(message))
+    //     }
+    //     ownConnectedClient.send(JSON.stringify(message))
+    // }
+
+    sendMessageToClient(message: Message): void {
+        const connectedClient = this.connectedClients.get(message.to._id.toString())
+        const ownConnectedClient = this.connectedClients.get(message.from._id.toString())
+
+        if (ownConnectedClient) {
+            ownConnectedClient.send(JSON.stringify(message))
         }
 
-        // SAVE INTO THE DATABASE
-        const from = new User()
-        from._id = wsAuthUserId
-        const message = await this.messageService.create(from, sendMessageDto)
-        connectedClient.send(JSON.stringify(message))
-        ownConnectedClient.send(JSON.stringify(message))
+        if (connectedClient) {
+            connectedClient.send(JSON.stringify(message))
+        }
+    }
+
+    isClientConnected(userId: string): boolean {
+        return !!this.connectedClients.get(userId)
     }
 }

@@ -72,6 +72,7 @@ export default {
         ...mapState(useWsStore, ['conn']),
     },
     mounted() {
+        this.updateStatusToReceived()
         this.clearChat()
         if (this.conn?.readyState !== WebSocket.OPEN) {
             const token = useCookie('token').value
@@ -80,7 +81,10 @@ export default {
     },
     methods: {
         ...mapActions(useChatStore, ['clearChat']),
-        ...mapActions(useWsStore, ['connectWs', 'disconnectWs'])
+        ...mapActions(useWsStore, ['connectWs', 'disconnectWs']),
+        async updateStatusToReceived() {
+            await useMyAuthFetch(`message/received`, { method: 'PUT' })
+        }
     },
     beforeUnmount() {
         this.disconnectWs()

@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
 import * as mongoose from "mongoose"
 import { Chat } from "src/chat/entities/chat.schema"
 import { User } from "src/user/entities/user.schema"
+import { Status } from "./status.enum"
 
 export type MessageDocument = mongoose.HydratedDocument<Message>
 
@@ -39,6 +40,12 @@ export class Message {
         required: true
     })
     to: User
+
+    @Prop({
+        type: String,
+        enum: Status
+    })
+    status?: Status
 
     createdAt: Date
     updatedAt: Date

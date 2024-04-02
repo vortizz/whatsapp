@@ -10,14 +10,14 @@ import { JwtModule } from "@nestjs/jwt";
 @Module({
     imports: [
         JwtModule,
-        UserModule,
-        MessageModule
+        UserModule
     ],
     providers: [
         WsClientManager,
         EntrypointGateway,
         LifecycleGateway,
         ChatGateway,
-    ]
+    ],
+    exports: [WsClientManager]
 })
 export class WebsocketModule {}

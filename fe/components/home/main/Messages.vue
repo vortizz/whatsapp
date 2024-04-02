@@ -14,6 +14,7 @@
         v-else
         :text="msg.text"
         :date="msg.createdAt"
+        :status="msg.status"
       />
     </template>
     <div ref="bottomEl"></div>

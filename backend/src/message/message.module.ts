@@ -5,6 +5,7 @@ import { MessageController } from "./message.controller";
 import { MessageService } from "./message.service";
 import { UserModule } from "src/user/user.module";
 import { ChatModule } from "src/chat/chat.module";
+import { WebsocketModule } from "src/websocket/websocket.module";
 
 @Module({
     imports: [
@@ -17,7 +18,8 @@ import { ChatModule } from "src/chat/chat.module";
             },
         }]),
         UserModule,
-        ChatModule
+        ChatModule,
+        WebsocketModule
     ],
     controllers: [MessageController],
     providers: [MessageService],

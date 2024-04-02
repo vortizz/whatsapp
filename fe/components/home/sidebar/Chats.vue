@@ -49,8 +49,10 @@ export default {
                     _id: chat._id,
                     user: chat.users.find(user => user._id !== this.userId),
                     lastMessage: {
-                        text: chat.lastMessage.text,
-                        createdAt: chat.lastMessage.createdAt
+                        text: chat.lastMessage?.text,
+                        createdAt: chat.lastMessage?.createdAt,
+                        status: chat.lastMessage?.status,
+                        isMine: chat.lastMessage?.from === this.userId
                     }
                 }))
             } catch (error) {

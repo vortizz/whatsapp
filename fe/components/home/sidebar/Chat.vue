@@ -14,6 +14,10 @@
                 </div>
             </div>
             <div class="flex place-items-center">
+                <span v-if="lastMessage?.isMine" class="text-sm mt-[-4px] mr-1" :class="lastMessage?.status === StatusMessage.READ ? 'text-cyan-500' : 'text-gray-500'">
+                    <Icon name="codicon:check" v-if="lastMessage?.status === StatusMessage.SENT" />
+                    <Icon name="codicon:check-all" v-else />
+                </span>
                 <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden">
                     {{ lastMessage.text }}
                 </div>

@@ -13,12 +13,12 @@ export class ChatGateway extends EntrypointGateway {
         super();
     }
 
-    @SubscribeMessage('send_message')
-    async sendMessage(
-        @WsAuthUserId() wsAuthUserId: string,
-        @MessageBody() sendMessageDto: SendMessageDto
-    ) {
-        this.logger.debug(`User ${wsAuthUserId} sent the message "${sendMessageDto.text}" to ${sendMessageDto.to} on chat ${sendMessageDto.chat}`)
-        this.wsClientManager.sendMessageToClient(wsAuthUserId, sendMessageDto)
-    }
+    // @SubscribeMessage('send_message')
+    // async sendMessage(
+    //     @WsAuthUserId() wsAuthUserId: string,
+    //     @MessageBody() sendMessageDto: SendMessageDto
+    // ) {
+    //     this.logger.debug(`User ${wsAuthUserId} sent the message "${sendMessageDto.text}" to ${sendMessageDto.to} on chat ${sendMessageDto.chat}`)
+    //     this.wsClientManager.sendMessageToClientGateway(wsAuthUserId, sendMessageDto)
+    // }
 }

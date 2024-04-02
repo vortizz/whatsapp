@@ -55,10 +55,10 @@ export class ChatService {
                 ...lastMessage
             }
         }).sort((a, b) => {
-            if (a.lastMessage.createdAt > b.lastMessage.createdAt) {
+            if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
                 return -1
             }
-            if (a.lastMessage.createdAt < b.lastMessage.createdAt) {
+            if (a.lastMessage?.createdAt < b.lastMessage?.createdAt) {
                 return 1
             }
             return 0

@@ -4,19 +4,31 @@
         <div class="text-sm text-gray-600">
             {{ text }}
         </div>
-        <div class="text-[11px] invisible">
+        <div class="invisible flex">
+          <span class="text-[11px]">
             {{ formattedTime }}
+          </span>
+          <span class="text-sm mt-[-4px]" :class="status === StatusMessage.READ ? 'text-cyan-500' : 'text-gray-500'">
+            <Icon name="codicon:check" v-if="status === StatusMessage.SENT" />
+            <Icon name="codicon:check-all" v-else />
+          </span>
         </div>
     </div>
-    <div class="text-[11px] absolute bottom-1 right-2">
-      {{ formattedTime }}
+    <div class="absolute bottom-1 right-2 flex justify-center items-center gap-1">
+      <span class="text-[11px]">
+        {{ formattedTime }}
+      </span>
+      <span class="text-sm mt-[-4px]" :class="status === StatusMessage.READ ? 'text-cyan-500' : 'text-gray-500'">
+        <Icon name="codicon:check" v-if="status === StatusMessage.SENT" />
+        <Icon name="codicon:check-all" v-else />
+      </span>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  props: ['text', 'date'],
+  props: ['text', 'date', 'status'],
   computed: {
     formattedTime() {
       const date = new Date(this.date)

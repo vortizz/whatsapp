@@ -4,9 +4,10 @@ import { User } from "src/user/entities/user.schema";
 import { CreateMessageDto } from "./dtos/create-message.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import * as mongoose from "mongoose";
-import { Chat } from "src/chat/entities/chat.schema";
 import { ChatService } from "src/chat/chat.service";
 import { UserService } from "src/user/user.service";
+import { Status } from "./entities/status.enum";
+import { WsClientManager } from "src/websocket/ws-client-manager.service";
 
 @Injectable()
 export class MessageService {
@@ -14,6 +15,7 @@ export class MessageService {
         @InjectModel(Message.name) private messageModel: mongoose.Model<Message>,
         private readonly chatService: ChatService,
         private readonly userService: UserService,
+        private readonly wsClientManager: WsClientManager
     ) {}
 
     async create(user: User, createMessageDto: CreateMessageDto): Promise<Message> {
@@ -39,12 +41,25 @@ export class MessageService {
 
         const newMessage = new this.messageModel({
             ...createMessageDto,
-            from: user
+            from: user,
+            status: this.wsClientManager.isClientConnected(createMessageDto.to) ? Status.RECEIVED : Status.SENT
         })
-        return await newMessage.save()
+        const messageCreated = <Message>await newMessage.save()
+
+        this.wsClientManager.sendMessageToClient(messageCreated)
+
+        return messageCreated
     }
 
     async findByChat(chat: string): Promise<Message[]> {
         return await this.messageModel.find({ chat }).sort({ createdAt: 1 })
+    }
+
+    async updateStatusToReceived(user: User): Promise<void> {
+        await this.messageModel.updateMany({ to: user._id, status: Status.SENT }, { $set: { status: Status.RECEIVED } })
+    }
+
+    async updateStatusToRead(user: User, chat: string) {
+        await this.messageModel.updateMany({ chat, to: user._id, status: Status.RECEIVED }, { status: Status.READ })
     }
 }
