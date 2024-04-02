@@ -56,10 +56,38 @@ export class MessageService {
     }
 
     async updateStatusToReceived(user: User): Promise<void> {
-        await this.messageModel.updateMany({ to: user._id, status: Status.SENT }, { $set: { status: Status.RECEIVED } })
+        const messagesToBeUpdated = await this.messageModel.aggregate([
+            { $match: { to: new mongoose.Types.ObjectId(user._id), status: Status.SENT } },
+            { $group: {
+                _id: { chat: '$chat', from: '$from' },
+                messages: { $push: '$$ROOT' }
+            } },
+            { $project: { _id: 0, 'chat': '$_id.chat', 'from': '$_id.from', 'messages': '$messages' } }
+        ])
+
+        await this.messageModel.updateMany(
+            { to: user._id, status: Status.SENT },
+            { $set: { status: Status.RECEIVED } }
+        )
+        
+        this.wsClientManager.sendStatusReceivedToClient(messagesToBeUpdated)
     }
 
     async updateStatusToRead(user: User, chat: string) {
-        await this.messageModel.updateMany({ chat, to: user._id, status: Status.RECEIVED }, { status: Status.READ })
+        const messagesToBeUpdated = await this.messageModel.aggregate([
+            { $match: { to: new mongoose.Types.ObjectId(user._id), status: Status.RECEIVED } },
+            { $group: {
+                _id: { chat: '$chat', from: '$from' },
+                messages: { $push: '$$ROOT' }
+            } },
+            { $project: { _id: 0, 'chat': '$_id.chat', 'from': '$_id.from', 'messages': '$messages' } }
+        ])
+
+        await this.messageModel.updateMany(
+            { to: user._id, status: Status.RECEIVED },
+            { $set: { status: Status.READ } }
+        )
+
+        this.wsClientManager.sendStatusReadToClient(messagesToBeUpdated)
     }
 }

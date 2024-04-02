@@ -74,14 +74,35 @@ export class WsClientManager {
     sendMessageToClient(message: Message): void {
         const connectedClient = this.connectedClients.get(message.to._id.toString())
         const ownConnectedClient = this.connectedClients.get(message.from._id.toString())
-
+    
+        const data = { name: 'new-message', data: message }
         if (ownConnectedClient) {
-            ownConnectedClient.send(JSON.stringify(message))
+            ownConnectedClient.send(JSON.stringify(data))
         }
 
         if (connectedClient) {
-            connectedClient.send(JSON.stringify(message))
+            connectedClient.send(JSON.stringify(data))
         }
+    }
+
+    sendStatusReceivedToClient(data: { chat: string, from: string, messages: any[] }[]): void {
+        data.forEach(item => {
+            const connectedClient = this.connectedClients.get(item.from.toString())
+            
+            if (connectedClient) {
+                connectedClient.send(JSON.stringify({ name: 'received-message', data: item }))
+            }
+        })
+    }
+
+    sendStatusReadToClient(data: { chat: string, from: string, messages: any[] }[]): void {
+        data.forEach(item => {
+            const connectedClient = this.connectedClients.get(item.from.toString())
+            
+            if (connectedClient) {
+                connectedClient.send(JSON.stringify({ name: 'read-message', data: item }))
+            }
+        })
     }
 
     isClientConnected(userId: string): boolean {

@@ -19,6 +19,7 @@
 import { mapActions, mapState } from 'pinia'
 import { useUserStore } from '../../../store/user'
 import { useChatStore } from '../../../store/chat'
+import { useWsStore } from '../../../store/websocket'
 
 export default {
     data() {
@@ -34,9 +35,26 @@ export default {
             chatId: '_id',
             chatUser: 'user'
         }),
+        ...mapState(useWsStore, ['conn']),
     },
-    mounted() {
-        this.getChats()
+    async mounted() {
+        await this.getChats()
+
+        this.conn.addEventListener('message', (event) => {
+            console.log('MSG RECEIVED (CHATS.VUE) -> ', JSON.parse(event.data))
+            const data = JSON.parse(event.data)
+
+            const name = data.name
+            const msg = data.data
+
+            if (name === 'new-message') {
+                this.newMessage(msg)
+            } else if (name === 'received-message') {
+                this.receivedMessage(msg)
+            } else if (name === 'read-message') {
+                this.readMessage(msg)
+            }
+        })
     },
     methods: {
         ...mapActions(useChatStore, {
@@ -49,6 +67,7 @@ export default {
                     _id: chat._id,
                     user: chat.users.find(user => user._id !== this.userId),
                     lastMessage: {
+                        _id: chat.lastMessage?._id,
                         text: chat.lastMessage?.text,
                         createdAt: chat.lastMessage?.createdAt,
                         status: chat.lastMessage?.status,
@@ -67,6 +86,37 @@ export default {
                 _id: clonedChat._id,
                 user: clonedChat.user
             })
+        },
+        newMessage(message) {
+            const chat = this.chats.find(item => item._id === message.chat._id)
+            if (!chat) {
+                return
+            }
+            chat.lastMessage = {
+                _id: message._id,
+                text: message.text,
+                createdAt: message.createdAt,
+                status: message.status,
+                isMine: message.from._id === this.userId
+            }
+        },
+        receivedMessage(message) {
+            const chat = this.chats.find(item => item._id === message.chat)
+            
+            if (!(chat && message.messages.some(msg => msg._id === chat.lastMessage._id))) {
+                return
+            }
+            
+            chat.lastMessage.status = StatusMessage.RECEIVED
+        },
+        readMessage(message) {
+            const chat = this.chats.find(item => item._id === message.chat)
+            
+            if (!(chat && message.messages.some(msg => msg._id === chat.lastMessage._id))) {
+                return
+            }
+            
+            chat.lastMessage.status = StatusMessage.READ
         }
     },
 }

@@ -48,21 +48,21 @@ export default {
       if (!value || value === oldValue) return
       this.getMessages()
 
-      this.conn.onmessage = (event) => {
-        console.log('MSG RECEIVED -> ', event.data)
-        const msg = JSON.parse(event.data)
+      this.conn.addEventListener('message', (event) => {
+        console.log('MSG RECEIVED (MESSAGES.VUE) -> ', JSON.parse(event.data))
+        const data = JSON.parse(event.data)
 
-        if (msg.chat._id === value) {
-          this.messages.push({
-            ...msg,
-            isMine: msg.from._id === this.userId
-          })
+        const name = data.name
+        const msg = data.data
+
+        if (name === 'new-message') {
+          this.newMessage(msg)
+        } else if (name === 'received-message') {
+          this.receivedMessage(msg)
+        } else if (name === 'read-message') {
+          this.readMessage(msg)
         }
-
-        this.$nextTick(() => {
-          this.$refs.bottomEl.scrollIntoView({ behavior: 'smooth' })
-        })
-      }
+      })
     }
   },
   methods: {
@@ -85,6 +85,36 @@ export default {
         const data = error?.data || {}
         const message = Array.isArray(data.message) ? data.message[0] : data.message
         useNuxtApp().$toast.error(message)
+      }
+    },
+    newMessage(message) {
+      if (message.chat._id === this.chatId) {
+        this.messages.push({
+          ...message,
+          isMine: message.from._id === this.userId
+        })
+      }
+
+      this.$nextTick(() => {
+        this.$refs.bottomEl.scrollIntoView({ behavior: 'smooth' })
+      })
+    },
+    receivedMessage(message) {
+      if (message.chat !== this.chatId) {
+        return
+      }
+      for (const msg of message.messages) {
+        const i = this.messages.find(m => m._id === msg._id)
+        i.status = StatusMessage.RECEIVED
+      }
+    },
+    readMessage(message) {
+      if (message.chat !== this.chatId) {
+        return
+      }
+      for (const msg of message.messages) {
+        const i = this.messages.find(m => m._id === msg._id)
+        i.status = StatusMessage.READ
       }
     }
   }
