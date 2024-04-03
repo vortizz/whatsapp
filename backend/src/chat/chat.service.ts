@@ -3,6 +3,7 @@ import { Chat } from "./entities/chat.schema";
 import * as mongoose from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from "src/user/entities/user.schema";
+import { Status } from "src/message/entities/status.enum";
 
 @Injectable()
 export class ChatService {
@@ -34,7 +35,7 @@ export class ChatService {
         }
         
         // GET LAST MESSAGE SENT
-        const lastMessagesChat = await this.chatModel.aggregate([
+        const lastMessagesChatPromise = this.chatModel.aggregate([
             { $match: { _id: { $in: chats.map(chat => chat._id) } } },
             { $lookup: {
                 from: 'messages',
@@ -44,15 +45,38 @@ export class ChatService {
             } },
             { $unwind: '$messages' },
             { $sort: { 'messages.createdAt': -1 } },
-            { $group: { _id: '$_id', lastMessage: { $first: '$messages' }} } 
+            { $group: { _id: '$_id', lastMessage: { $first: '$messages' }} },
         ])
 
+        // COUNT UNREAD MESSAGES 
+        const countUnreadMessagesPromise = this.chatModel.aggregate([
+            { $match: { _id: { $in: chats.map(chat => chat._id) } } },
+            { $lookup: {
+                from: 'messages',
+                localField: '_id',
+                foreignField: 'chat',
+                as: 'messages'
+            } },
+            { $unwind: '$messages' },
+            { $match: { $and: [ 
+                { $or: [
+                    { 'messages.status': Status.RECEIVED },
+                    { 'messages.status': Status.SENT }
+                ] },
+                { 'messages.to': new mongoose.Types.ObjectId(user._id) }
+            ] } },
+            { $group: { _id: '$_id', count: { $sum: 1 } } }
+        ])
+
+        const [lastMessagesChat, [countUnreadMessages]] = await Promise.all([lastMessagesChatPromise, countUnreadMessagesPromise])
+        
         // MERGE CHAT DATA WITH USERS DATA
         return chats.map(chat => {
             const lastMessage = lastMessagesChat.find(lastMsg => lastMsg._id.toString() === chat._id.toString())
             return {
                 ...JSON.parse(JSON.stringify(chat)),
-                ...lastMessage
+                ...lastMessage,
+                countUnreadMessages: countUnreadMessages?.count || 0
             }
         }).sort((a, b) => {
             if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {

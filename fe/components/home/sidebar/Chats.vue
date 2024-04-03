@@ -6,6 +6,7 @@
             :name="chat.user.name"
             :active="chatId === chat._id"
             :lastMessage="chat.lastMessage"
+            :countUnreadMessages="chat.countUnreadMessages"
             @click="setChat(chat)"
         />
         <div class="text-center text-xs p-3">
@@ -72,7 +73,8 @@ export default {
                         createdAt: chat.lastMessage?.createdAt,
                         status: chat.lastMessage?.status,
                         isMine: chat.lastMessage?.from === this.userId
-                    }
+                    },
+                    countUnreadMessages: chat.countUnreadMessages || 0
                 }))
             } catch (error) {
                 const data = error?.data || {}
@@ -81,6 +83,7 @@ export default {
             }
         },
         setChat(chat) {
+            chat.countUnreadMessages = 0
             const clonedChat = JSON.parse(JSON.stringify(chat))
             this.setChatAction({
                 _id: clonedChat._id,
@@ -92,12 +95,18 @@ export default {
             if (!chat) {
                 return
             }
+            const isMine = message.from._id === this.userId
             chat.lastMessage = {
                 _id: message._id,
                 text: message.text,
                 createdAt: message.createdAt,
                 status: message.status,
-                isMine: message.from._id === this.userId
+                isMine
+            }
+            if (!isMine && this.chatId !== chat._id) {
+                chat.countUnreadMessages += 1
+            } else {
+                chat.countUnreadMessages = 0
             }
         },
         receivedMessage(message) {

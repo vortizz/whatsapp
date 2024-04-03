@@ -6,10 +6,10 @@
     <div class="flex-1 flex flex-col justify-center pb-3.5 border-b border-gray-200">
         <div>
             <div class="flex items-center">
-                <div class="text-base max-h-6 text-black grow text-ellipsis overflow-hidden">
+                <div class="text-base max-h-6 text-black grow text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
                     {{ name }}
                 </div>
-                <div class="text-xs flex-none ">
+                <div class="text-xs flex-none" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-green-500 font-semibold' : ''">
                     {{ formattedDatetime }}
                 </div>
             </div>
@@ -18,13 +18,13 @@
                     <Icon name="codicon:check" v-if="lastMessage?.status === StatusMessage.SENT" />
                     <Icon name="codicon:check-all" v-else />
                 </span>
-                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden">
+                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
                     {{ lastMessage.text }}
                 </div>
                 <div class="flex-none">
                     <div class="flex flex-row items-center gap-0.5">
-                        <div class="h-5 w-5 rounded-full bg-green-500 text-white text-xs font-semibold flex items-center justify-center">
-                            <div class="mt-[-2px]">15</div>
+                        <div v-if="countUnreadMessages && !lastMessage?.isMine" class="h-5 w-5 rounded-full bg-green-500 text-white text-xs font-semibold flex items-center justify-center">
+                            <div class="mt-[-2px]">{{ countUnreadMessages }}</div>
                         </div>
                         <button class="text-2xl leading-5 h-5 text-gray-400 transition ease-in-out duration-300 hidden group-hover:block">
                             <Icon name="icon-park-outline:down" />
@@ -39,7 +39,7 @@
 
 <script>
 export default {
-    props: ['name', 'active', 'lastMessage'],
+    props: ['name', 'active', 'lastMessage', 'countUnreadMessages'],
     computed: {
         formattedDatetime() {
             if (!this.lastMessage?.createdAt) {
