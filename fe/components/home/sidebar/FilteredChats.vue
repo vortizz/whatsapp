@@ -3,16 +3,16 @@
         <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
             Looking for chats or users
         </div>
-        <div v-else-if="!chats.length && !users.length" class="text-center py-[72px] text-sm text-gray-400">
+        <div v-else-if="!filteredChats.length && !users.length" class="text-center py-[72px] text-sm text-gray-400">
             No chats or users found
         </div>
-        <div v-if="chats.length">
+        <div v-if="filteredChats.length">
             <div class="p-7 text-teal-600">
-                CHATS
+                {{ unreadChats && !text ? 'FILTERED BY UNREAD' : 'CHATS' }}
             </div>
             <HomeSidebarChat
-                v-for="(chat, i) in chats"
-                :key="i"
+                v-for="(chat) in filteredChats"
+                :key="chat._id"
                 :name="chat.user.name"
                 :active="chatId === chat._id"
                 :lastMessage="chat.lastMessage"
@@ -20,7 +20,7 @@
                 @click="setChat(chat)"
             />
         </div>
-        <div v-if="users.length">
+        <div v-if="users.length && !unreadChats">
             <div class="p-7 text-teal-600">
                 USERS
             </div>
@@ -43,7 +43,7 @@ import { useChatStore } from '../../../store/chat'
 import { useWsStore } from '../../../store/websocket'
 
 export default {
-    props: ['text'],
+    props: ['text', 'unreadChats'],
     data() {
         return {
             chats: [],
@@ -60,16 +60,22 @@ export default {
             chatUser: 'user'
         }),
         ...mapState(useWsStore, ['conn']),
-    },
-    async mounted() {
-        try {
-            this.loading = true
-            await Promise.all([this.getChats(), this.getUsers()])
-            this.conn.removeEventListener('message', this.handleEvent)
-            this.conn.addEventListener('message', this.handleEvent)
-        } finally {
-            this.loading = false
+        filteredChats() {
+            if (this.unreadChats) {
+                return this.chats.filter(chat => chat.countUnreadMessages || chat._id === this.chatId)
+            }
+            return this.chats
         }
+    },
+    watch: {
+        text() {
+            this.load()
+        }
+    },
+    mounted() {
+        this.load()
+        this.conn.removeEventListener('message', this.handleEvent)
+        this.conn.addEventListener('message', this.handleEvent)
     },
     methods: {
         ...mapActions(useChatStore, {
@@ -88,6 +94,14 @@ export default {
                 this.receivedMessage(msg)
             } else if (name === 'read-message') {
                 this.readMessage(msg)
+            }
+        },
+        async load() {
+            this.loading = true
+            try {
+                await Promise.all([this.getChats(), this.getUsers()])
+            } finally {
+                this.loading = false
             }
         },
         async getChats() {

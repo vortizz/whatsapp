@@ -4,7 +4,7 @@
       <input
         ref="rtextinput"
         type="text"
-        placeholder="Search or start new chat"
+        :placeholder="unreadChats ? 'Search unread chats' : 'Search'"
         class="bg-gray-100 pl-16 pr-8 py-2 text-sm rounded-md w-full placeholder:text-gray-600 focus:outline-none"
         :value="text"
         @input="debouncedInput"
@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="w-11 flex justify-center">
-      <button>
+      <button @click="unreadChats = !unreadChats" class="rounded-full px-1" :class="unreadChats ? 'text-white bg-teal-600' : ''">
         <Icon name="fluent-mdl2:sort-lines" />
       </button>
     </div>
@@ -38,7 +38,8 @@ export default {
     return {
       isSearching: false,
       text: '',
-      debouncedInput: debounce((e) => this.text = e.target.value, 500)
+      debouncedInput: debounce((e) => this.text = e.target.value, 500),
+      unreadChats: false
     }
   },
   watch: {
@@ -54,6 +55,11 @@ export default {
     text: {
       handler(newValue) {
         this.$emit('settext', newValue)
+      }
+    },
+    unreadChats: {
+      handler(newValue) {
+        this.$emit('setunreadChats', newValue)
       }
     }
   }

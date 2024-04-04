@@ -32,10 +32,10 @@ export class ChatService {
         
         if (username) {
             chats = chats.filter(chat => 
-                chat.users.some(user => 
-                    user.name.toLowerCase().trim().includes(
+                chat.users.some(u => 
+                    u.name.toLowerCase().trim().includes(
                         username.toLowerCase().trim()
-                    )
+                    ) && u._id.toString() !== user._id.toString()
                 )
             )
         }
