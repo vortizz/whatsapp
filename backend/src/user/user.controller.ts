@@ -3,7 +3,8 @@ import { User } from './entities/user.schema'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
 import { Auth } from 'src/common/decorator/auth.decorator'
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { AuthUser } from 'src/common/decorator/user.decorator'
 
 @Controller('user')
 export class UserController {
@@ -18,6 +19,15 @@ export class UserController {
     @Get()
     async users(): Promise<User[]> {
         return await this.userService.getAll()
+    }
+
+    @Auth()
+    @Get('/new-chat')
+    async userToNewChat(
+        @AuthUser() user: User,
+        @Query('username') username: string
+    ): Promise<User[]> {
+        return await this.userService.usersToNewChat(user, username)
     }
 
     @Auth()

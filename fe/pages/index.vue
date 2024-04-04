@@ -3,10 +3,11 @@
         <aside v-if="!isDisplayingProfile" class="flex-1 min-w-80 bg-white border-r border-gray-200 flex flex-col">
             <header class="sticky top-0">
                 <HomeSidebarHeader @openprofile="isDisplayingProfile = true" />
-                <HomeSidebarSubHeader />
+                <HomeSidebarSubHeader @settext="e => searchChatsContactsText = e" />
             </header>
             <main class="border-r-2 border-transparent overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                <HomeSidebarChats />
+                <HomeSidebarChats v-if="!searchChatsContactsText" />
+                <HomeSidebarFilteredChats v-else :text="searchChatsContactsText" />
             </main>
         </aside>
         <aside v-else class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
@@ -61,7 +62,8 @@ export default {
     data() {
         return {
             isDisplayingContactInfo: false,
-            isDisplayingProfile: false
+            isDisplayingProfile: false,
+            searchChatsContactsText: ''
         }
     },
     computed: {

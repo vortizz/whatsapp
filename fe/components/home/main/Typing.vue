@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
+import { mapActions, mapState } from 'pinia'
 // import { useWsStore } from '../../../store/websocket'
 import { useChatStore } from '../../../store/chat'
 
@@ -57,26 +57,33 @@ export default {
         }
     },
     methods: {
+        ...mapActions(useChatStore, {
+            setChatAction: 'setChat'
+        }),
         async send() {
-            // const data = {
-            //     event: 'send_message',
-            //     data: {
-            //         chat: this.chatId,
-            //         to: this.chatUser._id,
-            //         text: this.message
-            //     }
-            // }
-            // this.conn.send(JSON.stringify(data))
-            // this.message = ''
             try {
                 this.isLoading = true
+                let chatId
+
+                if (this.chatId === 'new-chat') {
+                    const chat = await this.createChat()
+                    chatId = chat._id
+                }
+
                 const body = {
-                    chat: this.chatId,
+                    chat: chatId || this.chatId,
                     to: this.chatUser._id,
                     text: this.message
                 }
                 await useMyAuthFetch('message', { method: 'POST', body })
                 this.message = ''
+                
+                if (this.chatId === 'new-chat' && chatId) {
+                    this.setChatAction({
+                        _id: chatId,
+                        user: this.chatUser
+                    })
+                }
             } catch (error) {
                 const data = error?.data || {}
                 const message = Array.isArray(data.message) ? data.message[0] : data.message
@@ -86,7 +93,14 @@ export default {
             }
         },
         async onFocusInput() {
+            if (this.chatId === 'new-chat') return
             await useMyAuthFetch(`message/${this.chatId}/read`, { method: 'PUT' })
+        },
+        async createChat() {
+            const body = {
+                user_id: this.chatUser._id
+            }
+            return await useMyAuthFetch('chat', { method: 'POST', body })
         }
     }
 }

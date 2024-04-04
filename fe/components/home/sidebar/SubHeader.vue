@@ -6,7 +6,8 @@
         type="text"
         placeholder="Search or start new chat"
         class="bg-gray-100 pl-16 pr-8 py-2 text-sm rounded-md w-full placeholder:text-gray-600 focus:outline-none"
-        v-model="text"
+        :value="text"
+        @input="debouncedInput"
         @focus="isSearching = true"
         @blur="() => !text ? isSearching = false : null"
       >
@@ -21,7 +22,6 @@
         <button v-else @click="isSearching = !isSearching" class="text-teal-600 text-xl">
           <Icon name="material-symbols:arrow-back" />
         </button>
-        
       </div>
     </div>
     <div class="w-11 flex justify-center">
@@ -38,6 +38,7 @@ export default {
     return {
       isSearching: false,
       text: '',
+      debouncedInput: debounce((e) => this.text = e.target.value, 500)
     }
   },
   watch: {
@@ -48,6 +49,11 @@ export default {
         }
         this.text = ''
         return this.$refs.rtextinput.blur()
+      }
+    },
+    text: {
+      handler(newValue) {
+        this.$emit('settext', newValue)
       }
     }
   }

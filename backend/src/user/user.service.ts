@@ -6,12 +6,14 @@ import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config'
+import { ChatService } from 'src/chat/chat.service'
 
 @Injectable()
 export class UserService {
     constructor(
         private configService: ConfigService,
-        @InjectModel(User.name) private userModel: mongoose.Model<User>
+        @InjectModel(User.name) private userModel: mongoose.Model<User>,
+        private readonly chatService: ChatService
     ) {}
 
     async create(createUserInput: CreateUserDto): Promise<User> {
@@ -93,6 +95,22 @@ export class UserService {
             _id,
             { $set: { isConnected } },
             { new: true }
+        )
+    }
+
+    async usersToNewChat(user: User, username: string): Promise<User[]> {
+        const users = await this.userModel.find({ name: { $regex: username, $options: 'i' }, _id: { $ne: user._id } })
+
+        if (!users?.length) {
+            return []
+        }
+
+        const chats = await this.chatService.findByUserSimple(user)
+
+        return users.filter(user => 
+            !chats.some(chat => 
+                chat.users.some(u => u._id.toString() === user._id.toString())
+            )
         )
     }
 }

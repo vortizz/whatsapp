@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { ChatController } from "./chat.controller";
 import { ChatService } from "./chat.service";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -15,7 +15,7 @@ import { UserModule } from "src/user/user.module";
                 return schema
             }
         }]),
-        UserModule
+        forwardRef(() => UserModule)
     ],
     controllers: [ChatController],
     providers: [ChatService],

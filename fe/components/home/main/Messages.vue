@@ -7,6 +7,7 @@
       />
       <HomeMainUnreadMessage
         v-if="
+          i >= 1 &&
           !messages[i].isMine && messages[i].status === StatusMessage.RECEIVED &&
           !(!messages[i-1].isMine && messages[i-1].status === StatusMessage.RECEIVED)
         "
@@ -53,6 +54,10 @@ export default {
   watch: {
     chatId(value, oldValue) {
       if (!value || value === oldValue) return
+      if (value === 'new-chat') {
+        this.messages = []
+        return
+      }
       this.getMessages()
 
       this.conn.removeEventListener('message', this.handleEvent)

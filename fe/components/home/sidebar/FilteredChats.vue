@@ -1,18 +1,38 @@
 <template>
     <div>
-        <HomeSidebarChat
-            v-for="(chat, i) in chats"
-            :key="i"
-            :name="chat.user.name"
-            :active="chatId === chat._id"
-            :lastMessage="chat.lastMessage"
-            :countUnreadMessages="chat.countUnreadMessages"
-            @click="setChat(chat)"
-        />
-        <div class="text-center text-xs p-3">
-            <Icon name="oi:lock-locked" />
-            Your personal messages are end-to-end encrypted
+        <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
+            Looking for chats or users
         </div>
+        <div v-else-if="!chats.length && !users.length" class="text-center py-[72px] text-sm text-gray-400">
+            No chats or users found
+        </div>
+        <div v-if="chats.length">
+            <div class="p-7 text-teal-600">
+                CHATS
+            </div>
+            <HomeSidebarChat
+                v-for="(chat, i) in chats"
+                :key="i"
+                :name="chat.user.name"
+                :active="chatId === chat._id"
+                :lastMessage="chat.lastMessage"
+                :countUnreadMessages="chat.countUnreadMessages"
+                @click="setChat(chat)"
+            />
+        </div>
+        <div v-if="users.length">
+            <div class="p-7 text-teal-600">
+                USERS
+            </div>
+            <HomeSidebarUser
+                v-for="(user, i) in users"
+                :key="i"
+                :name="user.name"
+                :about="user.about"
+                @click="setUser(user)"
+            />
+        </div>
+
     </div>
 </template>
 
@@ -23,9 +43,12 @@ import { useChatStore } from '../../../store/chat'
 import { useWsStore } from '../../../store/websocket'
 
 export default {
+    props: ['text'],
     data() {
         return {
-            chats: []
+            chats: [],
+            users: [],
+            loading: false
         }
     },
     computed: {
@@ -39,17 +62,21 @@ export default {
         ...mapState(useWsStore, ['conn']),
     },
     async mounted() {
-        await this.getChats()
-
-        this.conn.removeEventListener('message', this.handleEvent)
-        this.conn.addEventListener('message', this.handleEvent)
+        try {
+            this.loading = true
+            await Promise.all([this.getChats(), this.getUsers()])
+            this.conn.removeEventListener('message', this.handleEvent)
+            this.conn.addEventListener('message', this.handleEvent)
+        } finally {
+            this.loading = false
+        }
     },
     methods: {
         ...mapActions(useChatStore, {
             setChatAction: 'setChat'
         }),
         handleEvent(event) {
-            console.log('MSG RECEIVED (CHATS.VUE) -> ', JSON.parse(event.data))
+            console.log('MSG RECEIVED (FILTEREDCHATS.VUE) -> ', JSON.parse(event.data))
             const data = JSON.parse(event.data)
 
             const name = data.name
@@ -65,7 +92,7 @@ export default {
         },
         async getChats() {
             try {
-                const chats = await useMyAuthFetch('chat', { method: 'GET' })
+                const chats = await useMyAuthFetch('chat', { method: 'GET', query: { username: this.text } })
                 this.chats = chats.map(chat => ({
                     _id: chat._id,
                     user: chat.users.find(user => user._id !== this.userId),
@@ -92,12 +119,16 @@ export default {
                 user: clonedChat.user
             })
         },
+        setUser(user) {
+            const clonedUser = JSON.parse(JSON.stringify(user))
+            this.setChatAction({
+                _id: 'new-chat',
+                user: clonedUser
+            })
+        },
         newMessage(message) {
             const chat = this.chats.find(item => item._id === message.chat._id)
             if (!chat) {
-                if (message._id) {
-                    this.newChat(message)
-                }
                 return
             }
             const isMine = message.from._id === this.userId
@@ -113,7 +144,6 @@ export default {
             } else {
                 chat.countUnreadMessages = 0
             }
-            this.sortChats()
         },
         receivedMessage(message) {
             const chat = this.chats.find(item => item._id === message.chat)
@@ -133,32 +163,13 @@ export default {
             
             chat.lastMessage.status = StatusMessage.READ
         },
-        newChat(message) {
-            const chat = {
-                _id: message.chat._id,
-                user: message.chat.users.find(user => user._id !== this.userId),
-                lastMessage: {
-                    _id: message._id,
-                    text: message.text,
-                    createdAt: message.createdAt,
-                    status: message.status,
-                    isMine: message.from === this.userId
-                },
-                countUnreadMessages: message.from === this.userId ? 0 : 1
-            }
-            this.chats.push(chat)
-            this.sortChats()
-        },
-        sortChats() {
-            this.chats.sort((a, b) => {
-                if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
-                    return -1
-                }
-                if (a.lastMessage?.createdAt < b.lastMessage?.createdAt) {
-                    return 1
-                }
-                return 0
-            })
+        async getUsers() {
+            const users = await useMyAuthFetch('user/new-chat', { method: 'GET', query: { username: this.text } })
+            this.users = users.map(user => ({
+                _id: user._id,
+                name: user.name,
+                about: user.about
+            }))
         }
     },
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import { Chat } from "./entities/chat.schema";
 import { Auth } from "src/common/decorator/auth.decorator";
@@ -12,8 +12,11 @@ export class ChatController {
 
     @Auth()
     @Get()
-    async findByUser(@AuthUser() user: User): Promise<Chat[]> {
-        return await this.chatService.findByUser(user)
+    async findByUser(
+        @AuthUser() user: User, 
+        @Query('username') username: string
+    ): Promise<Chat[]> {
+        return await this.chatService.findByUser(user, username)
     }
 
     @Auth()

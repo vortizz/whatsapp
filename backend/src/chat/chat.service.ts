@@ -26,10 +26,20 @@ export class ChatService {
         return await newChat.save()
     }
 
-    async findByUser(user: User): Promise<Chat[]> {
+    async findByUser(user: User, username?: string): Promise<Chat[]> {
         // GET CHATS BY FILTERED USER
-        const chats = await this.chatModel.find({ users: user })
-
+        let chats = await this.chatModel.find({ users: user })
+        
+        if (username) {
+            chats = chats.filter(chat => 
+                chat.users.some(user => 
+                    user.name.toLowerCase().trim().includes(
+                        username.toLowerCase().trim()
+                    )
+                )
+            )
+        }
+    
         if (!chats.length) {
             return []
         }
@@ -68,15 +78,16 @@ export class ChatService {
             { $group: { _id: '$_id', count: { $sum: 1 } } }
         ])
 
-        const [lastMessagesChat, [countUnreadMessages]] = await Promise.all([lastMessagesChatPromise, countUnreadMessagesPromise])
-        
+        const [lastMessagesChat, countUnreadMessages] = await Promise.all([lastMessagesChatPromise, countUnreadMessagesPromise])
+
         // MERGE CHAT DATA WITH USERS DATA
         return chats.map(chat => {
             const lastMessage = lastMessagesChat.find(lastMsg => lastMsg._id.toString() === chat._id.toString())
+            const unreadMessages = countUnreadMessages.find(item => item._id.toString() === chat._id.toString())
             return {
                 ...JSON.parse(JSON.stringify(chat)),
                 ...lastMessage,
-                countUnreadMessages: countUnreadMessages?.count || 0
+                countUnreadMessages: unreadMessages?.count || 0
             }
         }).sort((a, b) => {
             if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
@@ -87,6 +98,10 @@ export class ChatService {
             }
             return 0
         })
+    }
+
+    async findByUserSimple(user: User): Promise<Chat[]> {
+        return await this.chatModel.find({ users: user }) 
     }
 
     async findByUsers(users: User[]): Promise<Chat> {
