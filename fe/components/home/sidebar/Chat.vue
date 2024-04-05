@@ -51,6 +51,10 @@ export default {
             if (this.isYesterday) {
                 return 'Yesterday'
             }
+            if (this.withinAWeek) {
+                const date = new Date(this.lastMessage.createdAt)
+                return date.toLocaleString(window.navigator.language, {weekday: 'long'})
+            }
             const date = new Date(this.lastMessage.createdAt)
             return date.toLocaleDateString(navigator.language)
         },
@@ -64,6 +68,12 @@ export default {
             yesterday.setDate(yesterday.getDate() - 1)
             const date = new Date(this.lastMessage.createdAt)
             return yesterday.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
+        },
+        withinAWeek() {
+            const aweekago = new Date()
+            aweekago.setDate(aweekago.getDate() - 7)
+            const date = new Date(this.lastMessage.createdAt)
+            return date >= aweekago
         },
         formattedTime() {
             const date = new Date(this.lastMessage.createdAt)
