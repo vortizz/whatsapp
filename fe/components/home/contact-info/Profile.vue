@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col justify-center items-center p-8 bg-white shadow-sm">
         <div class="mb-4">
-            <div class="size-52 border border-black rounded-full" />
+            <img src="~/assets/img/default_profile.png" width="208" height="208" />
         </div>
         <div class="text-2xl">
             {{ chatUser.name }}

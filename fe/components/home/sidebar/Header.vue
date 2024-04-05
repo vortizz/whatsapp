@@ -1,7 +1,7 @@
 <template>
     <div class="px-4 py-2.5 bg-gray-100 flex items-center justify-between">
-        <button class="size-10 border border-black rounded-full" @click="$emit('openprofile')">
-            <!-- AVATAR -->
+        <button class="size-10 rounded-full" @click="$emit('openprofile')">
+            <img src="~/assets/img/default_profile.png" width="40" height="40" />
         </button>
         <div class="flex flex-row gap-2.5 items-center justify-center">
             <div>

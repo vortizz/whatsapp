@@ -1,9 +1,7 @@
 <template>
     <div class="px-4 py-2.5 bg-gray-100 flex items-center justify-between">
         <div class="flex flex-row items-center gap-3 flex-1 cursor-pointer" @click="$emit('showContactInfo')">
-            <div class="size-10 border border-black rounded-full">
-                <!-- AVATAR -->
-            </div>
+            <img src="~/assets/img/default_profile.png" width="40" height="40" />
             <div class="text-base text-black">
                 {{ chatUser.name }}
             </div>

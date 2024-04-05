@@ -1,5 +1,5 @@
 <template>
-    <div class="size-52 border border-black rounded-full ml-auto mr-auto" />
+    <img src="~/assets/img/default_profile.png" class="ml-auto mr-auto" width="208" height="208" />
 </template>
 
 <script>
