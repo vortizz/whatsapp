@@ -1,16 +1,6 @@
 <template>
     <div class="h-full flex flex-row text-gray-600">
-        <aside v-if="!isDisplayingProfile" class="flex-1 min-w-80 bg-white border-r border-gray-200 flex flex-col">
-            <header class="sticky top-0">
-                <HomeSidebarHeader @openprofile="isDisplayingProfile = true" />
-                <HomeSidebarSubHeader @settext="e => searchChatsContactsText = e" @setunreadChats="e => unreadChats = e" />
-            </header>
-            <main class="border-r-2 border-transparent overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                <HomeSidebarChats v-if="!searchChatsContactsText && !unreadChats" />
-                <HomeSidebarFilteredChats v-else :text="searchChatsContactsText" :unreadChats="unreadChats" />
-            </main>
-        </aside>
-        <aside v-else class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
+        <aside v-if="isDisplayingProfile" class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
             <header class="sticky top-0">
                 <HomeProfileHeader @close="isDisplayingProfile = false" />
             </header>
@@ -18,6 +8,25 @@
                 <HomeProfileAvatar />
                 <HomeProfileName />
                 <HomeProfileAbout />
+            </main>
+        </aside>
+        <aside v-else-if="isDisplayingNewChat" class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
+            <header class="sticky top-0">
+                <HomeNewChatHeader @close="isDisplayingNewChat = false" />
+                <HomeNewChatSubHeader @settext="e => searchUserNewChat = e" />
+            </header>
+            <main class="flex flex-col gap-7 overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                <HomeNewChatUsers @close="isDisplayingNewChat = false" :text="searchUserNewChat" />
+            </main>
+        </aside>
+        <aside v-else class="flex-1 min-w-80 bg-white border-r border-gray-200 flex flex-col">
+            <header class="sticky top-0">
+                <HomeSidebarHeader @openprofile="isDisplayingProfile = true" @opennewchat="isDisplayingNewChat = true" />
+                <HomeSidebarSubHeader @settext="e => searchChatsContactsText = e" @setunreadChats="e => unreadChats = e" />
+            </header>
+            <main class="border-r-2 border-transparent overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                <HomeSidebarChats v-if="!searchChatsContactsText && !unreadChats" />
+                <HomeSidebarFilteredChats v-else :text="searchChatsContactsText" :unreadChats="unreadChats" />
             </main>
         </aside>
          <!--****************-->
@@ -63,8 +72,10 @@ export default {
         return {
             isDisplayingContactInfo: false,
             isDisplayingProfile: false,
+            isDisplayingNewChat: false,
             searchChatsContactsText: '',
-            unreadChats: false
+            unreadChats: false,
+            searchUserNewChat: ''
         }
     },
     computed: {

@@ -5,7 +5,7 @@
         </button>
         <div class="flex flex-row gap-2.5 items-center justify-center">
             <div>
-                <button class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100'>
+                <button class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100' @click="$emit('opennewchat')">
                     <Icon name="ci:chat-add" />
                 </button>
             </div>

@@ -98,7 +98,7 @@ export class UserService {
         )
     }
 
-    async usersToNewChat(user: User, username: string): Promise<User[]> {
+    async userWithNoChat(user: User, username: string): Promise<User[]> {
         const users = await this.userModel.find({ name: { $regex: username, $options: 'i' }, _id: { $ne: user._id } })
 
         if (!users?.length) {
@@ -112,5 +112,30 @@ export class UserService {
                 chat.users.some(u => u._id.toString() === user._id.toString())
             )
         )
+    }
+
+    async userNewChat(user: User, username?: string): Promise<User[]> {
+        const filter = { _id: { $ne: user._id  } }
+        
+        if (username) {
+            filter['name'] = { $regex: username, $options: 'i' }
+        }
+
+        const users = await this.userModel.find(filter).sort('name')
+
+        if (!users?.length) {
+            return []
+        }
+
+        const chats = await this.chatService.findByUserSimple(user)
+
+        return users.map(user => ({
+            ...JSON.parse(JSON.stringify(user)),
+            chat: chats.find(chat => 
+                chat.users.some(u => 
+                    u._id.toString() === user._id.toString()
+                )
+            )
+        }))
     }
 }

@@ -178,7 +178,7 @@ export default {
             chat.lastMessage.status = StatusMessage.READ
         },
         async getUsers() {
-            const users = await useMyAuthFetch('user/new-chat', { method: 'GET', query: { username: this.text } })
+            const users = await useMyAuthFetch('user/no-chat', { method: 'GET', query: { username: this.text } })
             this.users = users.map(user => ({
                 _id: user._id,
                 name: user.name,

@@ -22,12 +22,21 @@ export class UserController {
     }
 
     @Auth()
-    @Get('/new-chat')
-    async userToNewChat(
+    @Get('/no-chat')
+    async userWithNoChat(
         @AuthUser() user: User,
         @Query('username') username: string
     ): Promise<User[]> {
-        return await this.userService.usersToNewChat(user, username)
+        return await this.userService.userWithNoChat(user, username)
+    }
+
+    @Auth()
+    @Get('/new-chat')
+    async userNewChat(
+        @AuthUser() user: User,
+        @Query('username') username: string
+    ): Promise<User[]> {
+        return await this.userService.userNewChat(user, username)
     }
 
     @Auth()
