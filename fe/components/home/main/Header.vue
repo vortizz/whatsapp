@@ -29,7 +29,7 @@
                             <button @click="$emit('showContactInfo')" class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
                                 Contact info
                             </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
+                            <button @click="closeChat" class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
                                 Close chat
                             </button>
                             <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
+import { mapActions, mapState } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 
 export default {
@@ -66,10 +66,19 @@ export default {
         }),
     },
     methods: {
+        ...mapActions(useChatStore, {
+            setChatAction: 'setChat'
+        }),
         blurMenuButton() {
             setTimeout(() => {
                 this.isMenuButton = false
             }, 100)
+        },
+        closeChat() {
+            this.setChatAction({
+                _id: '',
+                user: {}
+            })
         }
     }
 }
