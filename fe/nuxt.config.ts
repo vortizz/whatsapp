@@ -1,10 +1,9 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
-    'nuxt-icon',
+    '@nuxt/icon',
     '@nuxtjs/google-fonts',
     '@pinia/nuxt',
-    '@pinia-plugin-persistedstate/nuxt',
     "@nuxt/image"
   ],
   css: ['~/assets/css/tailwind.css'],
