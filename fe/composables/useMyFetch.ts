@@ -20,7 +20,7 @@ export const useMyAuthFetch = async (request: string, opts?: any) => {
             setTimeout(() => {
                 useNuxtApp().$toast.error('Token has expired. Please login again!')
             }, 100)
-            return useRouter().push('/auth/login')
+            return navigateTo('/auth/login')
         }
         throw error
     }
