@@ -8,6 +8,9 @@ This repository contains a showcase chat application with:
 
 ## Run With Docker
 
+The default Docker Compose setup runs the frontend and backend in watch mode with bind mounts, so code changes are reflected automatically.
+Server-side requests from Nuxt use the Docker service name `backend`, while browser requests still use `localhost`.
+
 From the repository root:
 
 ```bash
@@ -19,7 +22,15 @@ Open:
 
 - Frontend: `http://localhost:3001`
 - Backend: `http://localhost:3000`
+- WebSocket: `ws://localhost:3000/entrypoint`
 - MongoDB: `mongodb://mongoadmin:admin123@localhost:27017`
+
+If the containers were already created before this change, recreate them once:
+
+```bash
+docker compose down
+docker compose up --build
+```
 
 ## Stop
 

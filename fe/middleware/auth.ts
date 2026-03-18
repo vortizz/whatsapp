@@ -2,6 +2,7 @@ import { useUserStore } from '../store/user'
 import { useWsStore } from '../store/websocket'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
+    const { $pinia } = useNuxtApp()
     const token = useCookie('token')
     const toAuth = ['auth-login', 'auth-create-account']
 
@@ -13,8 +14,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
 
         if (!isAuth && to?.name && !toAuth.includes(to?.name?.toString())) {
-            const userStore = useUserStore()
-            const wsStore = useWsStore()
+            const userStore = useUserStore($pinia)
+            const wsStore = useWsStore($pinia)
             userStore.logout()
             wsStore.disconnectWs()
             return navigateTo('/auth/login')

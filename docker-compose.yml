@@ -31,7 +31,7 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       APP_PORT: 3000
       APP_SALT_ROUND: ${APP_SALT_ROUND:-10}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
@@ -42,6 +42,10 @@ services:
       APP_MONGO_DATABASE: ${APP_MONGO_DATABASE:-whatsapp}
     ports:
       - "3000:3000"
+    command: npm run start:dev
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules
 
   frontend:
     build:
@@ -51,15 +55,20 @@ services:
     depends_on:
       - backend
     environment:
-      NODE_ENV: production
-      NITRO_HOST: 0.0.0.0
-      NITRO_PORT: 3000
-      HOST: 0.0.0.0
-      PORT: 3000
+      NODE_ENV: development
+      NUXT_BASE_URL_API_INTERNAL: http://backend:3000
       NUXT_PUBLIC_BASE_URL_API: ${NUXT_PUBLIC_BASE_URL_API:-http://localhost:3000}
-      NUXT_PUBLIC_BASE_URL_WS: ${NUXT_PUBLIC_BASE_URL_WS:-ws://localhost:3000}
+      NUXT_PUBLIC_BASE_URL_WS: ${NUXT_PUBLIC_BASE_URL_WS:-ws://localhost:3000/entrypoint}
     ports:
       - "3001:3000"
+    command: npm run dev
+    volumes:
+      - ./fe:/app
+      - frontend-node-modules:/app/node_modules
+      - frontend-nuxt:/app/.nuxt
 
 volumes:
   mongo-data:
+  backend-node-modules:
+  frontend-node-modules:
+  frontend-nuxt:

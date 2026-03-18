@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 
+const WS_ENTRYPOINT_PATH = '/entrypoint'
+
 export const useWsStore = defineStore('websocket', {
     state: () => ({
         conn: null as WebSocket | null,
@@ -7,7 +9,16 @@ export const useWsStore = defineStore('websocket', {
     actions: {
         connectWs({ token }: { token: string }) {
             const config = useRuntimeConfig()
-            this.conn = new WebSocket(config.public.baseUrlWs, token)
+            const baseUrlWs = String(config.public.baseUrlWs || '').trim()
+            const wsUrl = baseUrlWs.endsWith(WS_ENTRYPOINT_PATH)
+                ? baseUrlWs
+                : `${baseUrlWs.replace(/\/$/, '')}${WS_ENTRYPOINT_PATH}`
+
+            if (this.conn && [WebSocket.CONNECTING, WebSocket.OPEN].includes(this.conn.readyState)) {
+                return
+            }
+
+            this.conn = new WebSocket(wsUrl, token)
 
             this.conn.onopen = () => {
                 console.log('WebSocket connection established')
@@ -21,6 +32,7 @@ export const useWsStore = defineStore('websocket', {
         },
         disconnectWs() {
             this.conn?.close()
+            this.conn = null
         }
     },
     persist: true
