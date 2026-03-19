@@ -24,7 +24,7 @@
                     <Icon name="material-symbols:settings-outline-rounded" class="text-2xl" />
                 </button>
                 <button class="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
-                    <img src="~/assets/img/default_profile.png" width="28" height="28" />
+                    <AvatarPlaceholder :size="28" />
                 </button>
             </div>
         </aside>

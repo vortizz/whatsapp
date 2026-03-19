@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-row px-3.5 pt-3.5 gap-3.5 dark:hover:bg-stone-400/15 group cursor-pointer rounded-xl" :class="active ? 'bg-gray-100 dark:bg-stone-400/15' : ''">
     <div>
-        <img src="~/assets/img/default_profile.png" width="48" height="48" />
+        <AvatarPlaceholder :size="48" />
     </div>
     <div class="flex-1 flex flex-col justify-center pb-3.5">
         <div>
