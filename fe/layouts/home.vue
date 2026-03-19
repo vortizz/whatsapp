@@ -23,7 +23,11 @@
                 >
                     <Icon name="material-symbols:settings-outline-rounded" class="text-2xl" />
                 </button>
-                <button class="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
+                <button
+                    @click="pageStore.setPage(Pages.PROFILE)"
+                    class="p-2 rounded-full transition-colors"
+                    :class="currentPage === Pages.PROFILE ? activeButtonClass : inactiveButtonClass"
+                >
                     <AvatarPlaceholder :size="28" />
                 </button>
             </div>

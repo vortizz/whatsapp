@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 
 export enum Pages {
     CHATS = 'chats',
-    SETTINGS = 'settings'
+    SETTINGS = 'settings',
+    PROFILE = 'profile',
 }
 
 export type Page = Pages

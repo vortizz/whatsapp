@@ -1,78 +1,86 @@
 <template>
     <div class="h-full flex flex-row text-gray-600">
-        <HomeProfile
-            v-if="isDisplayingProfile"
-            @close="isDisplayingProfile = false"
-        />
-        <HomeNewChat
-            v-else-if="isDisplayingNewChat"
-            @close="isDisplayingNewChat = false"
-        />
-        <HomeSidebar 
-            v-else
-            @openprofile="isDisplayingProfile = true"
-            @opennewchat="isDisplayingNewChat = true"
-        />
-         <!--****************-->
-        <main
-            v-show="!chatId"
-            class="flex-2 bg-gray-100 flex flex-col"
-        />
-        <HomeMain
-            v-show="chatId"
-            @showContactInfo="isDisplayingContactInfo = true"
-        />
-        <!--****************-->
-        <HomeContactInfo
-            v-if="isDisplayingContactInfo"
-            @close="isDisplayingContactInfo = false"
-        />
+        <template v-if="currentPage === Pages.PROFILE">
+            <HomeProfile />
+            <main
+                class="flex-2 bg-stone-100 dark:bg-neutral-900 flex flex-col items-center gap-6 justify-center"
+            >
+                <div class="text-7xl dark:text-white/20 text-black/20">
+                    <Icon name="mdi:user-circle"></Icon>
+                </div>
+                <div class="dark:text-white text-neutral-950 text-3xl">Profile</div>
+            </main>
+        </template>
+        <template v-else-if="currentPage === Pages.CHATS">
+            <HomeNewChat
+                v-if="isDisplayingNewChat"
+                @close="isDisplayingNewChat = false"
+            />
+            <HomeSidebar 
+                v-else
+                @opennewchat="isDisplayingNewChat = true"
+            />
+        
+            <!--****************-->
+            <main
+                v-show="!chatId"
+                class="flex-2 bg-white dark:bg-neutral-900 flex flex-col"
+            />
+            <HomeMain
+                v-show="chatId"
+                @showContactInfo="isDisplayingContactInfo = true"
+            />
+            <!--****************-->
+            <HomeContactInfo
+                v-if="isDisplayingContactInfo"
+                @close="isDisplayingContactInfo = false"
+            />
+        </template>
     </div>
 </template>
 
-<script>
-import { mapActions, mapState } from 'pinia'
+<script setup>
+import { storeToRefs } from 'pinia'
 import { useChatStore } from '../store/chat'
 import { useWsStore } from '../store/websocket'
+import { Pages, usePageStore } from '~/store/page'
 
 definePageMeta({
     layout: 'home',
     middleware: 'auth'
 })
-export default {
-    data() {
-        return {
-            isDisplayingContactInfo: false,
-            isDisplayingProfile: false,
-            isDisplayingNewChat: false
-        }
-    },
-    computed: {
-        ...mapState(useChatStore, {
-            chatId: '_id',
-            chatUser: 'user'
-        }),
-        ...mapState(useWsStore, ['conn']),
-    },
-    mounted() {
-        this.updateStatusToReceived()
-        this.clearChat()
-        if (this.conn?.readyState !== WebSocket.OPEN) {
-            const token = useCookie('token').value
-            this.connectWs({ token })
-        }
-    },
-    methods: {
-        ...mapActions(useChatStore, ['clearChat']),
-        ...mapActions(useWsStore, ['connectWs', 'disconnectWs']),
-        async updateStatusToReceived() {
-            await useMyAuthFetch(`message/received`, { method: 'PUT' })
-        }
-    },
-    beforeUnmount() {
-        this.disconnectWs()
-    }
+
+const isDisplayingContactInfo = ref(false)
+const isDisplayingNewChat = ref(false)
+
+const chatStore = useChatStore()
+const wsStore = useWsStore()
+const pageStore = usePageStore()
+
+const { _id: chatId } = storeToRefs(chatStore)
+const { conn } = storeToRefs(wsStore)
+const { currentPage } = storeToRefs(pageStore)
+
+const { clearChat } = chatStore
+const { connectWs, disconnectWs } = wsStore
+
+async function updateStatusToReceived() {
+    await useMyAuthFetch('message/received', { method: 'PUT' })
 }
+
+onMounted(() => {
+    updateStatusToReceived()
+    clearChat()
+
+    if (conn.value?.readyState !== WebSocket.OPEN) {
+        const token = useCookie('token').value
+        connectWs({ token })
+    }
+})
+
+onBeforeUnmount(() => {
+    disconnectWs()
+})
 </script>
 
 <style>

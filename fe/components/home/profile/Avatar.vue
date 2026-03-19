@@ -1,5 +1,5 @@
 <template>
-    <AvatarPlaceholder :size="208" class="ml-auto mr-auto" />
+    <AvatarPlaceholder :size="128" class="ml-auto mr-auto" />
 </template>
 
 <script>

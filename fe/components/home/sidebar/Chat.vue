@@ -9,7 +9,7 @@
                 <div class="text-base max-h-6 text-black dark:text-zinc-50 grow text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
                     {{ name }}
                 </div>
-                <div class="text-xs flex-none" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-green-500 font-semibold' : 'dark:text-white/60'">
+                <div class="text-xs flex-none font-semibold" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-emerald-500 font-semibold' : 'dark:text-white/60'">
                     {{ formattedDatetime }}
                 </div>
             </div>
@@ -18,13 +18,13 @@
                     <Icon name="mdi:check" v-if="lastMessage?.status === StatusMessage.SENT" />
                     <Icon name="mdi:check-all" v-else />
                 </span>
-                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : 'dark:text-white/60'">
+                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold dark:text-white' : 'dark:text-white/60'">
                     {{ lastMessage.text }}
                 </div>
                 <div class="flex-none">
                     <div class="flex flex-row items-center gap-0.5">
-                        <div v-if="countUnreadMessages && !lastMessage?.isMine" class="h-5 w-5 rounded-full bg-green-500 text-white text-xs font-semibold flex items-center justify-center">
-                            <div class="mt-[-2px]">{{ countUnreadMessages }}</div>
+                        <div v-if="countUnreadMessages && !lastMessage?.isMine" class="px-1.5 py-1 rounded-full bg-emerald-500 text-white dark:text-neutral-950 text-xs leading-none font-semibold flex items-center justify-center">
+                            <div>{{ countUnreadMessages }}</div>
                         </div>
                         <button class="text-2xl leading-5 h-5 text-gray-400 dark:text-white/60 transition ease-in-out duration-300 hidden group-hover:block">
                             <Icon name="icon-park-outline:down" />
