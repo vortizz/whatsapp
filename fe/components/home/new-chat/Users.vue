@@ -1,17 +1,14 @@
 <template>
     <div>
-        <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
+        <div v-if="loading" class="text-center py-[72px] text-sm text-black/60">
             Looking for users
         </div>
-        <div v-else-if="!users.length" class="text-center py-[72px] text-sm text-gray-400">
+        <div v-else-if="!users.length" class="text-center py-[72px] text-sm text-black/60">
             No results found for '{{ text }}'
         </div>
-        <div v-else class="bg-white">
-            <div class="p-7 text-teal-600">
-                USERS
-            </div>
+        <div v-else>
             <template v-for="(user, i) in users" :key="i">
-                <div class="p-7 text-teal-600">
+                <div class="capitalize pt-10 pb-4 pl-7 text-black/60 dark:text-white/60 text-sm">
                     {{ user.letter }}
                 </div>
                 <HomeNewChatUser

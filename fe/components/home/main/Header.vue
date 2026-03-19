@@ -1,14 +1,14 @@
 <template>
-    <div class="px-4 py-2.5 bg-gray-100 flex items-center justify-between">
+    <div class="px-4 py-2.5 bg-white dark:bg-neutral-900 flex items-center justify-between shadow-sm">
         <div class="flex flex-row items-center gap-3 flex-1 cursor-pointer" @click="$emit('showContactInfo')">
             <img src="~/assets/img/default_profile.png" width="40" height="40" />
-            <div class="text-base text-black">
+            <div class="text-base font-semibold text-black dark:text-white">
                 {{ chatUser.name }}
             </div>
         </div>
         <div class="flex flex-row items-center justify-center gap-2.5">
             <div>
-                <button class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100'>
+                <button class='flex items-center text-2xl p-2 rounded-full text-neutral-950 dark:text-white dark:hover:bg-white/5 hover:bg-stone-100 transition-colors'>
                     <Icon name="material-symbols:search" />
                 </button>
             </div>
@@ -16,7 +16,7 @@
                 <div>
                     <button
                         type="button"
-                        class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100'
+                        class='flex items-center text-2xl p-2 rounded-full text-neutral-950 dark:text-white dark:hover:bg-white/5 hover:bg-stone-100 transition-colors'
                         @click="isMenuButton = !isMenuButton"
                         @blur="blurMenuButton"
                     >
@@ -24,22 +24,24 @@
                     </button>
                 </div>
                 <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                    <div v-show="isMenuButton" class="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                        <div class="py-1">
-                            <button @click="$emit('showContactInfo')" class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Contact info
+                    <div v-show="isMenuButton" class="absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black/10 dark:ring-white/10 dark:bg-neutral-900 ring-opacity-5 focus:outline-none z-10">
+                        <div class="p-1">
+                            <button @click="$emit('showContactInfo')" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50">
+                                <Icon class="text-base" name="zondicons:information-outline"></Icon>
+                                <span class="text-sm">Contact info</span>
                             </button>
-                            <button @click="closeChat" class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Close chat
+                            <button @click="closeChat" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50">
+                                <Icon class="text-base" name="zondicons:close-outline"></Icon>
+                                <span class="text-sm">Close chat</span>
                             </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Clear chat
+                            <div class="border-t border-neutral-950/10 dark:border-white/10 mx-2 my-1.5"></div>
+                            <button class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-rose-600/10 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 flex items-center gap-3 rounded-xl hover:text-rose-700 dark:text-zinc-50">
+                                <Icon class="text-base" name="zondicons:minus-outline"></Icon>
+                                <span class="text-sm">Clear chat</span>
                             </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Delete chat
-                            </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Block
+                            <button class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-rose-600/10 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 flex items-center gap-3 rounded-xl hover:text-rose-700 dark:text-zinc-50">
+                                <Icon class="text-base" name="line-md:trash"></Icon>
+                                <span class="text-sm">Delete chat</span>
                             </button>
                         </div>
                     </div>

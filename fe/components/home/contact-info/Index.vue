@@ -1,9 +1,9 @@
 <template>
-    <aside class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
+    <aside class="flex-1 min-w-80 bg-white dark:bg-neutral-900 flex flex-col">
         <header>
             <HomeContactInfoHeader @close="$emit('close')" />
         </header>
-        <main class="flex flex-col gap-3">
+        <main class="flex flex-col gap-3 overflow-y-auto">
             <HomeContactInfoProfile />
             <HomeContactInfoAbout />
             <HomeContactInfoActions />

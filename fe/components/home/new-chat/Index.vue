@@ -4,7 +4,7 @@
             <HomeNewChatHeader @close="$emit('close')" />
             <HomeNewChatSubHeader @settext="e => text = e" />
         </header>
-        <main class="flex flex-col gap-7 overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <main class="bg-white dark:bg-neutral-900 flex flex-col gap-7 overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
             <HomeNewChatUsers @close="$emit('close')" :text="text" />
         </main>
     </aside>

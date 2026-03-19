@@ -1,12 +1,12 @@
 <template>
-    <div class="flex flex-col justify-center items-center p-8 bg-white shadow-sm">
+    <div class="flex flex-col justify-center items-center p-8">
         <div class="mb-4">
             <img src="~/assets/img/default_profile.png" width="208" height="208" />
         </div>
-        <div class="text-2xl">
+        <div class="text-2xl text-neutral-950 dark:text-white">
             {{ chatUser.name }}
         </div>
-        <div class="text-base mt-1 text-gray-500">
+        <div class="text-base mt-1 text-black/60 dark:text-white/60">
             {{ chatUser.email }}
         </div>
     </div>

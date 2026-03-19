@@ -1,24 +1,24 @@
 <template>
-  <div class="flex flex-row px-3.5 pt-3.5 gap-3.5 hover:bg-gray-100 group cursor-pointer" :class="active ? 'bg-gray-100' : ''">
+  <div class="flex flex-row px-3.5 pt-3.5 gap-3.5 dark:hover:bg-stone-400/15 group cursor-pointer rounded-xl" :class="active ? 'bg-gray-100 dark:bg-stone-400/15' : ''">
     <div>
         <img src="~/assets/img/default_profile.png" width="48" height="48" />
     </div>
-    <div class="flex-1 flex flex-col justify-center pb-3.5 border-b border-gray-200">
+    <div class="flex-1 flex flex-col justify-center pb-3.5">
         <div>
             <div class="flex items-center">
-                <div class="text-base max-h-6 text-black grow text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
+                <div class="text-base max-h-6 text-black dark:text-zinc-50 grow text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
                     {{ name }}
                 </div>
-                <div class="text-xs flex-none" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-green-500 font-semibold' : ''">
+                <div class="text-xs flex-none" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-green-500 font-semibold' : 'dark:text-white/60'">
                     {{ formattedDatetime }}
                 </div>
             </div>
-            <div class="flex place-items-center">
-                <span v-if="lastMessage?.isMine" class="text-sm mt-[-4px] mr-1" :class="lastMessage?.status === StatusMessage.READ ? 'text-cyan-500' : 'text-gray-500'">
-                    <Icon name="codicon:check" v-if="lastMessage?.status === StatusMessage.SENT" />
-                    <Icon name="codicon:check-all" v-else />
+            <div class="flex items-end place-items-center">
+                <span v-if="lastMessage?.isMine" class="text-base leading-none mr-0.5" :class="lastMessage?.status === StatusMessage.READ ? 'text-sky-400' : 'text-gray-500'">
+                    <Icon name="mdi:check" v-if="lastMessage?.status === StatusMessage.SENT" />
+                    <Icon name="mdi:check-all" v-else />
                 </span>
-                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
+                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : 'dark:text-white/60'">
                     {{ lastMessage.text }}
                 </div>
                 <div class="flex-none">
@@ -26,7 +26,7 @@
                         <div v-if="countUnreadMessages && !lastMessage?.isMine" class="h-5 w-5 rounded-full bg-green-500 text-white text-xs font-semibold flex items-center justify-center">
                             <div class="mt-[-2px]">{{ countUnreadMessages }}</div>
                         </div>
-                        <button class="text-2xl leading-5 h-5 text-gray-400 transition ease-in-out duration-300 hidden group-hover:block">
+                        <button class="text-2xl leading-5 h-5 text-gray-400 dark:text-white/60 transition ease-in-out duration-300 hidden group-hover:block">
                             <Icon name="icon-park-outline:down" />
                         </button>
                     </div>

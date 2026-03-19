@@ -3,12 +3,15 @@
         <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
             Looking for chats or users
         </div>
-        <div v-else-if="!filteredChats.length && !users.length" class="text-center py-[72px] text-sm text-gray-400">
-            No chats or users found
+        <div v-else-if="!filteredChats.length && !users.length" class="flex flex-col items-center gap-4 text-center py-[72px] text-base dark:text-gray-400 text-black/60">
+            <div class="font-semibold">
+                No chats, contacts or messages found
+            </div>
         </div>
         <div v-if="filteredChats.length">
-            <div class="p-7 text-teal-600">
-                {{ unreadChats && !text ? 'FILTERED BY UNREAD' : 'CHATS' }}
+            <div class="py-7 pl-4 text-sm dark:text-white/60">
+                <!-- {{ unreadChats && !text ? 'FILTERED BY UNREAD' : 'CHATS' }} -->
+                Chats
             </div>
             <HomeSidebarChat
                 v-for="(chat) in filteredChats"

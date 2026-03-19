@@ -1,5 +1,5 @@
 <template>
-    <aside class="flex-1 min-w-80 bg-white border-r border-gray-200 flex flex-col">
+    <aside class="flex-1 min-w-80 bg-white border-r border-gray-200 dark:border-black/80 flex flex-col">
         <header class="sticky top-0">
             <HomeSidebarHeader
                 @openprofile="$emit('openprofile')"
@@ -10,7 +10,7 @@
                 @setunreadChats="e => unreadChats = e"
             />
         </header>
-        <main class="border-r-2 border-transparent overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <main class="border-r-2 border-transparent overflow-y-auto flex-1 scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent px-2.5 dark:bg-neutral-900">
             <HomeSidebarChats
                 v-if="!text && !unreadChats"
             />

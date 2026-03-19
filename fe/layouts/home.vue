@@ -1,10 +1,48 @@
 <template>
-    <div class="size-full ">
-        <div class="size-full flex items-center justify-center -z-10 bg-gray-300">
-            <div class="z-10 size-full xl:p-5">
-                <slot />
+    <div class="size-full flex flex-row justify-start">
+        <aside class="flex flex-col p-3 justify-between w-16 border-r border-black/10 bg-stone-100 dark:border-white/10 dark:bg-neutral-800">
+            <div class="flex flex-col gap-0.5">
+                <button
+                    type="button"
+                    @click="pageStore.setPage(Pages.CHATS)"
+                    class="flex items-center relative p-2 rounded-full transition-colors"
+                    :class="currentPage === Pages.CHATS ? activeButtonClass : inactiveButtonClass"
+                >
+                    <span class="absolute -right-1 -top-2 rounded-full text-xs text-white dark:text-neutral-950 bg-emerald-500 py-0.5 px-1.5 font-semibold z-10 border-2 border-solid border-stone-100 dark:border-neutral-800">
+                        30
+                    </span>
+                    <Icon :name="currentPage === Pages.CHATS ? 'material-symbols:chat-rounded' : 'material-symbols:chat-outline-rounded'" class="text-2xl" />
+                </button>
             </div>
-        </div>
-        <div class="w-full h-32 bg-teal-600 z-0 fixed top-0" />
+            <div>
+                <button
+                    type="button"
+                    @click="pageStore.setPage(Pages.SETTINGS)"
+                    class="flex items-center p-2 rounded-full transition-colors"
+                    :class="currentPage === Pages.SETTINGS ? activeButtonClass : inactiveButtonClass"
+                >
+                    <Icon name="material-symbols:settings-outline-rounded" class="text-2xl" />
+                </button>
+                <button class="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
+                    <img src="~/assets/img/default_profile.png" width="28" height="28" />
+                </button>
+            </div>
+        </aside>
+        <main class="size-full">
+            <slot />
+        </main>
     </div>
 </template>
+
+
+<script setup>
+import { storeToRefs } from 'pinia'
+import { Pages, usePageStore } from '~/store/page'
+
+const pageStore = usePageStore()
+const { currentPage } = storeToRefs(pageStore)
+
+const activeButtonClass = 'bg-black/10 text-black dark:bg-white/10 dark:text-white'
+const inactiveButtonClass = 'text-black/60 hover:bg-black/5 dark:text-white/60 dark:hover:bg-white/5'
+
+</script>

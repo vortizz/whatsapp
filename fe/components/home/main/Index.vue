@@ -1,5 +1,5 @@
 <template>
-    <main class="flex-2 bg-orange-50 flex flex-col">
+    <main class="flex-2 bg-[#efeae2] dark:bg-neutral-900/90 flex flex-col">
         <header>
             <HomeMainHeader
                 @showContactInfo="$emit('showContactInfo')"

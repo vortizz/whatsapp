@@ -1,5 +1,5 @@
 <template>
-    <div class="sticky top-3 text-xs p-2.5 bg-gray-50 rounded-md w-fit ml-auto mr-auto shadow-[0_1px_0.5px_rgba(11,20,26,.13)]">
+    <div class="sticky top-3 text-xs px-3 py-1 font-semibold bg-white/90 dark:bg-neutral-800 dark:text-white/60 text-gray-600 rounded-md w-fit ml-auto mr-auto shadow-[0_0_1px_1px_rgba(0,0,0,0.06),_0_1px_0_rgba(0,0,0,0.05)]">
         {{ formattedDate }}
     </div>
 </template>
