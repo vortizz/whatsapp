@@ -1,6 +1,6 @@
 <template>
     <form @submit.prevent="send">
-        <div class="py-3 px-4 w-full bg-[#efeae2] dark:bg-neutral-900/5 flex flex-row gap-4 items-center">
+        <div class="pb-3 px-4 w-full bg-[#efeae2] dark:bg-neutral-900/5 flex flex-row gap-4 items-center">
             <div class="flex w-full rounded-3xl bg-white dark:bg-neutral-800">
                 <input
                     ref="rInput"
