@@ -5,7 +5,7 @@
             :key="i"
             :name="chat.user.name"
             :active="chatId === chat._id"
-            :isClearing="clearingChatId === chat._id"
+            :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
             :lastMessage="chat.lastMessage"
             :countUnreadMessages="chat.countUnreadMessages"
             @click="setChat(chat)"
@@ -26,6 +26,7 @@ import { StatusMessage } from '../../../utils/status-message'
 
 const chats = ref([])
 const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
+const { deletingChatId, deletedChatState } = useDeleteChatState()
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -177,6 +178,10 @@ function clearChatState(chatIdToClear) {
     matchedChat.countUnreadMessages = 0
 }
 
+function removeChat(chatIdToDelete) {
+    chats.value = chats.value.filter(chat => chat._id !== chatIdToDelete)
+}
+
 watchEffect(() => {
     const selectedChat = chats.value.find(chat => chat._id === chatId.value)
     selectedChatHasMessages.value = Boolean(selectedChat?.lastMessage?._id)
@@ -188,6 +193,14 @@ watch(() => clearedChatState.value.nonce, () => {
     }
 
     clearChatState(clearedChatState.value.chatId)
+})
+
+watch(() => deletedChatState.value.nonce, () => {
+    if (!deletedChatState.value.chatId) {
+        return
+    }
+
+    removeChat(deletedChatState.value.chatId)
 })
 
 onMounted(async () => {

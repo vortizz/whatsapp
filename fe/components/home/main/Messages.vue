@@ -10,7 +10,10 @@
           />
           <div 
             class="px-16"
-            :class="isFirst(msg._id) ? 'mt-3' : 'm-0.5'"
+            :class="[
+              isFirst(msg._id) ? 'mt-3' : 'm-0.5',
+              isLast(msg._id) ? 'mb-4' : ''
+            ]"
           >          
             <HomeMainMessageFrom
               v-if="!msg.isMine"
@@ -43,6 +46,7 @@ import { StatusMessage } from '../../../utils/status-message'
 const messages = ref([])
 const bottomEl = ref(null)
 const { clearedChatState } = useClearChatState()
+const { deletedChatState } = useDeleteChatState()
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -97,6 +101,11 @@ function isFirst(messageId) {
   const currentMsg = messages.value[msgIndex]
 
   return currentMsg.isMine !== previousMsg.isMine
+}
+
+function isLast(messageId) {
+  const msgIndex = messages.value.findIndex(m => m._id === messageId)
+  return msgIndex === messages.value.length - 1
 }
 
 function sortMessages(items) {
@@ -182,6 +191,14 @@ function readMessage(message) {
 
 watch(() => clearedChatState.value.nonce, () => {
   if (clearedChatState.value.chatId !== chatId.value) {
+    return
+  }
+
+  messages.value = []
+})
+
+watch(() => deletedChatState.value.nonce, () => {
+  if (deletedChatState.value.chatId !== chatId.value) {
     return
   }
 

@@ -36,6 +36,7 @@
                 @close="isDisplayingContactInfo = false"
             />
             <HomeClearChatModal />
+            <HomeDeleteChatModal />
         </template>
     </div>
 </template>
@@ -81,6 +82,12 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     disconnectWs()
+})
+
+watch(chatId, value => {
+    if (!value) {
+        isDisplayingContactInfo.value = false
+    }
 })
 </script>
 

@@ -18,7 +18,7 @@
                 :key="chat._id"
                 :name="chat.user.name"
                 :active="chatId === chat._id"
-                :isClearing="clearingChatId === chat._id"
+                :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
                 :lastMessage="chat.lastMessage"
                 :countUnreadMessages="chat.countUnreadMessages"
                 @click="setChat(chat)"
@@ -54,6 +54,7 @@ const users = ref([])
 const loading = ref(false)
 
 const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
+const { deletingChatId, deletedChatState } = useDeleteChatState()
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -144,6 +145,10 @@ function clearChatState(chatIdToClear) {
     matchedChat.countUnreadMessages = 0
 }
 
+function removeChat(chatIdToDelete) {
+    chats.value = chats.value.filter(chat => chat._id !== chatIdToDelete)
+}
+
 function setChat(chat) {
     chat.countUnreadMessages = 0
     const clonedChat = JSON.parse(JSON.stringify(chat))
@@ -222,6 +227,15 @@ watch(() => clearedChatState.value.nonce, () => {
     }
 
     clearChatState(clearedChatId)
+})
+
+watch(() => deletedChatState.value.nonce, () => {
+    const deletedChatId = deletedChatState.value.chatId
+    if (!deletedChatId) {
+        return
+    }
+
+    removeChat(deletedChatId)
 })
 
 watch(currentSelectedChatHasMessages, value => {

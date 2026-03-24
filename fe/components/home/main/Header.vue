@@ -43,7 +43,11 @@
                                 <Icon class="text-base" name="zondicons:minus-outline"></Icon>
                                 <span class="text-sm">Clear chat</span>
                             </button>
-                            <button class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-rose-600/10 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 flex items-center gap-3 rounded-xl hover:text-rose-700 dark:text-zinc-50">
+                            <button
+                                class="text-neutral-950 w-full text-left px-4 py-2 enabled:hover:bg-rose-600/10 enabled:dark:hover:bg-rose-500/10 enabled:dark:hover:text-rose-300 flex items-center gap-3 rounded-xl enabled:hover:text-rose-700 dark:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed disabled:dark:text-neutral-400"
+                                :disabled="isDeleteChatDisabled"
+                                @click="deleteChat"
+                            >
                                 <Icon class="text-base" name="line-md:trash"></Icon>
                                 <span class="text-sm">Delete chat</span>
                             </button>
@@ -64,6 +68,7 @@ defineEmits(['showContactInfo'])
 
 const chatStore = useChatStore()
 const { openModal, isClearChatDisabled } = useClearChatModal()
+const { openModal: openDeleteModal, isDeleteChatDisabled } = useDeleteChatModal()
 
 const isMenuButton = ref(false)
 const { user: chatUser } = storeToRefs(chatStore)
@@ -86,6 +91,13 @@ const clearMessages = () => {
 
     isMenuButton.value = false
     openModal()
+}
+
+const deleteChat = () => {
+    if (isDeleteChatDisabled.value) return
+
+    isMenuButton.value = false
+    openDeleteModal()
 }
 </script>
 
