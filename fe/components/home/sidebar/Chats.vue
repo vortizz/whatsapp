@@ -5,6 +5,7 @@
             :key="i"
             :name="chat.user.name"
             :active="chatId === chat._id"
+            :isClearing="clearingChatId === chat._id"
             :lastMessage="chat.lastMessage"
             :countUnreadMessages="chat.countUnreadMessages"
             @click="setChat(chat)"
@@ -24,6 +25,7 @@ import { useWsStore } from '../../../store/websocket'
 import { StatusMessage } from '../../../utils/status-message'
 
 const chats = ref([])
+const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -33,6 +35,16 @@ const { _id: userId } = storeToRefs(userStore)
 const { _id: chatId } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
 const { setChat: setChatAction } = chatStore
+
+function emptyLastMessage() {
+    return {
+        _id: '',
+        text: '',
+        createdAt: '',
+        status: '',
+        isMine: false
+    }
+}
 
 function handleEvent(event) {
     console.log('MSG RECEIVED (CHATS.VUE) -> ', JSON.parse(event.data))
@@ -56,13 +68,13 @@ async function getChats() {
         chats.value = response.map(chat => ({
             _id: chat._id,
             user: chat.users.find(user => user._id !== userId.value),
-            lastMessage: {
-                _id: chat.lastMessage?._id,
-                text: chat.lastMessage?.text,
-                createdAt: chat.lastMessage?.createdAt,
-                status: chat.lastMessage?.status,
-                isMine: chat.lastMessage?.from === userId.value
-            },
+            lastMessage: chat.lastMessage ? {
+                _id: chat.lastMessage._id,
+                text: chat.lastMessage.text,
+                createdAt: chat.lastMessage.createdAt,
+                status: chat.lastMessage.status,
+                isMine: chat.lastMessage.from === userId.value
+            } : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
         }))
     } catch (error) {
@@ -154,6 +166,29 @@ function sortChats() {
         return 0
     })
 }
+
+function clearChatState(chatIdToClear) {
+    const matchedChat = chats.value.find(chat => chat._id === chatIdToClear)
+    if (!matchedChat) {
+        return
+    }
+
+    matchedChat.lastMessage = emptyLastMessage()
+    matchedChat.countUnreadMessages = 0
+}
+
+watchEffect(() => {
+    const selectedChat = chats.value.find(chat => chat._id === chatId.value)
+    selectedChatHasMessages.value = Boolean(selectedChat?.lastMessage?._id)
+})
+
+watch(() => clearedChatState.value.nonce, () => {
+    if (!clearedChatState.value.chatId) {
+        return
+    }
+
+    clearChatState(clearedChatState.value.chatId)
+})
 
 onMounted(async () => {
     await getChats()

@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-row px-3.5 pt-3.5 gap-3.5 dark:hover:bg-stone-400/15 group cursor-pointer rounded-xl" :class="active ? 'bg-gray-100 dark:bg-stone-400/15' : ''">
+  <div
+    class="flex flex-row px-3.5 pt-3.5 gap-3.5 group cursor-pointer rounded-xl hover:bg-gray-100 dark:hover:bg-stone-400/15" 
+    :class="active ? 'bg-gray-100 dark:bg-stone-400/15' : ''"
+>
     <div>
         <AvatarPlaceholder :size="48" />
     </div>
@@ -9,8 +12,14 @@
                 <div class="text-base max-h-6 text-black dark:text-zinc-50 grow text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold' : ''">
                     {{ name }}
                 </div>
-                <div class="text-xs flex-none font-semibold" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-emerald-500 font-semibold' : 'dark:text-white/60'">
+                <div v-if="!isClearing" class="text-xs flex-none font-semibold" :class="countUnreadMessages && !lastMessage?.isMine ? 'text-emerald-500 font-semibold' : 'dark:text-white/60'">
                     {{ formattedDatetime }}
+                </div>
+                <div v-else class="flex-none text-emerald-500">
+                    <svg aria-hidden="true" role="status" class="inline w-4 h-4 animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" fill-opacity="0.2"/>
+                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentColor"/>
+                    </svg>
                 </div>
             </div>
             <div class="flex items-end place-items-center">
@@ -18,11 +27,19 @@
                     <Icon name="mdi:check" v-if="lastMessage?.status === StatusMessage.SENT" />
                     <Icon name="mdi:check-all" v-else />
                 </span>
-                <div class="text-sm grow max-h-5 text-ellipsis overflow-hidden" :class="countUnreadMessages && !lastMessage?.isMine ? 'font-semibold dark:text-white' : 'dark:text-white/60'">
-                    {{ lastMessage.text }}
+                <div 
+                    class="text-sm grow max-h-5 text-ellipsis overflow-hidden" 
+                    :class="[
+                        countUnreadMessages && !lastMessage?.isMine 
+                            ? 'font-semibold dark:text-white' 
+                            : 'dark:text-white/60',
+                        { 'invisible': !lastMessage?.text }
+                    ]"
+                >
+                    {{ lastMessage.text || 'X' }}
                 </div>
                 <div class="flex-none">
-                    <div class="flex flex-row items-center gap-0.5">
+                    <div v-if="!isClearing" class="flex flex-row items-center gap-0.5">
                         <div v-if="countUnreadMessages && !lastMessage?.isMine" class="px-1.5 py-1 rounded-full bg-emerald-500 text-white dark:text-neutral-950 text-xs leading-none font-semibold flex items-center justify-center">
                             <div>{{ countUnreadMessages }}</div>
                         </div>
@@ -37,50 +54,74 @@
   </div>
 </template>
 
-<script>
-export default {
-    props: ['name', 'active', 'lastMessage', 'countUnreadMessages'],
-    computed: {
-        formattedDatetime() {
-            if (!this.lastMessage?.createdAt) {
-                return ''
-            }
-            if (this.isToday) {
-                return this.formattedTime
-            }
-            if (this.isYesterday) {
-                return 'Yesterday'
-            }
-            if (this.withinAWeek) {
-                const date = new Date(this.lastMessage.createdAt)
-                return date.toLocaleString(window.navigator.language, {weekday: 'long'})
-            }
-            const date = new Date(this.lastMessage.createdAt)
-            return date.toLocaleDateString(navigator.language)
-        },
-        isToday() {
-            const today = new Date()
-            const date = new Date(this.lastMessage.createdAt)
-            return today.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
-        },
-        isYesterday() {
-            const yesterday = new Date()
-            yesterday.setDate(yesterday.getDate() - 1)
-            const date = new Date(this.lastMessage.createdAt)
-            return yesterday.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
-        },
-        withinAWeek() {
-            const aweekago = new Date()
-            aweekago.setDate(aweekago.getDate() - 7)
-            const date = new Date(this.lastMessage.createdAt)
-            return date >= aweekago
-        },
-        formattedTime() {
-            const date = new Date(this.lastMessage.createdAt)
-            return date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' })
-        }
+<script setup>
+const props = defineProps(['name', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing'])
+
+const isToday = computed(() => {
+    const createdAt = props.lastMessage?.createdAt
+    if (!createdAt) {
+        return false
     }
-}
+
+    const today = new Date()
+    const date = new Date(createdAt)
+    return today.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
+})
+
+const isYesterday = computed(() => {
+    const createdAt = props.lastMessage?.createdAt
+    if (!createdAt) {
+        return false
+    }
+
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const date = new Date(createdAt)
+    return yesterday.toLocaleDateString('en-GB') === date.toLocaleDateString('en-GB')
+})
+
+const withinAWeek = computed(() => {
+    const createdAt = props.lastMessage?.createdAt
+    if (!createdAt) {
+        return false
+    }
+
+    const aweekago = new Date()
+    aweekago.setDate(aweekago.getDate() - 7)
+    const date = new Date(createdAt)
+    return date >= aweekago
+})
+
+const formattedTime = computed(() => {
+    const createdAt = props.lastMessage?.createdAt
+    if (!createdAt) {
+        return ''
+    }
+
+    const date = new Date(createdAt)
+    return date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' })
+})
+
+const formattedDatetime = computed(() => {
+    const createdAt = props.lastMessage?.createdAt
+    if (!createdAt) {
+        return ''
+    }
+
+    if (isToday.value) {
+        return formattedTime.value
+    }
+    if (isYesterday.value) {
+        return 'Yesterday'
+    }
+    if (withinAWeek.value) {
+        const date = new Date(createdAt)
+        return date.toLocaleString(window.navigator.language, { weekday: 'long' })
+    }
+
+    const date = new Date(createdAt)
+    return date.toLocaleDateString(navigator.language)
+})
 </script>
 
 <style>

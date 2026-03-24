@@ -35,7 +35,11 @@
                                 <span class="text-sm">Close chat</span>
                             </button>
                             <div class="border-t border-neutral-950/10 dark:border-white/10 mx-2 my-1.5"></div>
-                            <button class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-rose-600/10 dark:hover:bg-rose-500/10 dark:hover:text-rose-300 flex items-center gap-3 rounded-xl hover:text-rose-700 dark:text-zinc-50">
+                            <button
+                                class="text-neutral-950 w-full text-left px-4 py-2 enabled:hover:bg-rose-600/10 enabled:dark:hover:bg-rose-500/10 enabled:dark:hover:text-rose-300 flex items-center gap-3 rounded-xl enabled:hover:text-rose-700 enabled:dark:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed disabled:dark:text-neutral-400"
+                                :disabled="isClearChatDisabled"
+                                @click="clearMessages"
+                            >
                                 <Icon class="text-base" name="zondicons:minus-outline"></Icon>
                                 <span class="text-sm">Clear chat</span>
                             </button>
@@ -51,38 +55,37 @@
     </div>
 </template>
 
-<script>
-import { mapActions, mapState } from 'pinia'
+<script setup>
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 
-export default {
-    data() {
-        return {
-            isMenuButton: false
-        }
-    },
-    computed: {
-        ...mapState(useChatStore, {
-            chatId: '_id',
-            chatUser: 'user'
-        }),
-    },
-    methods: {
-        ...mapActions(useChatStore, {
-            setChatAction: 'setChat'
-        }),
-        blurMenuButton() {
-            setTimeout(() => {
-                this.isMenuButton = false
-            }, 100)
-        },
-        closeChat() {
-            this.setChatAction({
-                _id: '',
-                user: {}
-            })
-        }
-    }
+defineEmits(['showContactInfo'])
+
+const chatStore = useChatStore()
+const { openModal, isClearChatDisabled } = useClearChatModal()
+
+const isMenuButton = ref(false)
+const { user: chatUser } = storeToRefs(chatStore)
+
+const blurMenuButton = () => {
+    setTimeout(() => {
+        isMenuButton.value = false
+    }, 100)
+}
+
+const closeChat = () => {
+    chatStore.setChat({
+        _id: '',
+        user: {}
+    })
+}
+
+const clearMessages = () => {
+    if (isClearChatDisabled.value) return
+
+    isMenuButton.value = false
+    openModal()
 }
 </script>
 

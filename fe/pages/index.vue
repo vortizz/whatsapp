@@ -35,6 +35,7 @@
                 v-if="isDisplayingContactInfo"
                 @close="isDisplayingContactInfo = false"
             />
+            <HomeClearChatModal />
         </template>
     </div>
 </template>

@@ -42,6 +42,7 @@ import { StatusMessage } from '../../../utils/status-message'
 
 const messages = ref([])
 const bottomEl = ref(null)
+const { clearedChatState } = useClearChatState()
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -178,6 +179,14 @@ function readMessage(message) {
     }
   }
 }
+
+watch(() => clearedChatState.value.nonce, () => {
+  if (clearedChatState.value.chatId !== chatId.value) {
+    return
+  }
+
+  messages.value = []
+})
 
 watch(chatId, async (value, oldValue) => {
   if (!value || value === oldValue) {
