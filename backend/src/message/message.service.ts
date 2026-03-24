@@ -51,8 +51,11 @@ export class MessageService {
         return messageCreated
     }
 
-    async findByChat(chat: string): Promise<Message[]> {
-        return await this.messageModel.find({ chat }).sort({ createdAt: 1 })
+    async findByChat(user: User, chat: string): Promise<Message[]> {
+        return await this.messageModel.find({
+            chat,
+            clearedBy: { $ne: user._id }
+        }).sort({ createdAt: 1 })
     }
 
     async updateStatusToReceived(user: User): Promise<void> {
@@ -93,5 +96,12 @@ export class MessageService {
         )
 
         this.wsClientManager.sendStatusReadToClient(messagesToBeUpdated)
+    }
+
+    async clearMessages(user: User, chat: string) {
+        await this.messageModel.updateMany(
+            { chat, $or: [ { from: user._id}, { to: user._id } ] },
+            { $addToSet: { clearedBy: user } }
+        )
     }
 }

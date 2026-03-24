@@ -47,6 +47,15 @@ export class Message {
     })
     status?: Status
 
+    @Prop({
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: User.name,
+            autopopulate: true
+        }],
+    })
+    clearedBy?: User[]
+
     createdAt: Date
     updatedAt: Date
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put, Delete } from "@nestjs/common";
 import { Message } from "./entities/message.schema";
 import { Auth } from "src/common/decorator/auth.decorator";
 import { CreateMessageDto } from "./dtos/create-message.dto";
@@ -22,9 +22,10 @@ export class MessageController {
     @Auth()
     @Get('/:chat_id')
     async findByChat(
+        @AuthUser() user: User,
         @Param('chat_id') chatId: string
     ): Promise<Message[]> {
-        return await this.messageService.findByChat(chatId)
+        return await this.messageService.findByChat(user, chatId)
     }
 
     @Auth()
@@ -40,5 +41,14 @@ export class MessageController {
         @Param('chat_id') chatId: string
     ): Promise<void> {
         await this.messageService.updateStatusToRead(user, chatId)
+    }
+
+    @Auth()
+    @Delete('/:chat_id/clear')
+    async clearMessages(
+        @AuthUser() user: User,
+        @Param('chat_id') chatId: string
+    ): Promise<void> {
+        await this.messageService.clearMessages(user, chatId)
     }
 }

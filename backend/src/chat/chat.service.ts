@@ -54,6 +54,7 @@ export class ChatService {
                 as: 'messages'
             } },
             { $unwind: '$messages' },
+            { $match: { 'messages.clearedBy': { $ne: new mongoose.Types.ObjectId(user._id) } } },
             { $sort: { 'messages.createdAt': -1 } },
             { $group: { _id: '$_id', lastMessage: { $first: '$messages' }} },
         ])
@@ -69,6 +70,7 @@ export class ChatService {
             } },
             { $unwind: '$messages' },
             { $match: { $and: [ 
+                { 'messages.clearedBy': { $ne: new mongoose.Types.ObjectId(user._id) } },
                 { $or: [
                     { 'messages.status': Status.RECEIVED },
                     { 'messages.status': Status.SENT }
