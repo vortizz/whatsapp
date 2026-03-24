@@ -27,79 +27,139 @@ export class ChatService {
     }
 
     async findByUser(user: User, username?: string): Promise<Chat[]> {
-        // GET CHATS BY FILTERED USER
-        let chats = await this.chatModel.find({ users: user })
-        
-        if (username) {
-            chats = chats.filter(chat => 
-                chat.users.some(u => 
-                    u.name.toLowerCase().trim().includes(
-                        username.toLowerCase().trim()
-                    ) && u._id.toString() !== user._id.toString()
-                )
-            )
-        }
-    
-        if (!chats.length) {
-            return []
-        }
-        
-        // GET LAST MESSAGE SENT
-        const lastMessagesChatPromise = this.chatModel.aggregate([
-            { $match: { _id: { $in: chats.map(chat => chat._id) } } },
+        const userId = new mongoose.Types.ObjectId(user._id)
+        const trimmedUsername = username?.trim()
+        const usernameRegex = trimmedUsername ? new RegExp(this.escapeRegex(trimmedUsername), 'i') : null
+
+        return await this.chatModel.aggregate([
+            { $match: { users: userId } },
+            { $lookup: {
+                from: 'users',
+                localField: 'users',
+                foreignField: '_id',
+                as: 'usersData'
+            } },
+            ...(usernameRegex ? [{
+                $match: {
+                    usersData: {
+                        $elemMatch: {
+                            _id: { $ne: userId },
+                            name: usernameRegex
+                        }
+                    }
+                }
+            }] : []),
             { $lookup: {
                 from: 'messages',
-                localField: '_id',
-                foreignField: 'chat',
-                as: 'messages'
+                let: { chatId: '$_id' },
+                pipeline: [
+                    { $match: { $expr: { $eq: ['$chat', '$$chatId'] } } },
+                    { $group: {
+                        _id: null,
+                        totalMessagesCount: { $sum: 1 },
+                        visibleMessagesCount: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $not: {
+                                            $in: [userId, { $ifNull: ['$deletedBy', []] }]
+                                        }
+                                    },
+                                    1,
+                                    0
+                                ]
+                            }
+                        }
+                    } }
+                ],
+                as: 'messageVisibility'
             } },
-            { $unwind: '$messages' },
-            { $match: { 'messages.clearedBy': { $ne: new mongoose.Types.ObjectId(user._id) } } },
-            { $sort: { 'messages.createdAt': -1 } },
-            { $group: { _id: '$_id', lastMessage: { $first: '$messages' }} },
-        ])
-
-        // COUNT UNREAD MESSAGES 
-        const countUnreadMessagesPromise = this.chatModel.aggregate([
-            { $match: { _id: { $in: chats.map(chat => chat._id) } } },
+            { $addFields: {
+                totalMessagesCount: {
+                    $ifNull: [{ $arrayElemAt: ['$messageVisibility.totalMessagesCount', 0] }, 0]
+                },
+                visibleMessagesCount: {
+                    $ifNull: [{ $arrayElemAt: ['$messageVisibility.visibleMessagesCount', 0] }, 0]
+                }
+            } },
+            { $match: {
+                $or: [
+                    { totalMessagesCount: 0 },
+                    { visibleMessagesCount: { $gt: 0 } }
+                ]
+            } },
             { $lookup: {
                 from: 'messages',
-                localField: '_id',
-                foreignField: 'chat',
-                as: 'messages'
+                let: { chatId: '$_id' },
+                pipeline: [
+                    { $match: {
+                        $expr: {
+                            $and: [
+                                { $eq: ['$chat', '$$chatId'] },
+                                { $not: { $in: [userId, { $ifNull: ['$clearedBy', []] }] } },
+                                { $not: { $in: [userId, { $ifNull: ['$deletedBy', []] }] } }
+                            ]
+                        }
+                    } },
+                    { $sort: { createdAt: -1 } },
+                    { $limit: 1 }
+                ],
+                as: 'lastMessageData'
             } },
-            { $unwind: '$messages' },
-            { $match: { $and: [ 
-                { 'messages.clearedBy': { $ne: new mongoose.Types.ObjectId(user._id) } },
-                { $or: [
-                    { 'messages.status': Status.RECEIVED },
-                    { 'messages.status': Status.SENT }
-                ] },
-                { 'messages.to': new mongoose.Types.ObjectId(user._id) }
-            ] } },
-            { $group: { _id: '$_id', count: { $sum: 1 } } }
+            { $lookup: {
+                from: 'messages',
+                let: { chatId: '$_id' },
+                pipeline: [
+                    { $match: {
+                        $expr: {
+                            $and: [
+                                { $eq: ['$chat', '$$chatId'] },
+                                { $not: { $in: [userId, { $ifNull: ['$clearedBy', []] }] } },
+                                { $not: { $in: [userId, { $ifNull: ['$deletedBy', []] }] } },
+                                { $in: ['$status', [Status.RECEIVED, Status.SENT]] },
+                                { $eq: ['$to', userId] }
+                            ]
+                        }
+                    } },
+                    { $count: 'count' }
+                ],
+                as: 'unreadMessagesData'
+            } },
+            { $addFields: {
+                users: {
+                    $map: {
+                        input: '$users',
+                        as: 'userIdInChat',
+                        in: {
+                            $first: {
+                                $filter: {
+                                    input: '$usersData',
+                                    as: 'userDoc',
+                                    cond: { $eq: ['$$userDoc._id', '$$userIdInChat'] }
+                                }
+                            }
+                        }
+                    }
+                },
+                lastMessage: { $arrayElemAt: ['$lastMessageData', 0] },
+                countUnreadMessages: {
+                    $ifNull: [{ $arrayElemAt: ['$unreadMessagesData.count', 0] }, 0]
+                }
+            } },
+            { $project: {
+                usersData: 0,
+                messageVisibility: 0,
+                totalMessagesCount: 0,
+                visibleMessagesCount: 0,
+                lastMessageData: 0,
+                unreadMessagesData: 0
+            } },
+            { $sort: { 'lastMessage.createdAt': -1, updatedAt: -1 } }
         ])
+    }
 
-        const [lastMessagesChat, countUnreadMessages] = await Promise.all([lastMessagesChatPromise, countUnreadMessagesPromise])
-
-        // MERGE CHAT DATA WITH USERS DATA
-        return chats.map(chat => {
-            const lastMessage = lastMessagesChat.find(lastMsg => lastMsg._id.toString() === chat._id.toString())
-            const unreadMessages = countUnreadMessages.find(item => item._id.toString() === chat._id.toString())
-            return {
-                ...JSON.parse(JSON.stringify(chat)),
-                ...lastMessage,
-                countUnreadMessages: unreadMessages?.count || 0
-            }
-        }).sort((a, b) => {
-            if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
-                return -1
-            }
-            if (a.lastMessage?.createdAt < b.lastMessage?.createdAt) {
-                return 1
-            }
-            return 0
-        })
+    private escapeRegex(value: string): string {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     }
 
     async findByUserSimple(user: User): Promise<Chat[]> {

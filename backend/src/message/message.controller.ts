@@ -51,4 +51,13 @@ export class MessageController {
     ): Promise<void> {
         await this.messageService.clearMessages(user, chatId)
     }
+
+    @Auth()
+    @Delete('/:chat_id')
+    async deleteMessages(
+        @AuthUser() user: User,
+        @Param('chat_id') chatId: string
+    ): Promise<void> {
+        await this.messageService.deleteMessages(user, chatId)
+    }
 }

@@ -56,6 +56,15 @@ export class Message {
     })
     clearedBy?: User[]
 
+    @Prop({
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: User.name,
+            autopopulate: true
+        }],
+    })
+    deletedBy?: User[]
+
     createdAt: Date
     updatedAt: Date
 }

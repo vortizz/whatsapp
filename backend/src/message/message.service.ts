@@ -54,7 +54,8 @@ export class MessageService {
     async findByChat(user: User, chat: string): Promise<Message[]> {
         return await this.messageModel.find({
             chat,
-            clearedBy: { $ne: user._id }
+            clearedBy: { $ne: user._id },
+            deletedBy: { $ne: user._id },
         }).sort({ createdAt: 1 })
     }
 
@@ -81,7 +82,9 @@ export class MessageService {
             { $match: {
                 to: new mongoose.Types.ObjectId(user._id),
                 chat: new mongoose.Types.ObjectId(chat),
-                status: Status.RECEIVED
+                status: Status.RECEIVED,
+                clearedBy: { $ne: new mongoose.Types.ObjectId(user._id) },
+                deletedBy: { $ne: new mongoose.Types.ObjectId(user._id) },
             } },
             { $group: {
                 _id: { chat: '$chat', from: '$from' },
@@ -91,7 +94,13 @@ export class MessageService {
         ])
 
         await this.messageModel.updateMany(
-            { to: user._id, chat, status: Status.RECEIVED },
+            { 
+                to: user._id, 
+                chat, 
+                status: Status.RECEIVED,
+                clearedBy: { $ne: user._id },
+                deletedBy: { $ne: user._id },
+            },
             { $set: { status: Status.READ } }
         )
 
@@ -102,6 +111,13 @@ export class MessageService {
         await this.messageModel.updateMany(
             { chat, $or: [ { from: user._id}, { to: user._id } ] },
             { $addToSet: { clearedBy: user } }
+        )
+    }
+
+    async deleteMessages(user: User, chat: string) {
+        await this.messageModel.updateMany(
+            { chat, $or: [ { from: user._id }, { to: user._id } ] },
+            { $addToSet: { deletedBy: user } }
         )
     }
 }
