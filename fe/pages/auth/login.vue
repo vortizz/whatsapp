@@ -149,7 +149,8 @@ export default {
           name: data.name,
           email: data.email,
           about: data.about,
-          token: data.token
+          token: data.token,
+          blockedUsers: data.blockedUsers || []
         })
         this.connectWs({ token: data.token })
         this.$router.push('/')

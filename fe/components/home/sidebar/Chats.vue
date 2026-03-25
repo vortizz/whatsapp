@@ -37,6 +37,10 @@ const { _id: chatId } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
 const { setChat: setChatAction } = chatStore
 
+function getUserId(user) {
+    return user?._id || user
+}
+
 function emptyLastMessage() {
     return {
         _id: '',
@@ -74,7 +78,7 @@ async function getChats() {
                 text: chat.lastMessage.text,
                 createdAt: chat.lastMessage.createdAt,
                 status: chat.lastMessage.status,
-                isMine: chat.lastMessage.from === userId.value
+                isMine: getUserId(chat.lastMessage.from) === userId.value
             } : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
         }))
@@ -140,6 +144,8 @@ function readMessage(message) {
 }
 
 function newChat(message) {
+    const isMine = getUserId(message.from) === userId.value
+
     const chat = {
         _id: message.chat._id,
         user: message.chat.users.find(user => user._id !== userId.value),
@@ -148,9 +154,9 @@ function newChat(message) {
             text: message.text,
             createdAt: message.createdAt,
             status: message.status,
-            isMine: message.from === userId.value
+            isMine
         },
-        countUnreadMessages: message.from === userId.value ? 0 : 1
+        countUnreadMessages: isMine ? 0 : 1
     }
     chats.value.push(chat)
     sortChats()

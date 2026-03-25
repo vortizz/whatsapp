@@ -9,15 +9,22 @@
             <HomeMainMessages />
         </main>
         <footer class="sticky bottom-0">
-            <HomeMainTyping />
+            <HomeMainTyping v-if="!isBlockedUser" />
+            <HomeMainBlockedActions v-else />
         </footer>
     </main>
 </template>
 
-<script>
-export default {
+<script setup>
+import { storeToRefs } from 'pinia'
+import { useChatStore } from '../../../store/chat'
+import { useUserStore } from '../../../store/user'
 
-}
+const chatStore = useChatStore()
+const userStore = useUserStore()
+
+const { user: chatUser } = storeToRefs(chatStore)
+const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
 </script>
 
 <style>

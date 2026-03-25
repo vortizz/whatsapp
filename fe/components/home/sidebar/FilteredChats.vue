@@ -65,6 +65,10 @@ const { _id: chatId } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
 const { setChat: setChatAction } = chatStore
 
+function getUserId(user) {
+    return user?._id || user
+}
+
 const filteredChats = computed(() => {
     if (props.unreadChats) {
         return chats.value.filter(chat => chat.countUnreadMessages || chat._id === chatId.value)
@@ -124,7 +128,7 @@ async function getChats() {
                 text: chat.lastMessage.text,
                 createdAt: chat.lastMessage.createdAt,
                 status: chat.lastMessage.status,
-                isMine: chat.lastMessage.from === userId.value
+                isMine: getUserId(chat.lastMessage.from) === userId.value
             } : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
         }))

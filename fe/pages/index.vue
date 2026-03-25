@@ -36,6 +36,8 @@
                 @close="isDisplayingContactInfo = false"
             />
             <HomeClearChatModal />
+            <HomeBlockUserModal />
+            <HomeUnblockUserModal />
             <HomeDeleteChatModal />
         </template>
     </div>
