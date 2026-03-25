@@ -74,13 +74,17 @@ export class WsClientManager {
     sendMessageToClient(message: Message): void {
         const connectedClient = this.connectedClients.get(message.to._id.toString())
         const ownConnectedClient = this.connectedClients.get(message.from._id.toString())
+        const recipientCanReceiveMessage = !message.deletedBy?.some(user => {
+            const deletedByUserId = user?._id?.toString() || user?.toString()
+            return deletedByUserId === message.to._id.toString()
+        })
     
         const data = { name: 'new-message', data: message }
         if (ownConnectedClient) {
             ownConnectedClient.send(JSON.stringify(data))
         }
 
-        if (connectedClient) {
+        if (connectedClient && recipientCanReceiveMessage) {
             connectedClient.send(JSON.stringify(data))
         }
     }

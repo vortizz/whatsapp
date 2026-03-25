@@ -98,6 +98,73 @@ export class UserService {
         )
     }
 
+    async blockUser(blockedByUserId: string, blockedUserId: string): Promise<User> {
+        if (blockedByUserId === blockedUserId) {
+            throw new BadRequestException('User cannot block themselves')
+        }
+
+        const [blockedByUser, blockedUser] = await Promise.all([
+            this.findById(blockedByUserId),
+            this.findById(blockedUserId)
+        ])
+
+        if (!blockedByUser) {
+            throw new NotFoundException('User not found')
+        }
+
+        if (!blockedUser) {
+            throw new NotFoundException('User to block not found')
+        }
+
+        const isAlreadyBlocked = blockedByUser.blockedUsers?.some(
+            userId => userId.toString() === blockedUserId
+        )
+
+        if (isAlreadyBlocked) {
+            throw new BadRequestException('User already blocked')
+        }
+
+        return await this.userModel.findByIdAndUpdate(
+            blockedByUserId,
+            { $addToSet: { blockedUsers: blockedUser._id } },
+            { new: true }
+        )
+    }
+
+    async unblockUser(blockedByUserId: string, blockedUserId: string): Promise<User> {
+        if (blockedByUserId === blockedUserId) {
+            throw new BadRequestException('User cannot unblock themselves')
+        }
+
+        const [blockedByUser, blockedUser] = await Promise.all([
+            this.findById(blockedByUserId),
+            this.findById(blockedUserId)
+        ])
+
+        if (!blockedByUser) {
+            throw new NotFoundException('User not found')
+        }
+
+        if (!blockedUser) {
+            throw new NotFoundException('User to unblock not found')
+        }
+
+        const isBlocked = blockedByUser.blockedUsers?.some(userId => {
+            const currentBlockedUserId = userId?._id?.toString() || userId?.toString()
+            return currentBlockedUserId === blockedUserId
+        })
+
+        if (!isBlocked) {
+            throw new BadRequestException('User is not blocked')
+        }
+
+        return await this.userModel.findByIdAndUpdate(
+            blockedByUserId,
+            { $pull: { blockedUsers: blockedUser._id } },
+            { new: true }
+        )
+    }
+
     async userWithNoChat(user: User, username: string): Promise<User[]> {
         const users = await this.userModel.find({ name: { $regex: username, $options: 'i' }, _id: { $ne: user._id } })
 

@@ -2,6 +2,7 @@ import { UserService } from './user.service'
 import { User } from './entities/user.schema'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
+import { BlockUserDto } from './dtos/block-user.dto'
 import { Auth } from 'src/common/decorator/auth.decorator'
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { AuthUser } from 'src/common/decorator/user.decorator'
@@ -55,5 +56,17 @@ export class UserController {
     @Put()
     async updateUser(@Body() updateUserDto: UpdateUserDto): Promise<User> {
         return await this.userService.update(updateUserDto._id, updateUserDto)
+    }
+
+    @Auth()
+    @Post('/block')
+    async blockUser(@AuthUser() user: User, @Body() blockUserDto: BlockUserDto): Promise<User> {
+        return await this.userService.blockUser(user._id, blockUserDto.user_id)
+    }
+
+    @Auth()
+    @Delete('/block/:user_id')
+    async unblockUser(@AuthUser() user: User, @Param('user_id') userId: string): Promise<User> {
+        return await this.userService.unblockUser(user._id, userId)
     }
 }

@@ -46,6 +46,16 @@ export class User {
     })
     isConnected: Boolean
 
+    @Prop({
+        type: [{ 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: User.name,
+            autopopulate: true
+        }],
+        default: []
+    })
+    blockedUsers: User[]
+
     createdAt: Date
     updatedAt: Date
 }

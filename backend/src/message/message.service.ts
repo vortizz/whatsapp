@@ -39,10 +39,18 @@ export class MessageService {
             throw new BadRequestException('Recipient must be different from the receiver')
         }
 
+        const recipientBlockedSender = to.blockedUsers?.some(blockedUser => {
+            const blockedUserId = blockedUser?._id?.toString() || blockedUser?.toString()
+            return blockedUserId === user._id.toString()
+        })
+
         const newMessage = new this.messageModel({
             ...createMessageDto,
             from: user,
-            status: this.wsClientManager.isClientConnected(createMessageDto.to) ? Status.RECEIVED : Status.SENT
+            status: !recipientBlockedSender && this.wsClientManager.isClientConnected(createMessageDto.to)
+                ? Status.RECEIVED
+                : Status.SENT,
+            ...(recipientBlockedSender ? { deletedBy: [to] } : {})
         })
         const messageCreated = <Message>await newMessage.save()
 
@@ -61,7 +69,13 @@ export class MessageService {
 
     async updateStatusToReceived(user: User): Promise<void> {
         const messagesToBeUpdated = await this.messageModel.aggregate([
-            { $match: { to: new mongoose.Types.ObjectId(user._id), status: Status.SENT } },
+            {
+                $match: {
+                    to: new mongoose.Types.ObjectId(user._id),
+                    status: Status.SENT,
+                    deletedBy: { $ne: new mongoose.Types.ObjectId(user._id) }
+                }
+            },
             { $group: {
                 _id: { chat: '$chat', from: '$from' },
                 messages: { $push: '$$ROOT' }
@@ -70,7 +84,7 @@ export class MessageService {
         ])
 
         await this.messageModel.updateMany(
-            { to: user._id, status: Status.SENT },
+            { to: user._id, status: Status.SENT, deletedBy: { $ne: user._id } },
             { $set: { status: Status.RECEIVED } }
         )
         
