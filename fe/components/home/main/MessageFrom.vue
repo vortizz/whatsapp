@@ -1,5 +1,6 @@
 <template>
   <div 
+    data-message-bubble
     class="p-2.5 bg-white dark:bg-neutral-800 w-fit relative shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] max-w-80"
     :class="isFirst ? 'rounded-r-md rounded-bl-md' : 'rounded-md'"
   >

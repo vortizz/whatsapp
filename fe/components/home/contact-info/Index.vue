@@ -1,7 +1,7 @@
 <template>
     <aside class="flex-1 min-w-80 bg-white dark:bg-neutral-900 flex flex-col">
         <header>
-            <HomeContactInfoHeader @close="$emit('close')" />
+            <HomeContactInfoHeader @close="emit('close')" />
         </header>
         <main class="flex flex-col gap-3 overflow-y-auto">
             <HomeContactInfoProfile />
@@ -11,10 +11,9 @@
     </aside>
 </template>
 
-<script>
-export default {
+<script setup>
+const emit = defineEmits(['close'])
 
-}
 </script>
 
 <style>

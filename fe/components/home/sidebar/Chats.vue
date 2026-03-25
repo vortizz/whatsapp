@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div ref="containerEl" class="relative flex flex-col gap-1" @click="closeMenu">
         <HomeSidebarChat
             v-for="(chat, i) in chats"
             :key="i"
@@ -9,6 +9,14 @@
             :lastMessage="chat.lastMessage"
             :countUnreadMessages="chat.countUnreadMessages"
             @click="setChat(chat)"
+            @openMenu="openMenu(chat, $event)"
+        />
+        <HomeMainMenu
+            :is-menu-button="isMenuOpen"
+            :x="menuPosition.x"
+            :y="menuPosition.y"
+            @showContactInfo="emit('showContactInfo')"
+            @close="closeMenu"
         />
         <div class="text-center text-xs p-3">
             <Icon name="oi:lock-locked" />
@@ -24,7 +32,12 @@ import { useChatStore } from '../../../store/chat'
 import { useWsStore } from '../../../store/websocket'
 import { StatusMessage } from '../../../utils/status-message'
 
+const emit = defineEmits(['showContactInfo'])
+
 const chats = ref([])
+const containerEl = ref(null)
+const isMenuOpen = ref(false)
+const menuPosition = ref({ x: 0, y: 0 })
 const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
 const { deletingChatId, deletedChatState } = useDeleteChatState()
 
@@ -96,6 +109,46 @@ function setChat(chat) {
         _id: clonedChat._id,
         user: clonedChat.user
     })
+}
+
+function closeMenu() {
+    isMenuOpen.value = false
+}
+
+function openMenu(chat, position) {
+    setChat(chat)
+
+    const container = containerEl.value
+    const scrollParent = container?.parentElement
+    if (!(container && scrollParent)) {
+        return
+    }
+
+    const rect = container.getBoundingClientRect()
+    const menuWidth = 224
+    const horizontalPadding = 16
+    const verticalPadding = 16
+    const x = position.clientX - rect.left
+    const y = position.clientY - rect.top + scrollParent.scrollTop
+    const maxX = container.clientWidth - menuWidth - horizontalPadding
+
+    menuPosition.value = {
+        x: Math.max(horizontalPadding, Math.min(x, maxX)),
+        y: Math.max(verticalPadding, y)
+    }
+    isMenuOpen.value = true
+}
+
+function handleWindowPointerDown(event) {
+    if (!isMenuOpen.value) {
+        return
+    }
+
+    if (containerEl.value?.contains(event.target)) {
+        return
+    }
+
+    closeMenu()
 }
 
 function newMessage(message) {
@@ -214,10 +267,12 @@ onMounted(async () => {
 
     conn.value?.removeEventListener('message', handleEvent)
     conn.value?.addEventListener('message', handleEvent)
+    window.addEventListener('pointerdown', handleWindowPointerDown)
 })
 
 onBeforeUnmount(() => {
     conn.value?.removeEventListener('message', handleEvent)
+    window.removeEventListener('pointerdown', handleWindowPointerDown)
 })
 </script>
 

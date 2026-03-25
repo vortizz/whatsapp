@@ -2,6 +2,7 @@
   <div
     class="flex flex-row px-3.5 pt-3.5 gap-3.5 group cursor-pointer rounded-xl hover:bg-gray-100 dark:hover:bg-stone-400/15" 
     :class="active ? 'bg-gray-100 dark:bg-stone-400/15' : ''"
+    @contextmenu.prevent="openMenuAtPointer"
 >
     <div>
         <AvatarPlaceholder :size="48" />
@@ -43,7 +44,11 @@
                         <div v-if="countUnreadMessages && !lastMessage?.isMine" class="px-1.5 py-1 rounded-full bg-emerald-500 text-white dark:text-neutral-950 text-xs leading-none font-semibold flex items-center justify-center">
                             <div>{{ countUnreadMessages }}</div>
                         </div>
-                        <button class="text-2xl leading-5 h-5 text-gray-400 dark:text-white/60 transition ease-in-out duration-300 hidden group-hover:block">
+                        <button
+                            type="button"
+                            class="text-2xl leading-5 h-5 text-gray-400 dark:text-white/60 transition ease-in-out duration-300 hidden group-hover:block"
+                            @click.stop="openMenu"
+                        >
                             <Icon name="icon-park-outline:down" />
                         </button>
                     </div>
@@ -55,7 +60,24 @@
 </template>
 
 <script setup>
+const emit = defineEmits(['openMenu'])
 const props = defineProps(['name', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing'])
+
+function openMenu(event) {
+    const rect = event.currentTarget.getBoundingClientRect()
+
+    emit('openMenu', {
+        clientX: rect.right,
+        clientY: rect.bottom
+    })
+}
+
+function openMenuAtPointer(event) {
+    emit('openMenu', {
+        clientX: event.clientX,
+        clientY: event.clientY
+    })
+}
 
 const isToday = computed(() => {
     const createdAt = props.lastMessage?.createdAt

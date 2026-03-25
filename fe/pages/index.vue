@@ -19,6 +19,7 @@
             <HomeSidebar 
                 v-else
                 @opennewchat="isDisplayingNewChat = true"
+                @showContactInfo="isDisplayingContactInfo = true"
             />
         
             <!--****************-->

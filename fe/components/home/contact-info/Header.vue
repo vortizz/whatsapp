@@ -3,7 +3,7 @@
         <div>
             <button 
                 class='text-2xl leading-6 p-2 rounded-full hover:bg-stone-100 text-neutral-950 dark:text-white flex items-center dark:hover:bg-white/5 transition-colors'
-                @click="$emit('close')"
+                @click="emit('close')"
             >
                 <Icon name="material-symbols:close" />
             </button>
@@ -14,7 +14,8 @@
     </div>
 </template>
 
-<script lang="ts" setup>
+<script setup>
+const emit = defineEmits(['close'])
 
 </script>
 
