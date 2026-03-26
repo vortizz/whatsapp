@@ -1,26 +1,27 @@
 <template>
     <div class="px-7 pt-3.5 pb-2.5 flex flex-col gap-5">
         <label class="text-sm text-black/60 dark:text-white/60 font-semibold">
-            Name
+            About
         </label>
         <div
             v-if="!isEditing"
             class="flex flex-row justify-between items-center"
         >
             <span class="text-neutral-950 dark:text-white">
-                {{ name }}
+                {{ about }}
             </span>
-            <button class="text-2xl text-black/60 dark:text-white/60" @click="startEditing">
+            <button 
+                class="text-2xl text-neutral-950 dark:text-white/60 dark:hover:bg-neutral-800 rounded-full p-2 flex items-center hover:bg-stone-100 transition-colors" 
+                @click="startEditing"
+            >
                 <Icon name="material-symbols:edit-outline" />
             </button>
         </div>
         <div v-else class="relative">
             <form @submit.prevent="submit">
                 <input
-                    ref="rname"
                     type="text"
                     v-model="text"
-                    maxlength="25"
                     class="w-full py-1.5 pr-14 border-b-2 border-gray-700 dark:border-gray-500 focus:outline-none focus:border-emerald-500 bg-transparent dark:text-white"
                 >
                 <div v-if="!loading" class="text-2xl text-gray-400 absolute right-0 inset-y-0 flex flex-row gap-0.5">
@@ -55,15 +56,15 @@ export default {
         }
     },
     computed: {
-        ...mapState(useUserStore, ['_id', 'name']),
+        ...mapState(useUserStore, ['_id', 'about']),
         disabledSubmit() {
             return this.isEditing && this.text === ''   
         }
     },
     methods: {
-        ...mapActions(useUserStore, ['setName']),
+        ...mapActions(useUserStore, ['setAbout']),
         startEditing() {
-            this.text = this.name.slice()
+            this.text = this.about.slice()
             this.isEditing = true
         },
         stopEditing() {
@@ -73,12 +74,12 @@ export default {
         async submit() {
             try {
                 this.loading = true
-                const name = this.text.slice()
+                const about = this.text.slice()
                 await useMyAuthFetch('user', {
                     method: 'PUT',
-                    body: { _id: this._id, name },
+                    body: { _id: this._id, about },
                 })
-                this.setName(name)
+                this.setAbout(about)
                 this.stopEditing()
             } catch (error) {
                 const data = error?.data || {}

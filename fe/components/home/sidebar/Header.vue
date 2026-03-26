@@ -39,26 +39,28 @@
     </div>
 </template>
 
-<script>
-import { mapActions } from 'pinia'
+<script setup>
 import { useUserStore } from '../../../store/user'
+import { usePageStore } from '../../../store/page'
 import { useWsStore } from '../../../store/websocket'
 
-export default {
-    data() {
-        return {
-            isMenuButton: false
-        }
-    },
-    methods: {
-        ...mapActions(useUserStore, ['logout']),
-        ...mapActions(useWsStore, ['disconnectWs']),
-        signout() {
-            this.logout()
-            this.disconnectWs()
-            this.$router.push('/auth/login')
-        }
-    }
+defineEmits(['opennewchat'])
+
+const router = useRouter()
+const userStore = useUserStore()
+const wsStore = useWsStore()
+const pageStore = usePageStore()
+
+const isMenuButton = ref(false)
+
+const { logout } = userStore
+const { disconnectWs } = wsStore
+const { resetPage } = pageStore
+
+function signout() {
+    logout()
+    disconnectWs()
+    router.push('/auth/login').then(() => resetPage())
 }
 </script>
 

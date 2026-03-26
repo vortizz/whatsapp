@@ -16,14 +16,6 @@
             </div>
             <div>
                 <button
-                    type="button"
-                    @click="pageStore.setPage(Pages.SETTINGS)"
-                    class="flex items-center p-2 rounded-full transition-colors"
-                    :class="currentPage === Pages.SETTINGS ? activeButtonClass : inactiveButtonClass"
-                >
-                    <Icon name="material-symbols:settings-outline-rounded" class="text-2xl" />
-                </button>
-                <button
                     @click="pageStore.setPage(Pages.PROFILE)"
                     class="p-2 rounded-full transition-colors"
                     :class="currentPage === Pages.PROFILE ? activeButtonClass : inactiveButtonClass"
@@ -45,8 +37,12 @@ import { Pages, usePageStore } from '~/store/page'
 
 const pageStore = usePageStore()
 const { currentPage } = storeToRefs(pageStore)
+const { resetPage } = pageStore
 
 const activeButtonClass = 'bg-black/10 text-black dark:bg-white/10 dark:text-white'
 const inactiveButtonClass = 'text-black/60 hover:bg-black/5 dark:text-white/60 dark:hover:bg-white/5'
 
+onMounted(() => {
+    resetPage()
+})
 </script>

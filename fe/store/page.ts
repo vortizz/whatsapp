@@ -15,7 +15,9 @@ export const usePageStore = defineStore('page', {
     actions: {
         setPage(page: Page) {
             this.currentPage = page
+        },
+        resetPage() {
+            this.currentPage = Pages.CHATS
         }
-    },
-    persist: true
+    }
 })

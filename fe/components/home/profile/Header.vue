@@ -1,13 +1,13 @@
 <template>
     <div class="text-neutral-950 dark:text-white text-xl pl-5 py-3">
-        Profile
+        {{ name }}
     </div>
 </template>
 
-<script lang="ts" setup>
+<script setup>
+import { useUserStore } from '../../../store/user'
 
+const userStore = useUserStore()
+
+const name = computed(() => userStore?.name)
 </script>
-
-<style>
-
-</style>
