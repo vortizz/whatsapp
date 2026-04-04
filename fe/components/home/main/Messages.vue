@@ -9,12 +9,14 @@
             :count="numberOfUnreadMessages(msg._id)"
           />
           <div
+            :data-message-id="msg._id"
             class="flex items-center gap-3 transition-colors"
             :class="[
               isSelecting ? 'px-4 cursor-pointer' : 'px-16',
               isFirst(msg._id) ? 'mt-3' : 'm-0.5',
               isLast(msg._id) ? 'mb-4' : '',
-              isSelecting && selectedIds.includes(msg._id) ? 'bg-emerald-700/5 dark:bg-slate-200/5' : ''
+              isSelecting && selectedIds.includes(msg._id) ? 'bg-emerald-700/5 dark:bg-slate-200/5' : '',
+              highlightedId === msg._id ? 'bg-emerald-500/10 dark:bg-emerald-400/10' : ''
             ]"
             @click="isSelecting ? toggleSelection(msg._id) : null"
           >
@@ -69,6 +71,7 @@ import { StatusMessage } from '../../../utils/status-message'
 const messages = ref([])
 const bottomEl = ref(null)
 const openMenuId = ref(null)
+const highlightedId = ref(null)
 
 const selectionStore = useMessageSelectionStore()
 const { isSelecting, selectedIds } = storeToRefs(selectionStore)
@@ -87,7 +90,16 @@ async function deleteSelected() {
   cancelSelection()
 }
 
-defineExpose({ deleteSelected })
+async function scrollToMessage(id) {
+  await nextTick()
+  const el = document.querySelector(`[data-message-id="${id}"]`)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  highlightedId.value = id
+  setTimeout(() => { highlightedId.value = null }, 2000)
+}
+
+defineExpose({ deleteSelected, scrollToMessage })
 
 function toggleMenu(id) {
   openMenuId.value = openMenuId.value === id ? null : id

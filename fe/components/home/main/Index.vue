@@ -3,6 +3,7 @@
         <header>
             <HomeMainHeader
                 @showContactInfo="emit('showContactInfo')"
+                @showSearchMessages="emit('showSearchMessages')"
             />
         </header>
         <main
@@ -52,7 +53,7 @@ import { useChatStore } from '../../../store/chat'
 import { useUserStore } from '../../../store/user'
 import { useMessageSelectionStore } from '../../../store/messageSelection'
 
-const emit = defineEmits(['showContactInfo'])
+const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
 
 const chatStore = useChatStore()
 const userStore = useUserStore()
@@ -66,6 +67,12 @@ const { openModal: openDeleteMessageModal } = useDeleteMessageModal()
 const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
 const messagesPane = ref(null)
 const messagesRef = ref(null)
+
+function scrollToMessage(id) {
+    messagesRef.value?.scrollToMessage(id)
+}
+
+defineExpose({ scrollToMessage })
 const isContextMenuOpen = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
 

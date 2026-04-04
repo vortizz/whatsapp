@@ -8,7 +8,7 @@
         </div>
         <div class="flex flex-row items-center justify-center gap-2.5">
             <div>
-                <button class='flex items-center text-2xl p-2 rounded-full text-neutral-950 dark:text-white dark:hover:bg-white/5 hover:bg-stone-100 transition-colors'>
+                <button @click="emit('showSearchMessages')" class='flex items-center text-2xl p-2 rounded-full text-neutral-950 dark:text-white dark:hover:bg-white/5 hover:bg-stone-100 transition-colors'>
                     <Icon name="material-symbols:search" />
                 </button>
             </div>
@@ -38,7 +38,7 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 
-const emit = defineEmits(['showContactInfo'])
+const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
 
 const chatStore = useChatStore()
 const { user: chatUser } = storeToRefs(chatStore)

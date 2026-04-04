@@ -28,13 +28,20 @@
                 class="flex-2 bg-white dark:bg-neutral-900 flex flex-col"
             />
             <HomeMain
+                ref="homeMainRef"
                 v-show="chatId"
                 @showContactInfo="isDisplayingContactInfo = true"
+                @showSearchMessages="isDisplayingSearchMessages = true"
             />
             <!--****************-->
             <HomeContactInfo
                 v-if="isDisplayingContactInfo"
                 @close="isDisplayingContactInfo = false"
+            />
+            <HomeSearchMessages
+                v-if="isDisplayingSearchMessages"
+                @close="isDisplayingSearchMessages = false"
+                @goToMessage="goToMessage"
             />
             <HomeClearChatModal />
             <HomeBlockUserModal />
@@ -58,6 +65,13 @@ definePageMeta({
 
 const isDisplayingContactInfo = ref(false)
 const isDisplayingNewChat = ref(false)
+const isDisplayingSearchMessages = ref(false)
+const homeMainRef = ref(null)
+
+function goToMessage(id) {
+    isDisplayingSearchMessages.value = false
+    homeMainRef.value?.scrollToMessage(id)
+}
 
 const chatStore = useChatStore()
 const wsStore = useWsStore()
@@ -91,6 +105,7 @@ onBeforeUnmount(() => {
 watch(chatId, value => {
     if (!value) {
         isDisplayingContactInfo.value = false
+        isDisplayingSearchMessages.value = false
     }
 })
 </script>
