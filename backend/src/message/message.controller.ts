@@ -53,6 +53,15 @@ export class MessageController {
     }
 
     @Auth()
+    @Delete('/bulk')
+    async deleteMultipleMessages(
+        @AuthUser() user: User,
+        @Body() body: { ids: string[] }
+    ): Promise<void> {
+        await this.messageService.deleteMultipleMessages(user, body.ids)
+    }
+
+    @Auth()
     @Delete('/:chat_id')
     async deleteMessages(
         @AuthUser() user: User,
