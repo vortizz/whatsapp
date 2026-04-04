@@ -8,8 +8,8 @@
                     class="flex items-center relative p-2 rounded-full transition-colors"
                     :class="currentPage === Pages.CHATS ? activeButtonClass : inactiveButtonClass"
                 >
-                    <span class="absolute -right-1 -top-2 rounded-full text-xs text-white dark:text-neutral-950 bg-emerald-500 py-0.5 px-1.5 font-semibold z-10 border-2 border-solid border-stone-100 dark:border-neutral-800">
-                        30
+                    <span v-if="unreadChatsCount > 0" class="absolute -right-1 -top-2 rounded-full text-xs text-white dark:text-neutral-950 bg-emerald-500 py-0.5 px-1.5 font-semibold z-10 border-2 border-solid border-stone-100 dark:border-neutral-800">
+                        {{ unreadChatsCount }}
                     </span>
                     <Icon :name="currentPage === Pages.CHATS ? 'material-symbols:chat-rounded' : 'material-symbols:chat-outline-rounded'" class="text-2xl" />
                 </button>
@@ -34,9 +34,12 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { Pages, usePageStore } from '~/store/page'
+import { useChatStore } from '~/store/chat'
 
 const pageStore = usePageStore()
 const { currentPage } = storeToRefs(pageStore)
+const chatStore = useChatStore()
+const { unreadChatsCount } = storeToRefs(chatStore)
 const { resetPage } = pageStore
 
 const activeButtonClass = 'bg-black/10 text-black dark:bg-white/10 dark:text-white'

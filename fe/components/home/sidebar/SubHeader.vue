@@ -45,7 +45,7 @@
           'hover:bg-stone-100 dark:hover:bg-stone-400/15 dark:bg-neutral-900 dark:text-white/60': !unreadChats
         }"
       >
-        Unread
+        Unread {{ unreadMessagesCount }}
       </button>
     </div>
     <!-- <div class="w-11 flex justify-center">
@@ -57,7 +57,15 @@
 </template>
 
 <script>
+import { useChatStore } from '../../../store/chat'
+import { storeToRefs } from 'pinia'
+
 export default {
+  setup() {
+    const chatStore = useChatStore()
+    const { unreadMessagesCount } = storeToRefs(chatStore)
+    return { unreadMessagesCount }
+  },
   data() {
     return {
       isSearching: false,

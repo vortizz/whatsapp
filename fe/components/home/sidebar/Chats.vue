@@ -48,7 +48,7 @@ const wsStore = useWsStore()
 const { _id: userId } = storeToRefs(userStore)
 const { _id: chatId } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
-const { setChat: setChatAction } = chatStore
+const { setChat: setChatAction, setUnreadCounts } = chatStore
 
 function getUserId(user) {
     return user?._id || user
@@ -245,6 +245,10 @@ watchEffect(() => {
     const selectedChat = chats.value.find(chat => chat._id === chatId.value)
     selectedChatHasMessages.value = Boolean(selectedChat?.lastMessage?._id)
 })
+
+watch(chats, (newChats) => {
+    setUnreadCounts(newChats)
+}, { deep: true })
 
 watch(() => clearedChatState.value.nonce, () => {
     if (!clearedChatState.value.chatId) {

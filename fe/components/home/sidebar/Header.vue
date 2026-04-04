@@ -43,7 +43,6 @@
 import { useUserStore } from '../../../store/user'
 import { usePageStore } from '../../../store/page'
 import { useWsStore } from '../../../store/websocket'
-
 defineEmits(['opennewchat'])
 
 const router = useRouter()

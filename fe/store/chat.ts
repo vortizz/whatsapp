@@ -15,7 +15,9 @@ interface IChat {
 export const useChatStore = defineStore('chat', {
     state: () => ({
         _id: '',
-        user: {}
+        user: {},
+        unreadChatsCount: 0,
+        unreadMessagesCount: 0
     }),
     actions: {
         setChat({ _id, user }: IChat) {
@@ -25,6 +27,10 @@ export const useChatStore = defineStore('chat', {
         clearChat() {
             this._id = ''
             this.user = {}
+        },
+        setUnreadCounts(chats: Array<{ countUnreadMessages: number }>) {
+            this.unreadChatsCount = chats.filter(c => c.countUnreadMessages > 0).length
+            this.unreadMessagesCount = chats.reduce((sum, c) => sum + c.countUnreadMessages, 0)
         }
     },
     persist: true
