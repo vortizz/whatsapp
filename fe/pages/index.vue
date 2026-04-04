@@ -40,6 +40,7 @@
             <HomeBlockUserModal />
             <HomeUnblockUserModal />
             <HomeDeleteChatModal />
+            <HomeDeleteMessageModal />
         </template>
     </div>
 </template>

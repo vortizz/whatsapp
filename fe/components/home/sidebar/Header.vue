@@ -21,7 +21,7 @@
                     </button>
                 </div>
                 <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                    <div v-show="isMenuButton" class="absolute left-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 dark:ring-white/10 ring-black ring-opacity-5 focus:outline-none z-10 dark:bg-neutral-900 dark:text-zinc-50">
+                    <div v-show="isMenuButton" class="absolute left-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 dark:ring-white/10 ring-black ring-opacity-5 focus:outline-none z-50 dark:bg-neutral-900 dark:text-zinc-50">
                         <div class="p-1">
                             <button
                                 type="button"

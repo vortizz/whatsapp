@@ -11,7 +11,7 @@
             @contextmenu="openContextMenu"
             @click="closeContextMenu"
         >
-            <HomeMainMessages />
+            <HomeMainMessages ref="messagesRef" />
             <HomeMainMenu
                 :is-menu-button="isContextMenuOpen"
                 :x="menuPosition.x"
@@ -21,8 +21,27 @@
             />
         </main>
         <footer class="sticky bottom-0">
-            <HomeMainTyping v-if="!isBlockedUser" />
-            <HomeMainBlockedActions v-else />
+            <template v-if="isSelecting">
+                <div class="flex items-center justify-between px-5 py-3 bg-white dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-neutral-950 dark:text-zinc-50">
+                    <div class="flex items-center gap-2">
+                        <button @click="cancelSelection" class="p-2 rounded-full text-2xl flex items-center hover:bg-stone-100 dark:hover:bg-white/5">
+                            <Icon name="mdi:close" />
+                        </button>
+                        <span class="text-[15px]">{{ selectedIds.length }} selected</span>
+                    </div>
+                    <button
+                        @click="openDeleteMessageModal(() => messagesRef?.deleteSelected())"
+                        :disabled="selectedIds.length === 0"
+                        class="p-2 rounded-full text-2xl flex items-center enabled:hover:bg-stone-100 dark:enabled:hover:bg-white/5 enabled:text-black dark:enabled:text-white disabled:opacity-40"
+                    >
+                        <Icon name="line-md:trash" />
+                    </button>
+                </div>
+            </template>
+            <template v-else>
+                <HomeMainTyping v-if="!isBlockedUser" />
+                <HomeMainBlockedActions v-else />
+            </template>
         </footer>
     </main>
 </template>
@@ -31,15 +50,22 @@
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 import { useUserStore } from '../../../store/user'
+import { useMessageSelectionStore } from '../../../store/messageSelection'
 
 const emit = defineEmits(['showContactInfo'])
 
 const chatStore = useChatStore()
 const userStore = useUserStore()
+const selectionStore = useMessageSelectionStore()
 
 const { user: chatUser } = storeToRefs(chatStore)
+const { isSelecting, selectedIds } = storeToRefs(selectionStore)
+const { cancelSelection } = selectionStore
+const { openModal: openDeleteMessageModal } = useDeleteMessageModal()
+
 const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
 const messagesPane = ref(null)
+const messagesRef = ref(null)
 const isContextMenuOpen = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
 
