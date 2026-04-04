@@ -1,5 +1,5 @@
 <template>
-    <main class="flex-2 bg-[#efeae2] dark:bg-neutral-900/90 flex flex-col">
+    <main class="flex-2 bg-[#efeae2] dark:bg-neutral-900/90 flex flex-col relative">
         <header>
             <HomeMainHeader
                 @showContactInfo="emit('showContactInfo')"
@@ -21,6 +21,15 @@
                 @close="closeContextMenu"
             />
         </main>
+        <Transition name="scroll-btn">
+            <button
+                v-if="isScrolledUp"
+                @click="scrollToBottom"
+                class="absolute bottom-20 right-4 z-10 p-2 rounded-full bg-white dark:bg-neutral-700 shadow-md flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors"
+            >
+                <Icon name="mdi:chevron-down" class="text-3xl" />
+            </button>
+        </Transition>
         <footer class="sticky bottom-0">
             <template v-if="isSelecting">
                 <div class="flex items-center justify-between px-5 py-3 bg-white dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-neutral-950 dark:text-zinc-50">
@@ -67,6 +76,17 @@ const { openModal: openDeleteMessageModal } = useDeleteMessageModal()
 const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
 const messagesPane = ref(null)
 const messagesRef = ref(null)
+const isScrolledUp = ref(false)
+
+function onScroll() {
+    const el = messagesPane.value
+    if (!el) return
+    isScrolledUp.value = el.scrollHeight - el.scrollTop - el.clientHeight > 100
+}
+
+function scrollToBottom() {
+    messagesPane.value?.scrollTo({ top: messagesPane.value.scrollHeight, behavior: 'smooth' })
+}
 
 function scrollToMessage(id) {
     messagesRef.value?.scrollToMessage(id)
@@ -122,13 +142,23 @@ function handleWindowPointerDown(event) {
 
 onMounted(() => {
     window.addEventListener('pointerdown', handleWindowPointerDown)
+    messagesPane.value?.addEventListener('scroll', onScroll)
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('pointerdown', handleWindowPointerDown)
+    messagesPane.value?.removeEventListener('scroll', onScroll)
 })
 </script>
 
 <style>
-
+.scroll-btn-enter-active,
+.scroll-btn-leave-active {
+    transition: opacity 0.2s, transform 0.2s;
+}
+.scroll-btn-enter-from,
+.scroll-btn-leave-to {
+    opacity: 0;
+    transform: translateY(8px);
+}
 </style>
