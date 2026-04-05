@@ -2,10 +2,18 @@ import { defineStore } from 'pinia'
 
 export const useMessageSelectionStore = defineStore('messageSelection', () => {
     const isSelecting = ref(false)
+    const mode = ref<'delete' | 'forward'>('delete')
     const selectedIds = ref<string[]>([])
 
     function enterSelectionMode(id: string) {
         isSelecting.value = true
+        mode.value = 'delete'
+        selectedIds.value = [id]
+    }
+
+    function enterForwardMode(id: string) {
+        isSelecting.value = true
+        mode.value = 'forward'
         selectedIds.value = [id]
     }
 
@@ -18,7 +26,8 @@ export const useMessageSelectionStore = defineStore('messageSelection', () => {
     function cancelSelection() {
         isSelecting.value = false
         selectedIds.value = []
+        mode.value = 'delete'
     }
 
-    return { isSelecting, selectedIds, enterSelectionMode, toggleSelection, cancelSelection }
+    return { isSelecting, mode, selectedIds, enterSelectionMode, enterForwardMode, toggleSelection, cancelSelection }
 })

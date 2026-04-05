@@ -8,6 +8,10 @@
     <span v-if="isFirst" class="block absolute left-[-8px] top-0 h-[13px] w-2 text-white dark:text-neutral-800">
       <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 8 13"><title>tail-in</title><path opacity="0.13" fill="#0000000" d="M1.533,3.568L8,12.193V1H2.812 C1.042,1,0.474,2.156,1.533,3.568z"></path><path fill="currentColor" d="M1.533,2.568L8,11.193V0L2.812,0C1.042,0,0.474,1.156,1.533,2.568z"></path></svg>
     </span>
+    <div v-if="forwarded" class="flex items-center gap-1 text-[11px] text-black/40 dark:text-white/40 italic mb-1">
+      <Icon name="mdi:share" class="text-sm" />
+      Forwarded
+    </div>
     <div
       v-if="replyTo"
       class="mb-1.5 rounded-md overflow-hidden border-l-4 bg-black/5 dark:bg-white/5 px-2 py-1 cursor-pointer"
@@ -33,14 +37,15 @@
       buttonClass="bg-white/95 text-gray-500 dark:bg-neutral-800/95 dark:text-white/60"
       @toggle-menu="$emit('toggle-menu')"
       @enter-select="$emit('enter-select', $event)"
+      @enter-forward="$emit('enter-forward', $event)"
       @reply="$emit('reply')"
     />
   </div>
 </template>
 
 <script setup>
-const props = defineProps(['_id', 'text', 'date', 'isFirst', 'isMenuOpen', 'isSelecting', 'replyTo'])
-defineEmits(['toggle-menu', 'delete', 'enter-select', 'reply', 'scroll-to'])
+const props = defineProps(['_id', 'text', 'date', 'isFirst', 'isMenuOpen', 'isSelecting', 'replyTo', 'forwarded'])
+defineEmits(['toggle-menu', 'delete', 'enter-select', 'enter-forward', 'reply', 'scroll-to'])
 
 const menuRef = ref(null)
 

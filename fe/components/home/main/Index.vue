@@ -12,6 +12,7 @@
             @contextmenu="openContextMenu"
             @click="closeContextMenu"
         >
+            <HomeForwardMessageModal />
             <HomeMainMessages ref="messagesRef" />
             <HomeMainMenu
                 :is-menu-button="isContextMenuOpen"
@@ -41,6 +42,15 @@
                         <span class="text-[15px]">{{ selectedIds.length }} selected</span>
                     </div>
                     <button
+                        v-if="selectionMode === 'forward'"
+                        @click="handleForward"
+                        :disabled="selectedIds.length === 0"
+                        class="p-2 rounded-full text-2xl flex items-center enabled:hover:bg-stone-100 dark:enabled:hover:bg-white/5 enabled:text-black dark:enabled:text-white disabled:opacity-40"
+                    >
+                        <Icon name="mdi:share" />
+                    </button>
+                    <button
+                        v-else
                         @click="openDeleteMessageModal(() => messagesRef?.deleteSelected())"
                         :disabled="selectedIds.length === 0"
                         class="p-2 rounded-full text-2xl flex items-center enabled:hover:bg-stone-100 dark:enabled:hover:bg-white/5 enabled:text-black dark:enabled:text-white disabled:opacity-40"
@@ -72,8 +82,16 @@ const selectionStore = useMessageSelectionStore()
 const replyStore = useMessageReplyStore()
 
 const { user: chatUser } = storeToRefs(chatStore)
-const { isSelecting, selectedIds } = storeToRefs(selectionStore)
+const { isSelecting, selectedIds, mode: selectionMode } = storeToRefs(selectionStore)
 const { cancelSelection } = selectionStore
+
+const { openModal: openForwardModal } = useForwardMessageModal()
+
+function handleForward() {
+    const msgs = messagesRef.value?.getSelectedMessages() ?? []
+    openForwardModal(msgs)
+    cancelSelection()
+}
 const { replyTo } = storeToRefs(replyStore)
 
 watch(replyTo, async (val) => {

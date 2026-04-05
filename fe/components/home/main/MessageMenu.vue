@@ -23,6 +23,10 @@
           <Icon class="text-base" name="mdi:content-copy" />
           Copy
         </button>
+        <button @click.stop="enterForward" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
+          <Icon class="text-base" name="mdi:share" />
+          Forward
+        </button>
         <button @click.stop="enterSelect" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-rose-600/10 dark:hover:bg-rose-500/10 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
           <Icon class="text-base" name="line-md:trash" />
           Delete
@@ -34,7 +38,7 @@
 
 <script setup>
 const props = defineProps(['_id', 'text', 'isMenuOpen', 'buttonClass'])
-const emit = defineEmits(['toggle-menu', 'enter-select', 'reply'])
+const emit = defineEmits(['toggle-menu', 'enter-select', 'enter-forward', 'reply'])
 
 const btnRef = ref(null)
 const menuPos = ref({ vertical: 'bottom', horizontal: 'right' })
@@ -81,6 +85,11 @@ function copyText() {
 
 function enterSelect() {
   emit('enter-select', props._id)
+  emit('toggle-menu')
+}
+
+function enterForward() {
+  emit('enter-forward', props._id)
   emit('toggle-menu')
 }
 

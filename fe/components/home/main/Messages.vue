@@ -36,9 +36,11 @@
               :isMenuOpen="openMenuId === msg._id"
               :isSelecting="isSelecting"
               :replyTo="msg.replyTo"
+              :forwarded="msg.forwarded"
               @toggle-menu="toggleMenu(msg._id)"
               @delete="deleteMessage"
               @enter-select="enterSelectionMode(msg._id)"
+              @enter-forward="enterForwardMode(msg._id)"
               @reply="handleReply(msg)"
               @scroll-to="scrollToMessage"
             />
@@ -52,9 +54,11 @@
               :isMenuOpen="openMenuId === msg._id"
               :isSelecting="isSelecting"
               :replyTo="msg.replyTo"
+              :forwarded="msg.forwarded"
               @toggle-menu="toggleMenu(msg._id)"
               @delete="deleteMessage"
               @enter-select="enterSelectionMode(msg._id)"
+              @enter-forward="enterForwardMode(msg._id)"
               @reply="handleReply(msg)"
               @scroll-to="scrollToMessage"
             />
@@ -82,7 +86,7 @@ const highlightedId = ref(null)
 
 const selectionStore = useMessageSelectionStore()
 const { isSelecting, selectedIds } = storeToRefs(selectionStore)
-const { enterSelectionMode, toggleSelection, cancelSelection } = selectionStore
+const { enterSelectionMode, enterForwardMode, toggleSelection, cancelSelection } = selectionStore
 
 const replyStore = useMessageReplyStore()
 const { setReply } = replyStore
@@ -113,7 +117,11 @@ async function scrollToMessage(id) {
   setTimeout(() => { highlightedId.value = null }, 2000)
 }
 
-defineExpose({ deleteSelected, scrollToMessage })
+function getSelectedMessages() {
+  return messages.value.filter(m => selectedIds.value.includes(m._id)).map(m => ({ _id: m._id, text: m.text }))
+}
+
+defineExpose({ deleteSelected, scrollToMessage, getSelectedMessages })
 
 function toggleMenu(id) {
   openMenuId.value = openMenuId.value === id ? null : id
