@@ -25,12 +25,13 @@
             <button
                 v-if="isScrolledUp"
                 @click="scrollToBottom"
-                class="absolute bottom-20 right-4 z-10 p-2 rounded-full bg-white dark:bg-neutral-700 shadow-md flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors"
+                :style="{ bottom: (footerHeight + 16) + 'px' }"
+                class="absolute right-4 z-10 p-2 rounded-full bg-white dark:bg-neutral-700 shadow-md flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors"
             >
                 <Icon name="mdi:chevron-down" class="text-3xl" />
             </button>
         </Transition>
-        <footer class="sticky bottom-0">
+        <footer ref="footerEl" class="sticky bottom-0">
             <template v-if="isSelecting">
                 <div class="flex items-center justify-between px-5 py-3 bg-white dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-neutral-950 dark:text-zinc-50">
                     <div class="flex items-center gap-2">
@@ -61,22 +62,36 @@ import { storeToRefs } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 import { useUserStore } from '../../../store/user'
 import { useMessageSelectionStore } from '../../../store/messageSelection'
+import { useMessageReplyStore } from '../../../store/messageReply'
 
 const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
 
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const selectionStore = useMessageSelectionStore()
+const replyStore = useMessageReplyStore()
 
 const { user: chatUser } = storeToRefs(chatStore)
 const { isSelecting, selectedIds } = storeToRefs(selectionStore)
 const { cancelSelection } = selectionStore
+const { replyTo } = storeToRefs(replyStore)
+
+watch(replyTo, async (val) => {
+    if (val && !isScrolledUp.value) {
+        await nextTick()
+        scrollToBottom()
+    }
+})
 const { openModal: openDeleteMessageModal } = useDeleteMessageModal()
 
 const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
 const messagesPane = ref(null)
 const messagesRef = ref(null)
+const footerEl = ref(null)
+const footerHeight = ref(64)
 const isScrolledUp = ref(false)
+
+let footerObserver = null
 
 function onScroll() {
     const el = messagesPane.value
@@ -143,11 +158,16 @@ function handleWindowPointerDown(event) {
 onMounted(() => {
     window.addEventListener('pointerdown', handleWindowPointerDown)
     messagesPane.value?.addEventListener('scroll', onScroll)
+    footerObserver = new ResizeObserver(() => {
+        footerHeight.value = footerEl.value?.offsetHeight ?? 64
+    })
+    if (footerEl.value) footerObserver.observe(footerEl.value)
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('pointerdown', handleWindowPointerDown)
     messagesPane.value?.removeEventListener('scroll', onScroll)
+    footerObserver?.disconnect()
 })
 </script>
 

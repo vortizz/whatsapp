@@ -35,9 +35,12 @@
               :isFirst="isFirst(msg._id)"
               :isMenuOpen="openMenuId === msg._id"
               :isSelecting="isSelecting"
+              :replyTo="msg.replyTo"
               @toggle-menu="toggleMenu(msg._id)"
               @delete="deleteMessage"
               @enter-select="enterSelectionMode(msg._id)"
+              @reply="handleReply(msg)"
+              @scroll-to="scrollToMessage"
             />
             <HomeMainMessageTo
               v-else
@@ -48,9 +51,12 @@
               :isFirst="isFirst(msg._id)"
               :isMenuOpen="openMenuId === msg._id"
               :isSelecting="isSelecting"
+              :replyTo="msg.replyTo"
               @toggle-menu="toggleMenu(msg._id)"
               @delete="deleteMessage"
               @enter-select="enterSelectionMode(msg._id)"
+              @reply="handleReply(msg)"
+              @scroll-to="scrollToMessage"
             />
           </div>
         </template>
@@ -66,6 +72,7 @@ import { useUserStore } from '../../../store/user'
 import { useChatStore } from '../../../store/chat'
 import { useWsStore } from '../../../store/websocket'
 import { useMessageSelectionStore } from '../../../store/messageSelection'
+import { useMessageReplyStore } from '../../../store/messageReply'
 import { StatusMessage } from '../../../utils/status-message'
 
 const messages = ref([])
@@ -76,6 +83,13 @@ const highlightedId = ref(null)
 const selectionStore = useMessageSelectionStore()
 const { isSelecting, selectedIds } = storeToRefs(selectionStore)
 const { enterSelectionMode, toggleSelection, cancelSelection } = selectionStore
+
+const replyStore = useMessageReplyStore()
+const { setReply } = replyStore
+
+function handleReply(msg) {
+  setReply({ _id: msg._id, text: msg.text, senderName: msg.isMine ? 'You' : chatUser.value?.name || '' })
+}
 
 async function deleteSelected() {
   const ids = [...selectedIds.value]
@@ -119,8 +133,19 @@ const chatStore = useChatStore()
 const wsStore = useWsStore()
 
 const { _id: userId } = storeToRefs(userStore)
-const { _id: chatId } = storeToRefs(chatStore)
+const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
+
+function resolveReplyTo(replyTo) {
+  if (!replyTo) return null
+  const fromId = replyTo.from?._id || replyTo.from
+  const isMine = fromId === userId.value
+  return {
+    ...replyTo,
+    isMine,
+    senderName: isMine ? 'You' : chatUser.value?.name || ''
+  }
+}
 
 const handledMessages = computed(() => {
   const grouped = {}
@@ -199,7 +224,8 @@ async function getMessages() {
     const response = await useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' })
     messages.value = sortMessages(response.map(msg => ({
       ...msg,
-      isMine: msg.from._id === userId.value
+      isMine: msg.from._id === userId.value,
+      replyTo: resolveReplyTo(msg.replyTo)
     })))
     await scrollToBottom()
   } catch (error) {
@@ -228,7 +254,8 @@ function handleEvent(event) {
 function newMessage(message) {
   if (message.chat._id === chatId.value) {
     const isMine = message.from._id === userId.value
-    messages.value.push({ ...message, isMine })
+    const replyTo = resolveReplyTo(message.replyTo)
+    messages.value.push({ ...message, isMine, replyTo })
     messages.value = sortMessages(messages.value)
 
     const receivedMessages = messages.value.filter(msg => !msg.isMine && msg.status === StatusMessage.RECEIVED)

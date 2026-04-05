@@ -15,6 +15,10 @@
         class="absolute w-40 rounded-xl bg-white shadow-lg ring-1 ring-black/10 ring-opacity-5 dark:bg-neutral-900 dark:ring-white/10 p-1"
         :class="menuPositionClass"
       >
+        <button @click.stop="reply" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
+          <Icon class="text-base" name="mdi:reply" />
+          Reply
+        </button>
         <button @click.stop="copyText" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
           <Icon class="text-base" name="mdi:content-copy" />
           Copy
@@ -30,7 +34,7 @@
 
 <script setup>
 const props = defineProps(['_id', 'text', 'isMenuOpen', 'buttonClass'])
-const emit = defineEmits(['toggle-menu', 'enter-select'])
+const emit = defineEmits(['toggle-menu', 'enter-select', 'reply'])
 
 const btnRef = ref(null)
 const menuPos = ref({ vertical: 'bottom', horizontal: 'right' })
@@ -77,6 +81,11 @@ function copyText() {
 
 function enterSelect() {
   emit('enter-select', props._id)
+  emit('toggle-menu')
+}
+
+function reply() {
+  emit('reply')
   emit('toggle-menu')
 }
 
