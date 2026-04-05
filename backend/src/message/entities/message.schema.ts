@@ -54,6 +54,9 @@ export class Message {
     })
     replyTo?: Message
 
+    @Prop({ type: Boolean, default: false })
+    forwarded?: boolean
+
     @Prop({
         type: [{
             type: mongoose.Schema.Types.ObjectId,

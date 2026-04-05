@@ -16,4 +16,7 @@ export class CreateMessageDto {
     @IsOptional()
     @IsMongoId()
     replyTo?: string
+
+    @IsOptional()
+    forwarded?: boolean
 }
