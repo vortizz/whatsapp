@@ -48,6 +48,13 @@ export class Message {
     status?: Status
 
     @Prop({
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+        autopopulate: { maxDepth: 1 },
+    })
+    replyTo?: Message
+
+    @Prop({
         type: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: User.name,
