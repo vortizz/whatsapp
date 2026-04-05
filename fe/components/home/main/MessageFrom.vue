@@ -1,7 +1,7 @@
 <template>
   <div
     data-message-bubble
-    class="w-fit max-w-80 relative group bg-white pt-1.5 pb-2 pl-2.5 pr-2 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] dark:bg-neutral-800"
+    class="w-fit max-w-[70%] relative group bg-white pt-1.5 pb-2 pl-2.5 pr-2 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] dark:bg-neutral-800"
     :class="isFirst ? 'rounded-r-md rounded-bl-md' : 'rounded-md'"
     @contextmenu.prevent.stop="menuRef.open()"
   >
@@ -19,12 +19,10 @@
       </div>
       <div class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{{ replyTo.text }}</div>
     </div>
-    <div class="flex flex-row gap-2">
-      <div class="text-sm text-neutral-950 dark:text-white">{{ text }}</div>
-      <div class="text-[11px] invisible">{{ formattedTime }}</div>
-    </div>
-    <div class="text-[11px] absolute bottom-1 right-2 text-black/60 dark:text-white/60">
-      {{ formattedTime }}
+    <div class="text-sm text-neutral-950 dark:text-white whitespace-pre-wrap">
+      {{ text }}<span class="inline-block ml-1.5 float-right translate-y-[3px]">
+        <span class="text-[11px] text-black/60 dark:text-white/60 whitespace-nowrap">{{ formattedTime }}</span>
+      </span>
     </div>
     <HomeMainMessageMenu
       v-if="!isSelecting"

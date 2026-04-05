@@ -14,18 +14,21 @@
             </div>
         </div>
         <div class="pb-3 px-4 w-full bg-[#efeae2] dark:bg-neutral-900/5 flex flex-row gap-4 items-center">
-            <div 
-                class="flex w-full bg-white dark:bg-neutral-800 shadow-md"
+            <div
+                class="flex items-end w-full bg-white dark:bg-neutral-800 shadow-md"
                 :class="replyTo ? 'rounded-b-3xl' : 'rounded-3xl'"
             >
-                <input
+                <textarea
                     ref="rInput"
-                    type="text"
                     v-model="message"
                     placeholder="Type a message"
-                    class="flex-1 w-full text-sm text-neutral-950 dark:placeholder:text-white/60 dark:text-white rounded-3xl py-3.5 px-5 focus:outline-none placeholder:text-gray-600 caret-emerald-500 dark:bg-neutral-800"
+                    rows="1"
+                    class="flex-1 w-full text-sm text-neutral-950 dark:placeholder:text-white/60 dark:text-white rounded-3xl py-3.5 px-5 focus:outline-none placeholder:text-gray-600 caret-emerald-500 dark:bg-neutral-800 resize-none overflow-hidden leading-normal"
                     @focus="onFocusInput"
-                >
+                    @input="autoResize"
+                    @keydown.enter.exact.prevent="send"
+                    @keydown.shift.enter="$nextTick(autoResize)"
+                ></textarea>
                 <div class="p-1 flex-none flex items-center" v-if="message.trim()">
                     <button v-if="!isLoading" type="submit" :disabled="!message.trim()" class='flex items-center text-2xl p-2 h-full leading-none rounded-full text-white dark:text-neutral-950 bg-emerald-500 hover:bg-emerald-600 transition-colors'>
                         <Icon name="material-symbols:send" />
@@ -75,6 +78,7 @@ export default {
                 this.replyStore.clearReply()
                 this.$nextTick(() => {
                     this.$refs.rInput.focus()
+                this.$refs.rInput.style.height = 'auto'
                 })
             }
         }
@@ -83,6 +87,22 @@ export default {
         ...mapActions(useChatStore, {
             setChatAction: 'setChat'
         }),
+        autoResize() {
+            const el = this.$refs.rInput
+            el.style.height = 'auto'
+            const style = window.getComputedStyle(el)
+            const lineHeight = parseFloat(style.lineHeight)
+            const paddingTop = parseFloat(style.paddingTop)
+            const paddingBottom = parseFloat(style.paddingBottom)
+            const maxHeight = lineHeight * 8 + paddingTop + paddingBottom
+            if (el.scrollHeight <= maxHeight) {
+                el.style.height = el.scrollHeight + 'px'
+                el.style.overflowY = 'hidden'
+            } else {
+                el.style.height = maxHeight + 'px'
+                el.style.overflowY = 'auto'
+            }
+        },
         clearReply() {
             this.replyStore.clearReply()
         },
@@ -104,6 +124,7 @@ export default {
                 }
                 await useMyAuthFetch('message', { method: 'POST', body })
                 this.message = ''
+                this.$refs.rInput.style.height = 'auto'
                 this.replyStore.clearReply()
 
                 if (this.chatId === 'new-chat' && chatId) {
@@ -134,6 +155,18 @@ export default {
 }
 </script>
 
-<style>
-
+<style scoped>
+textarea::-webkit-scrollbar {
+    width: 4px;
+}
+textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+textarea::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 9999px;
+}
+.dark textarea::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+}
 </style>
