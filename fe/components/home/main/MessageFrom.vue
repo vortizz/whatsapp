@@ -15,7 +15,7 @@
       <Icon name="mdi:share" class="text-sm" />
       Forwarded
     </div>
-    <div v-if="isGroup" class="text-xs font-semibold text-indigo-600 dark:text-amber-300 cursor-pointer w-fit hover:underline" @click.stop="$emit('view-member', from)">
+    <div v-if="isGroup && isFirst" class="text-xs font-semibold text-indigo-600 dark:text-amber-300 cursor-pointer w-fit hover:underline" @click.stop="$emit('view-member', from)">
       {{ from?.name || "Unknown" }}
     </div>
     <div

@@ -3,71 +3,84 @@
     <div v-for="date in handledMessages" :key="date.date">
       <HomeMainDateMessage :date="date.date" class="my-3" />
       <div>
-        <template v-for="msg in date?.messages ?? []" :key="msg._id">
-          <HomeMainUnreadMessage
-            v-if="showUnreadMessage(msg._id)"
-            :count="numberOfUnreadMessages(msg._id)"
+        <template v-for="item in date?.messages ?? []" :key="item._id">
+          <HomeMainChatEvent
+            v-if="item.isEvent"
+            :doneBy="item.doneBy"
+            :isNameChanged="item.isNameChanged"
+            :isDescriptionChanged="item.isDescriptionChanged"
+            :isUserAdded="item.isUserAdded"
+            :isUserRemoved="item.isUserRemoved"
+            :userAdded="item.userAdded"
+            :userRemoved="item.userRemoved"
+            :newName="item.newName"
           />
-          <div
-            :data-message-id="msg._id"
-            class="flex items-center gap-3 transition-colors"
-            :class="[
-              isSelecting ? 'px-4 cursor-pointer' : chatUser.isGroup ? 'pl-9 pr-16' : 'px-16',
-              isFirst(msg._id) ? 'mt-3' : 'm-0.5',
-              isLast(msg._id) ? 'mb-4' : '',
-              isSelecting && selectedIds.includes(msg._id) ? 'bg-emerald-700/5 dark:bg-slate-200/5' : '',
-              highlightedId === msg._id ? 'bg-emerald-500/10 dark:bg-emerald-400/10' : ''
-            ]"
-            @click="isSelecting ? toggleSelection(msg._id) : null"
-          >
+          <template v-else>
+            <HomeMainUnreadMessage
+              v-if="showUnreadMessage(item._id)"
+              :count="numberOfUnreadMessages(item._id)"
+            />
             <div
-              v-if="isSelecting"
-              class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center"
-              :class="selectedIds.includes(msg._id) ? 'bg-emerald-500 border-emerald-500' : 'border-gray-400 dark:border-gray-500'"
+              :data-message-id="item._id"
+              class="flex items-center gap-3 transition-colors"
+              :class="[
+                isSelecting ? 'px-4 cursor-pointer' : chatUser.isGroup ? 'pl-9 pr-16' : 'px-16',
+                isFirst(item._id) ? 'mt-3' : 'm-0.5',
+                isLast(item._id) ? 'mb-4' : '',
+                isSelecting && selectedIds.includes(item._id) ? 'bg-emerald-700/5 dark:bg-slate-200/5' : '',
+                highlightedId === item._id ? 'bg-emerald-500/10 dark:bg-emerald-400/10' : ''
+              ]"
+              @click="isSelecting ? toggleSelection(item._id) : null"
             >
-              <Icon v-if="selectedIds.includes(msg._id)" name="mdi:check" class="text-white text-base" />
+              <div
+                v-if="isSelecting"
+                class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center"
+                :class="selectedIds.includes(item._id) ? 'bg-emerald-500 border-emerald-500' : 'border-gray-400 dark:border-gray-500'"
+              >
+                <Icon v-if="selectedIds.includes(item._id)" name="mdi:check" class="text-white text-base" />
+              </div>
+              <HomeMainMessageFrom
+                v-if="!item.isMine"
+                :_id="item._id"
+                :text="item.text"
+                :date="item.createdAt"
+                :isFirst="isFirst(item._id)"
+                :isMenuOpen="openMenuId === item._id"
+                :isSelecting="isSelecting"
+                :replyTo="item.replyTo"
+                :forwarded="item.forwarded"
+                :from="item.from"
+                :isGroup="chatUser?.isGroup"
+                @toggle-menu="toggleMenu(item._id)"
+                @delete="deleteMessage"
+                @enter-select="enterSelectionMode(item._id)"
+                @enter-forward="enterForwardMode(item._id)"
+                @reply="handleReply(item)"
+                @reply-privately="handleReplyPrivately(item)"
+                @message-user="openDmWith(item.from)"
+                @scroll-to="scrollToReply"
+                @view-member="$emit('view-member', $event)"
+              />
+              <HomeMainMessageTo
+                v-else
+                :_id="item._id"
+                :text="item.text"
+                :date="item.createdAt"
+                :status="item.status"
+                :isFirst="isFirst(item._id)"
+                :isMenuOpen="openMenuId === item._id"
+                :isSelecting="isSelecting"
+                :replyTo="item.replyTo"
+                :forwarded="item.forwarded"
+                @toggle-menu="toggleMenu(item._id)"
+                @delete="deleteMessage"
+                @enter-select="enterSelectionMode(item._id)"
+                @enter-forward="enterForwardMode(item._id)"
+                @reply="handleReply(item)"
+                @scroll-to="scrollToReply"
+              />
             </div>
-            <HomeMainMessageFrom
-              v-if="!msg.isMine"
-              :_id="msg._id"
-              :text="msg.text"
-              :date="msg.createdAt"
-              :isFirst="isFirst(msg._id)"
-              :isMenuOpen="openMenuId === msg._id"
-              :isSelecting="isSelecting"
-              :replyTo="msg.replyTo"
-              :forwarded="msg.forwarded"
-              :from="msg.from"
-              :isGroup="chatUser?.isGroup"
-              @toggle-menu="toggleMenu(msg._id)"
-              @delete="deleteMessage"
-              @enter-select="enterSelectionMode(msg._id)"
-              @enter-forward="enterForwardMode(msg._id)"
-              @reply="handleReply(msg)"
-              @reply-privately="handleReplyPrivately(msg)"
-              @message-user="openDmWith(msg.from)"
-              @scroll-to="scrollToReply"
-              @view-member="$emit('view-member', $event)"
-            />
-            <HomeMainMessageTo
-              v-else
-              :_id="msg._id"
-              :text="msg.text"
-              :date="msg.createdAt"
-              :status="msg.status"
-              :isFirst="isFirst(msg._id)"
-              :isMenuOpen="openMenuId === msg._id"
-              :isSelecting="isSelecting"
-              :replyTo="msg.replyTo"
-              :forwarded="msg.forwarded"
-              @toggle-menu="toggleMenu(msg._id)"
-              @delete="deleteMessage"
-              @enter-select="enterSelectionMode(msg._id)"
-              @enter-forward="enterForwardMode(msg._id)"
-              @reply="handleReply(msg)"
-              @scroll-to="scrollToReply"
-            />
-          </div>
+          </template>
         </template>
       </div>
     </div>
@@ -170,7 +183,7 @@ async function scrollToReply(replyTo) {
 }
 
 function getSelectedMessages() {
-  return messages.value.filter(m => selectedIds.value.includes(m._id)).map(m => ({ _id: m._id, text: m.text }))
+  return messagesOnly.value.filter(m => selectedIds.value.includes(m._id)).map(m => ({ _id: m._id, text: m.text }))
 }
 
 let pendingScrollId = null
@@ -234,35 +247,37 @@ const handledMessages = computed(() => {
   )
 })
 
+const messagesOnly = computed(() => messages.value.filter(m => !m.isEvent))
+
 function showUnreadMessage(messageId) {
-  const msgIndex = messages.value.findIndex(m => m._id === messageId)
+  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
   if (msgIndex <= 0) return false
 
-  const previousMsg = messages.value[msgIndex-1]
-  const currentMsg = messages.value[msgIndex]
+  const previousMsg = messagesOnly.value[msgIndex - 1]
+  const currentMsg = messagesOnly.value[msgIndex]
 
   return !currentMsg.isMine && currentMsg.status === StatusMessage.RECEIVED &&
     !(!previousMsg.isMine && previousMsg.status === StatusMessage.RECEIVED)
 }
 
 function numberOfUnreadMessages(messageId) {
-  const msgIndex = messages.value.findIndex(m => m._id === messageId)
-  return messages.value.length - msgIndex
+  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
+  return messagesOnly.value.length - msgIndex
 }
 
 function isFirst(messageId) {
-  const msgIndex = messages.value.findIndex(m => m._id === messageId)
+  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
   if (msgIndex <= 0) return true
 
-  const previousMsg = messages.value[msgIndex-1]
-  const currentMsg = messages.value[msgIndex]
+  const previousMsg = messagesOnly.value[msgIndex - 1]
+  const currentMsg = messagesOnly.value[msgIndex]
 
   return currentMsg.from?._id !== previousMsg.from?._id
 }
 
 function isLast(messageId) {
-  const msgIndex = messages.value.findIndex(m => m._id === messageId)
-  return msgIndex === messages.value.length - 1
+  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
+  return msgIndex === messagesOnly.value.length - 1
 }
 
 async function deleteMessage(messageId) {
@@ -287,12 +302,17 @@ async function scrollToBottom(options) {
 
 async function getMessages() {
   try {
-    const response = await useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' })
-    messages.value = sortMessages(response.map(msg => ({
+    const [response, events] = await Promise.all([
+      useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' }),
+      chatUser.value?.isGroup ? useMyAuthFetch(`chat/${chatId.value}/events`, { method: 'GET' }) : Promise.resolve([])
+    ])
+    const mappedMessages = response.map(msg => ({
       ...msg,
       isMine: msg.from._id === userId.value,
       replyTo: resolveReplyTo(msg.replyTo)
-    })))
+    }))
+    const mappedEvents = events.map(e => ({ ...e, isEvent: true }))
+    messages.value = sortMessages([...mappedMessages, ...mappedEvents])
     if (pendingScrollId) {
       const id = pendingScrollId
       pendingScrollId = null
@@ -320,6 +340,16 @@ function handleEvent(event) {
     receivedMessage(msg)
   } else if (name === 'read-message') {
     readMessage(msg)
+  } else if (name === 'chat-event') {
+    newChatEvent(msg)
+  }
+}
+
+function newChatEvent(event) {
+  if ((event.chat?._id ?? event.chat) === chatId.value) {
+    messages.value.push({ ...event, isEvent: true })
+    messages.value = sortMessages(messages.value)
+    scrollToBottom({ behavior: 'smooth' })
   }
 }
 
