@@ -13,7 +13,7 @@
             @click="closeContextMenu"
         >
             <HomeForwardMessageModal />
-            <HomeMainMessages ref="messagesRef" />
+            <HomeMainMessages ref="messagesRef" @view-member="emit('viewMember', $event)" />
             <HomeMainMenu
                 :is-menu-button="isContextMenuOpen"
                 :x="menuPosition.x"
@@ -74,7 +74,7 @@ import { useUserStore } from '../../../store/user'
 import { useMessageSelectionStore } from '../../../store/messageSelection'
 import { useMessageReplyStore } from '../../../store/messageReply'
 
-const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
+const emit = defineEmits(['showContactInfo', 'showSearchMessages', 'viewMember'])
 
 const chatStore = useChatStore()
 const userStore = useUserStore()
@@ -125,7 +125,11 @@ function scrollToMessage(id) {
     messagesRef.value?.scrollToMessage(id)
 }
 
-defineExpose({ scrollToMessage })
+function scheduleScrollToMessage(id) {
+    messagesRef.value?.scheduleScrollToMessage(id)
+}
+
+defineExpose({ scrollToMessage, scheduleScrollToMessage })
 const isContextMenuOpen = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
 

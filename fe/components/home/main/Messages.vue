@@ -12,7 +12,7 @@
             :data-message-id="msg._id"
             class="flex items-center gap-3 transition-colors"
             :class="[
-              isSelecting ? 'px-4 cursor-pointer' : 'px-16',
+              isSelecting ? 'px-4 cursor-pointer' : chatUser.isGroup ? 'pl-9 pr-16' : 'px-16',
               isFirst(msg._id) ? 'mt-3' : 'm-0.5',
               isLast(msg._id) ? 'mb-4' : '',
               isSelecting && selectedIds.includes(msg._id) ? 'bg-emerald-700/5 dark:bg-slate-200/5' : '',
@@ -37,12 +37,15 @@
               :isSelecting="isSelecting"
               :replyTo="msg.replyTo"
               :forwarded="msg.forwarded"
+              :from="msg.from"
+              :isGroup="chatUser?.isGroup"
               @toggle-menu="toggleMenu(msg._id)"
               @delete="deleteMessage"
               @enter-select="enterSelectionMode(msg._id)"
               @enter-forward="enterForwardMode(msg._id)"
               @reply="handleReply(msg)"
               @scroll-to="scrollToMessage"
+              @view-member="$emit('view-member', $event)"
             />
             <HomeMainMessageTo
               v-else
@@ -92,7 +95,7 @@ const replyStore = useMessageReplyStore()
 const { setReply } = replyStore
 
 function handleReply(msg) {
-  setReply({ _id: msg._id, text: msg.text, senderName: msg.isMine ? 'You' : chatUser.value?.name || '' })
+  setReply({ _id: msg._id, text: msg.text, senderName: msg.isMine ? 'You' : msg.from?.name || '' })
 }
 
 async function deleteSelected() {
@@ -121,7 +124,13 @@ function getSelectedMessages() {
   return messages.value.filter(m => selectedIds.value.includes(m._id)).map(m => ({ _id: m._id, text: m.text }))
 }
 
-defineExpose({ deleteSelected, scrollToMessage, getSelectedMessages })
+let pendingScrollId = null
+
+function scheduleScrollToMessage(id) {
+  pendingScrollId = id
+}
+
+defineExpose({ deleteSelected, scrollToMessage, getSelectedMessages, scheduleScrollToMessage })
 
 function toggleMenu(id) {
   openMenuId.value = openMenuId.value === id ? null : id
@@ -151,7 +160,7 @@ function resolveReplyTo(replyTo) {
   return {
     ...replyTo,
     isMine,
-    senderName: isMine ? 'You' : chatUser.value?.name || ''
+    senderName: isMine ? 'You' : replyTo.from?.name || ''
   }
 }
 
@@ -199,7 +208,7 @@ function isFirst(messageId) {
   const previousMsg = messages.value[msgIndex-1]
   const currentMsg = messages.value[msgIndex]
 
-  return currentMsg.isMine !== previousMsg.isMine
+  return currentMsg.from?._id !== previousMsg.from?._id
 }
 
 function isLast(messageId) {
@@ -235,7 +244,13 @@ async function getMessages() {
       isMine: msg.from._id === userId.value,
       replyTo: resolveReplyTo(msg.replyTo)
     })))
-    await scrollToBottom()
+    if (pendingScrollId) {
+      const id = pendingScrollId
+      pendingScrollId = null
+      await scrollToMessage(id)
+    } else {
+      await scrollToBottom()
+    }
   } catch (error) {
     const data = error?.data || {}
     const message = Array.isArray(data.message) ? data.message[0] : data.message

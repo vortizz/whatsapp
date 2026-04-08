@@ -30,7 +30,7 @@
             <template v-if="!query">
                 <div class="flex items-center justify-center h-full">
                     <p class="text-sm text-gray-400 dark:text-gray-500 text-center px-6">
-                        Search for messages with {{ chatUser.name }}.
+                        Search for messages with {{ effectiveChatName }}.
                     </p>
                 </div>
             </template>
@@ -67,13 +67,17 @@ import { storeToRefs } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 import { useUserStore } from '../../../store/user'
 
+const props = defineProps(['chatIdOverride', 'chatNameOverride'])
 const emit = defineEmits(['close', 'goToMessage'])
 
 const chatStore = useChatStore()
 const userStore = useUserStore()
 
-const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
+const { _id: storeChatId, user: chatUser } = storeToRefs(chatStore)
 const { _id: userId } = storeToRefs(userStore)
+
+const effectiveChatId = computed(() => props.chatIdOverride || storeChatId.value)
+const effectiveChatName = computed(() => props.chatNameOverride || chatUser.value?.name)
 
 const query = ref('')
 const messages = ref([])
@@ -100,12 +104,12 @@ function formatDate(dateStr) {
 }
 
 async function fetchMessages() {
-    if (!chatId.value || chatId.value === 'new-chat') {
+    if (!effectiveChatId.value || effectiveChatId.value === 'new-chat') {
         messages.value = []
         return
     }
     try {
-        const response = await useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' })
+        const response = await useMyAuthFetch(`message/${effectiveChatId.value}`, { method: 'GET' })
         messages.value = response.map(msg => ({
             ...msg,
             isMine: msg.from._id === userId.value
@@ -115,7 +119,7 @@ async function fetchMessages() {
     }
 }
 
-watch(chatId, fetchMessages)
+watch(effectiveChatId, fetchMessages)
 
 onMounted(async () => {
     await fetchMessages()

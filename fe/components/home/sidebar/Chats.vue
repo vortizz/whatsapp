@@ -4,6 +4,7 @@
             v-for="(chat, i) in chats"
             :key="i"
             :name="chat.user.name"
+            :isGroup="chat.user.isGroup"
             :active="chatId === chat._id"
             :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
             :lastMessage="chat.lastMessage"
@@ -85,7 +86,9 @@ async function getChats() {
         const response = await useMyAuthFetch('chat', { method: 'GET' })
         chats.value = response.map(chat => ({
             _id: chat._id,
-            user: chat.users.find(user => user._id !== userId.value),
+            user: chat.isGroup
+                ? { _id: chat._id, name: chat.name, isGroup: true, users: chat.users, groupAdmins: chat.groupAdmins, createdAt: chat.createdAt, createdBy: chat.createdBy }
+                : chat.users.find(user => user._id !== userId.value),
             lastMessage: chat.lastMessage ? {
                 _id: chat.lastMessage._id,
                 text: chat.lastMessage.text,
@@ -201,7 +204,9 @@ function newChat(message) {
 
     const chat = {
         _id: message.chat._id,
-        user: message.chat.users.find(user => user._id !== userId.value),
+        user: message.chat.isGroup
+            ? { _id: message.chat._id, name: message.chat.name, isGroup: true, users: message.chat.users, groupAdmins: message.chat.groupAdmins, createdAt: message.chat.createdAt, createdBy: message.chat.createdBy }
+            : message.chat.users.find(user => user._id !== userId.value),
         lastMessage: {
             _id: message._id,
             text: message.text,

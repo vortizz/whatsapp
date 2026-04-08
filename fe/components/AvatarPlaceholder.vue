@@ -3,7 +3,7 @@
         class="inline-flex items-center justify-center rounded-full bg-stone-200 text-stone-500 dark:bg-white/10 dark:text-white/60"
         :style="avatarStyle"
     >
-        <Icon name="solar:user-bold" :style="iconStyle" />
+        <Icon :name="group ? 'solar:users-group-rounded-bold' : 'solar:user-bold'" :style="iconStyle" />
     </div>
 </template>
 
@@ -16,6 +16,10 @@ const props = defineProps({
     iconScale: {
         type: Number,
         default: 0.55
+    },
+    group: {
+        type: Boolean,
+        default: false
     }
 })
 

@@ -118,7 +118,7 @@ export default {
 
                 const body = {
                     chat: chatId || this.chatId,
-                    to: this.chatUser._id,
+                    ...(!this.chatUser.isGroup ? { to: this.chatUser._id } : {}),
                     text: this.message,
                     ...(this.replyTo ? { replyTo: this.replyTo._id } : {})
                 }

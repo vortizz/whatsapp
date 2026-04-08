@@ -25,6 +25,14 @@
                         <div class="p-1">
                             <button
                                 type="button"
+                                @mousedown.prevent="openNewGroup"
+                                class="flex items-center gap-2 px-2 py-3 hover:text-neutral-950 dark:hover:text-white w-full hover:bg-stone-100 dark:hover:bg-white/5 rounded-xl"
+                            >
+                                <Icon name="material-symbols:group-add-outline-rounded" class="text-lg" />
+                                <span class="text-sm">New group</span>
+                            </button>
+                            <button
+                                type="button"
                                 @click="signout"
                                 class="flex items-center gap-2 px-2 py-3 hover:text-rose-700 dark:hover:text-rose-300 w-full hover:bg-rose-600/10 dark:hover:bg-rose-500/10 rounded-xl"
                             >
@@ -43,7 +51,7 @@
 import { useUserStore } from '../../../store/user'
 import { usePageStore } from '../../../store/page'
 import { useWsStore } from '../../../store/websocket'
-defineEmits(['opennewchat'])
+const emit = defineEmits(['opennewchat', 'opennewgroup'])
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -55,6 +63,11 @@ const isMenuButton = ref(false)
 const { logout } = userStore
 const { disconnectWs } = wsStore
 const { resetPage } = pageStore
+
+function openNewGroup() {
+    isMenuButton.value = false
+    emit('opennewgroup')
+}
 
 function signout() {
     logout()

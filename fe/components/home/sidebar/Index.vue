@@ -3,6 +3,7 @@
         <header class="sticky top-0 z-10">
             <HomeSidebarHeader
                 @opennewchat="emit('opennewchat')"
+                @opennewgroup="emit('opennewgroup')"
             />
             <HomeSidebarSubHeader
                 @settext="e => text = e"
@@ -24,7 +25,7 @@
 </template>
 
 <script setup>
-const emit = defineEmits(['opennewchat', 'showContactInfo'])
+const emit = defineEmits(['opennewchat', 'opennewgroup', 'showContactInfo'])
 
 const text = ref('')
 const unreadChats = ref(false)

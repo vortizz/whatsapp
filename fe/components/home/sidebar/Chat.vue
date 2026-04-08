@@ -5,7 +5,7 @@
     @contextmenu.prevent="openMenuAtPointer"
 >
     <div>
-        <AvatarPlaceholder :size="48" />
+        <AvatarPlaceholder :size="48" :group="isGroup" />
     </div>
     <div class="flex-1 flex flex-col justify-center pb-3.5">
         <div>
@@ -61,7 +61,7 @@
 
 <script setup>
 const emit = defineEmits(['openMenu'])
-const props = defineProps(['name', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing'])
+const props = defineProps(['name', 'isGroup', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing'])
 
 function openMenu(event) {
     const rect = event.currentTarget.getBoundingClientRect()

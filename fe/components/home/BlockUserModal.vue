@@ -7,7 +7,7 @@
         >
             <div class="w-full max-w-lg rounded-2xl bg-white py-5 px-6 shadow-2xl dark:bg-neutral-800">
                 <div class="text-xl mb-5 font-semibold text-neutral-950 dark:text-white">
-                    Block <span v-if="chatUser?.name">{{ chatUser.name }}</span>?
+                    Block <span v-if="targetUser?.name">{{ targetUser.name }}</span>?
                 </div>
                 <div class="max-w-3xl text-sm leading-relaxed text-neutral-500 dark:text-white/60">
                     This person won't be able to message or call you. They won't know you blocked or reported them.
@@ -36,19 +36,14 @@
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia'
-import { useChatStore } from '../../store/chat'
-
 const {
     isOpen,
+    targetUser,
     isBlockingUser,
     isBlockUserDisabled,
     closeModal,
     confirmBlockUser
 } = useBlockUserModal()
-
-const chatStore = useChatStore()
-const { user: chatUser } = storeToRefs(chatStore)
 </script>
 
 <style>

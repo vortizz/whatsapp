@@ -16,9 +16,14 @@
                 v-if="isDisplayingNewChat"
                 @close="isDisplayingNewChat = false"
             />
-            <HomeSidebar 
+            <HomeNewGroup
+                v-else-if="isDisplayingNewGroup"
+                @close="isDisplayingNewGroup = false"
+            />
+            <HomeSidebar
                 v-else
                 @opennewchat="isDisplayingNewChat = true"
+                @opennewgroup="isDisplayingNewGroup = true"
                 @showContactInfo="isDisplayingContactInfo = true"
             />
         
@@ -31,12 +36,22 @@
                 ref="homeMainRef"
                 v-show="chatId"
                 @showContactInfo="isDisplayingContactInfo = true"
-                @showSearchMessages="isDisplayingSearchMessages = true"
+                @showSearchMessages="showSearchMessages"
+                @viewMember="viewGroupMember"
             />
             <!--****************-->
-            <HomeContactInfo
-                v-if="isDisplayingContactInfo"
+            <HomeGroupInfo
+                v-if="isDisplayingContactInfo && chatUser.isGroup && !viewingGroupMember"
                 @close="isDisplayingContactInfo = false"
+                @viewMember="viewGroupMember"
+                @search="showSearchMessages"
+            />
+            <HomeContactInfo
+                v-else-if="isDisplayingContactInfo || viewingGroupMember"
+                :member="viewingGroupMember"
+                @close="handleContactInfoClose"
+                @goToMessage="goToMessage"
+                @goToChat="goToChat"
             />
             <HomeSearchMessages
                 v-if="isDisplayingSearchMessages"
@@ -48,6 +63,11 @@
             <HomeUnblockUserModal />
             <HomeDeleteChatModal />
             <HomeDeleteMessageModal />
+            <HomeAddMemberModal />
+            <HomeMakeGroupAdminModal />
+            <HomeRemoveMemberModal />
+            <HomeExitGroupModal />
+            <HomeGroupInfoSearchMembersModal />
         </template>
     </div>
 </template>
@@ -56,6 +76,7 @@
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '../store/chat'
 import { useWsStore } from '../store/websocket'
+import { useUserStore } from '../store/user'
 import { Pages, usePageStore } from '~/store/page'
 
 definePageMeta({
@@ -65,24 +86,83 @@ definePageMeta({
 
 const isDisplayingContactInfo = ref(false)
 const isDisplayingNewChat = ref(false)
+const isDisplayingNewGroup = ref(false)
 const isDisplayingSearchMessages = ref(false)
 const homeMainRef = ref(null)
+const viewingGroupMember = ref(null)
 
-function goToMessage(id) {
+function viewGroupMember(member) {
+    viewingGroupMember.value = member
+}
+
+function handleContactInfoClose() {
+    if (viewingGroupMember.value) {
+        viewingGroupMember.value = null
+    } else {
+        isDisplayingContactInfo.value = false
+    }
+}
+
+function goToMessage(id, overrideChatId) {
     isDisplayingSearchMessages.value = false
-    homeMainRef.value?.scrollToMessage(id)
+    if (overrideChatId && overrideChatId !== chatId.value) {
+        homeMainRef.value?.scheduleScrollToMessage(id)
+        chatStore.setChat({ _id: overrideChatId, user: viewingGroupMember.value })
+        isDisplayingContactInfo.value = false
+        viewingGroupMember.value = null
+    } else {
+        homeMainRef.value?.scrollToMessage(id)
+    }
+}
+
+function goToChat(id) {
+    if (id) {
+        chatStore.setChat({ _id: id, user: viewingGroupMember.value })
+        isDisplayingContactInfo.value = false
+        viewingGroupMember.value = null
+    }
+}
+
+function showSearchMessages() {
+    isDisplayingSearchMessages.value = true
+    isDisplayingContactInfo.value = false
+    viewingGroupMember.value = null
 }
 
 const chatStore = useChatStore()
 const wsStore = useWsStore()
 const pageStore = usePageStore()
+const userStore = useUserStore()
 
-const { _id: chatId } = storeToRefs(chatStore)
+const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
+const { _id: userId } = storeToRefs(userStore)
 const { conn } = storeToRefs(wsStore)
 const { currentPage } = storeToRefs(pageStore)
 
 const { clearChat } = chatStore
 const { connectWs, disconnectWs } = wsStore
+
+const { pendingViewMember, pendingMessageMember } = useSearchMembersModal()
+
+watch(pendingViewMember, (val) => {
+    if (!val) return
+    isDisplayingContactInfo.value = true
+    viewingGroupMember.value = val
+})
+
+watch(pendingMessageMember, async (val) => {
+    if (!val) return
+    try {
+        const chats = await useMyAuthFetch('chat')
+        const direct = chats.find(c => !c.isGroup && c.users.some(u => (u._id ?? u) === val._id))
+        if (direct) {
+            const otherUser = direct.users.find(u => (u._id ?? u) !== userId.value)
+            chatStore.setChat({ _id: direct._id, user: otherUser })
+            isDisplayingContactInfo.value = false
+            viewingGroupMember.value = null
+        }
+    } catch {}
+})
 
 async function updateStatusToReceived() {
     await useMyAuthFetch('message/received', { method: 'PUT' })
@@ -102,11 +182,10 @@ onBeforeUnmount(() => {
     disconnectWs()
 })
 
-watch(chatId, value => {
-    if (!value) {
-        isDisplayingContactInfo.value = false
-        isDisplayingSearchMessages.value = false
-    }
+watch(chatId, () => {
+    isDisplayingContactInfo.value = false
+    isDisplayingSearchMessages.value = false
+    viewingGroupMember.value = null
 })
 </script>
 

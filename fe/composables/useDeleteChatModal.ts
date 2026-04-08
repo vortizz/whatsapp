@@ -3,15 +3,20 @@ import { useChatStore } from '../store/chat'
 
 export function useDeleteChatModal() {
     const isOpen = useState('delete-chat-modal-open', () => false)
+    const chatIdOverride = useState('delete-chat-id-override', () => '')
+    const targetNameOverride = useState('delete-chat-name-override', () => '')
 
     const chatStore = useChatStore()
     const { _id: chatId } = storeToRefs(chatStore)
     const { deletingChatId, deletedChatState } = useDeleteChatState()
 
-    const isDeletingChat = computed(() => deletingChatId.value === chatId.value)
-    const isDeleteChatDisabled = computed(() => !chatId.value || isDeletingChat.value)
+    const effectiveChatId = computed(() => chatIdOverride.value || chatId.value)
+    const isDeletingChat = computed(() => deletingChatId.value === effectiveChatId.value)
+    const isDeleteChatDisabled = computed(() => !effectiveChatId.value || isDeletingChat.value)
 
-    function openModal() {
+    function openModal(overrideChatId?: string, overrideName?: string) {
+        chatIdOverride.value = overrideChatId ?? ''
+        targetNameOverride.value = overrideName ?? ''
         if (isDeleteChatDisabled.value) {
             return
         }
@@ -21,6 +26,8 @@ export function useDeleteChatModal() {
 
     function closeModal() {
         isOpen.value = false
+        chatIdOverride.value = ''
+        targetNameOverride.value = ''
     }
 
     async function confirmDeleteChat() {
@@ -29,13 +36,15 @@ export function useDeleteChatModal() {
         }
 
         try {
-            deletingChatId.value = chatId.value
-            await useMyAuthFetch(`message/${chatId.value}`, { method: 'DELETE' })
+            deletingChatId.value = effectiveChatId.value
+            await useMyAuthFetch(`message/${effectiveChatId.value}`, { method: 'DELETE' })
             deletedChatState.value = {
-                chatId: chatId.value,
+                chatId: effectiveChatId.value,
                 nonce: Date.now()
             }
-            chatStore.clearChat()
+            if (!chatIdOverride.value) {
+                chatStore.clearChat()
+            }
             closeModal()
         } catch (error) {
             const data = error?.data || {}
@@ -48,6 +57,7 @@ export function useDeleteChatModal() {
 
     return {
         isOpen,
+        targetNameOverride,
         isDeletingChat,
         isDeleteChatDisabled,
         openModal,

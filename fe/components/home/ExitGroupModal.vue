@@ -6,28 +6,25 @@
             @click.self="closeModal"
         >
             <div class="w-full max-w-lg rounded-2xl bg-white py-5 px-6 shadow-2xl dark:bg-neutral-800">
-                <div class="text-xl mb-5 font-semibold text-neutral-950 dark:text-white">
-                    Delete chat<span v-if="displayName"> with {{ displayName }}</span>?
-                </div>
-                <div class="max-w-3xl text-sm leading-relaxed text-neutral-500 dark:text-white/60">
-                    Messages will be removed from your chat list.
+                <div class="text-sm mb-5 font-semibold text-neutral-950 dark:text-white">
+                    Exit group: "{{ groupName }}"?
                 </div>
 
                 <div class="mt-12 flex justify-end gap-2">
                     <button
                         class="text-sm font-semibold px-4 py-2.5 rounded-full text-emerald-700 dark:text-emerald-500 bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-900 transition-colors disabled:cursor-not-allowed disabled:opacity-35"
-                        :disabled="isDeletingChat"
+                        :disabled="isSubmitting"
                         @click="closeModal"
                     >
                         Cancel
                     </button>
                     <button
                         class="rounded-full bg-rose-600 dark:bg-rose-500 px-6 py-2.5 text-sm font-semibold text-white dark:text-neutral-950 transition-colors hover:bg-rose-700 dark:hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-35"
-                        :disabled="isDeleteChatDisabled"
-                        @click="confirmDeleteChat"
+                        :disabled="isSubmitting"
+                        @click="confirm"
                     >
-                        <span v-if="!isDeletingChat">Delete chat</span>
-                        <span v-else>Deleting...</span>
+                        <span v-if="!isSubmitting">Exit group</span>
+                        <span v-else>Exiting...</span>
                     </button>
                 </div>
             </div>
@@ -36,24 +33,5 @@
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia'
-import { useChatStore } from '../../store/chat'
-
-const chatStore = useChatStore()
-const { user: chatUser } = storeToRefs(chatStore)
-
-const {
-    isOpen,
-    targetNameOverride,
-    isDeletingChat,
-    isDeleteChatDisabled,
-    closeModal,
-    confirmDeleteChat
-} = useDeleteChatModal()
-
-const displayName = computed(() => targetNameOverride.value || chatUser.value?.name)
+const { isOpen, groupName, isSubmitting, closeModal, confirm } = useExitGroupModal()
 </script>
-
-<style>
-
-</style>

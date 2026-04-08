@@ -4,7 +4,7 @@
             About
         </div>
         <div class="text-base text-neutral-950 dark:text-white">
-            {{ chatUser.about }}
+            {{ displayUser.about }}
         </div>
     </div>
 </template>
@@ -14,10 +14,14 @@ import { mapState } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 
 export default {
+    props: ['member'],
     computed: {
         ...mapState(useChatStore, {
             chatUser: 'user'
         }),
+        displayUser() {
+            return this.member ?? this.chatUser
+        }
     },
 }
 </script>

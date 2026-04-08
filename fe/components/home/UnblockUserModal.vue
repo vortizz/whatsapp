@@ -7,7 +7,7 @@
         >
             <div class="w-full max-w-lg rounded-2xl bg-white py-5 px-6 shadow-2xl dark:bg-neutral-800">
                 <div class="text-xl mb-5 font-semibold text-neutral-950 dark:text-white">
-                    Unblock <span v-if="chatUser?.name">{{ chatUser.name }}</span>?
+                    Unblock <span v-if="targetUser?.name">{{ targetUser.name }}</span>?
                 </div>
 
                 <div class="mt-[70px] flex justify-end gap-2">
@@ -33,19 +33,14 @@
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia'
-import { useChatStore } from '../../store/chat'
-
 const {
     isOpen,
+    targetUser,
     isUnblockingUser,
     isUnblockUserDisabled,
     closeModal,
     confirmUnblockUser
 } = useUnblockUserModal()
-
-const chatStore = useChatStore()
-const { user: chatUser } = storeToRefs(chatStore)
 </script>
 
 <style>
