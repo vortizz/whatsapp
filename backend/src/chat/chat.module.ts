@@ -4,17 +4,28 @@ import { ChatService } from "./chat.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Chat, ChatSchema } from "./entities/chat.schema";
 import { UserModule } from "src/user/user.module";
+import { ChatEvent, ChatEventSchema } from "./entities/chat-event.schema";
 
 @Module({
     imports: [
-        MongooseModule.forFeatureAsync([{ 
-            name: Chat.name, 
-            useFactory: () => {
-                const schema = ChatSchema
-                schema.plugin(require('mongoose-autopopulate'))
-                return schema
-            }
-        }]),
+        MongooseModule.forFeatureAsync([
+            { 
+                name: Chat.name, 
+                useFactory: () => {
+                    const schema = ChatSchema
+                    schema.plugin(require('mongoose-autopopulate'))
+                    return schema
+                }
+            },
+            {
+                name: ChatEvent.name, 
+                useFactory: () => {
+                    const schema = ChatEventSchema
+                    schema.plugin(require('mongoose-autopopulate'))
+                    return schema
+                }
+            },
+        ]),
         forwardRef(() => UserModule)
     ],
     controllers: [ChatController],

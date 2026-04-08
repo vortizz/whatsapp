@@ -18,6 +18,27 @@ export class Chat {
     })
     users: User[]
 
+    @Prop({ type: Boolean, default: false })
+    isGroup?: boolean
+
+    @Prop({ type: String, trim: true })
+    name?: string
+
+    @Prop({ type: String, trim: true })
+    description?: string
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name })
+    createdBy?: User
+
+    @Prop({
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: User.name,
+            autopopulate: true
+        }]
+    })
+    groupAdmins?: User[]
+
     createdAt: Date
     updatedAt: Date
 }

@@ -4,11 +4,13 @@ import * as mongoose from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from "src/user/entities/user.schema";
 import { Status } from "src/message/entities/status.enum";
+import { ChatEvent } from "./entities/chat-event.schema";
 
 @Injectable()
 export class ChatService {
     constructor(
-        @InjectModel(Chat.name) private chatModel: mongoose.Model<Chat>
+        @InjectModel(Chat.name) private chatModel: mongoose.Model<Chat>,
+        @InjectModel(ChatEvent.name) private chatEventModel: mongoose.Model<ChatEvent>,
     ) {}
 
     async create(users: User[]): Promise<Chat> {
@@ -24,6 +26,22 @@ export class ChatService {
 
         const newChat = new this.chatModel({ users })
         return await newChat.save()
+    }
+
+    async createGroup(users: User[], name: string): Promise<Chat> {
+        const newChat = new this.chatModel({ 
+            users, 
+            isGroup: true, 
+            name, 
+            createdBy: users[0], 
+            groupAdmins: [users[0]] 
+        })
+        return await newChat.save()
+    }
+
+    async createChatEvent(chatEvent: ChatEvent): Promise<ChatEvent> {
+        const newChatEvent = new this.chatEventModel(chatEvent)
+        return await newChatEvent.save()
     }
 
     async findByUser(user: User, username?: string): Promise<Chat[]> {
@@ -172,5 +190,201 @@ export class ChatService {
 
     async findById(_id: string): Promise<Chat> {
         return await this.chatModel.findById(_id)
+    }
+
+    async updateGroupName(_id: string, name: string, user: User): Promise<Chat> {
+        const chatFound = await this.findById(_id)
+
+        if (!chatFound) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chatFound.groupAdmins?.some(u => u._id?.toString() === user._id)) {
+            throw new BadRequestException('User must be admin to update the group name')
+        }
+        
+        const newEvent = new ChatEvent()
+        const chat = new Chat()
+        chat._id = _id
+        newEvent.chat = chat
+        newEvent.isNameChanged = true
+        newEvent.doneBy = user
+        await this.createChatEvent(newEvent)
+        return await this.chatModel.findByIdAndUpdate(_id, { name }, { new: true })
+    }
+
+    async updateGroupDescription(_id: string, description: string, user: User): Promise<Chat> {
+        const chatFound = await this.findById(_id)
+
+        if (!chatFound) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chatFound.groupAdmins?.some(u => u._id?.toString() === user._id)) {
+            throw new BadRequestException('User must be admin to update the group description')
+        }
+
+        const newEvent = new ChatEvent()
+        const chat = new Chat()
+        chat._id = _id
+        newEvent.chat = chat
+        newEvent.isDescriptionChanged = true
+        newEvent.doneBy = user
+        await this.createChatEvent(newEvent)
+        return await this.chatModel.findByIdAndUpdate(_id, { description }, { new: true })
+    }
+
+    async addGroupMembers(_id: string, userIds: string[], user: User): Promise<Chat> {
+        const chatFound = await this.findById(_id)
+
+        if (!chatFound) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (chatFound.users.some(u => userIds.some(ui => ui === u._id?.toString()))) {
+            throw new BadRequestException('User does belong to the chat')
+        }
+
+        if (!chatFound.groupAdmins?.some(u => u._id?.toString() === user._id)) {
+            throw new BadRequestException('User must be admin to add members')
+        }
+
+        const newUsers = userIds.map(id => {
+            const u = new User()
+            u._id = id
+            return u
+        })
+
+        const newEvents = newUsers.map(nu => {
+            const newEvent = new ChatEvent()
+            const chat = new Chat()
+            chat._id = _id
+            newEvent.chat = chat
+            newEvent.doneBy = user
+            newEvent.isUserAdded = true
+            newEvent.userAdded = nu
+            return newEvent
+        })
+        
+        await Promise.all(newEvents.map(ne => this.createChatEvent(ne)))
+
+        return await this.chatModel.findByIdAndUpdate(
+            _id,
+            { $addToSet: { users: { $each: newUsers } } },
+            { new: true }
+        )
+    }
+
+    async removeGroupMember(_id: string, userId: string, user: User): Promise<Chat> {
+        const chatFound = await this.findById(_id)
+
+        if (!chatFound) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chatFound.users.some(u => u._id?.toString() === userId)) {
+            throw new BadRequestException('User does not belong to the chat')
+        }
+
+        if (!chatFound.groupAdmins?.some(u => u._id?.toString() === user._id)) {
+            throw new BadRequestException('User must be admin to remove members')
+        }
+
+        if (chatFound.groupAdmins?.some(u => u._id?.toString() === userId)) {
+            await this.setUserGroupAdmin(_id, userId, false, user)
+        }
+
+        const removedUser = new User()
+        removedUser._id = userId
+
+        const chat = new Chat()
+        chat._id = _id
+
+        const newEvent = new ChatEvent()
+        newEvent.chat = chat
+        newEvent.doneBy = user
+        newEvent.isUserRemoved = true
+        newEvent.userRemoved = removedUser
+
+        await this.createChatEvent(newEvent)
+
+        return await this.chatModel.findByIdAndUpdate(
+            _id,
+            { $pull: { users: removedUser } },
+            { new: true }
+        )
+    }
+
+    async exitGroup(_id: string, user: User): Promise<Chat> {
+        const chatFound = await this.findById(_id)
+
+        if (!chatFound) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chatFound.users.some(u => u._id?.toString() === user._id)) {
+            throw new BadRequestException('User does not belong to the chat')
+        }
+
+        if (chatFound.groupAdmins?.some(u => u._id?.toString() === user._id)) {
+            await this.setUserGroupAdmin(_id, user._id, false, user)
+        }
+
+        const exitUser = new User()
+        exitUser._id = user._id
+
+        const chat = new Chat()
+        chat._id = _id
+
+        const newEvent = new ChatEvent()
+        newEvent.chat = chat
+        newEvent.doneBy = user
+        newEvent.isUserRemoved = true
+        newEvent.userRemoved = exitUser
+
+        await this.createChatEvent(newEvent)
+
+        return await this.chatModel.findByIdAndUpdate(
+            _id,
+            { $pull: { users: exitUser } },
+            { new: true }
+        )
+    }
+
+    async setUserGroupAdmin(_id: string, userId: string, isAdmin: boolean, user: User): Promise<Chat> {
+        const chatFound = await this.findById(_id)
+
+        if (!chatFound) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chatFound.users.some(u => u._id?.toString() === userId)) {
+            throw new BadRequestException('User does not belong to the chat')
+        }
+
+        if (!chatFound.groupAdmins?.some(u => u._id?.toString() === user._id)) {
+            throw new BadRequestException('User must be admin to set group admins')
+        }
+
+        if (isAdmin && chatFound.groupAdmins?.some(u => u._id?.toString() === userId)) {
+            throw new BadRequestException('User is already a group admin')
+        }
+
+        if (!isAdmin && !chatFound.groupAdmins?.some(u => u._id?.toString() === userId)) {
+            throw new BadRequestException('User is already not a group admin')
+        }
+
+        const updatedUser = new User()
+        updatedUser._id = userId
+
+        const update = isAdmin
+            ? { $addToSet: { groupAdmins: updatedUser } }
+            : { $pull: { groupAdmins: updatedUser } }
+
+        return await this.chatModel.findByIdAndUpdate(
+            _id,
+            update,
+            { new: true }
+        )
     }
 }

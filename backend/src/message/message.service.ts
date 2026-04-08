@@ -25,6 +25,20 @@ export class MessageService {
             throw new NotFoundException('Chat not found')
         }
 
+        if (chat.isGroup) {
+            const newMessage = new this.messageModel({
+                ...createMessageDto,
+                from: user,
+                status: Status.SENT,
+            })
+            const messageCreated = <Message>await newMessage.save()
+
+            const memberIds = chat.users.map(u => u._id.toString())
+            this.wsClientManager.sendGroupMessageToClients(messageCreated, memberIds)
+
+            return messageCreated
+        }
+
         if (!chat.users.some(user => user._id.toString() === createMessageDto.to)) {
             throw new BadRequestException('Receiver does not belong to the chat')
         }

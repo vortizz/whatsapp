@@ -37,9 +37,9 @@ export class Message {
         type: mongoose.Schema.Types.ObjectId,
         ref: User.name,
         autopopulate: true,
-        required: true
+        required: false
     })
-    to: User
+    to?: User
 
     @Prop({
         type: String,
@@ -50,7 +50,7 @@ export class Message {
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Message',
-        autopopulate: { maxDepth: 1 },
+        autopopulate: { maxDepth: 2 },
     })
     replyTo?: Message
 

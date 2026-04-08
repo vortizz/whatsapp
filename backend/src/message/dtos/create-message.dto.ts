@@ -5,9 +5,9 @@ export class CreateMessageDto {
     @IsMongoId()
     chat: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsMongoId()
-    to: string
+    to?: string
 
     @IsNotEmpty()
     @IsString()

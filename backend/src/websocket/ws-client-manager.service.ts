@@ -89,6 +89,16 @@ export class WsClientManager {
         }
     }
 
+    sendGroupMessageToClients(message: Message, memberIds: string[]): void {
+        const data = { name: 'new-message', data: message }
+        for (const memberId of memberIds) {
+            const client = this.connectedClients.get(memberId)
+            if (client) {
+                client.send(JSON.stringify(data))
+            }
+        }
+    }
+
     sendStatusReceivedToClient(data: { chat: string, from: string, messages: any[] }[]): void {
         data.forEach(item => {
             const connectedClient = this.connectedClients.get(item.from.toString())
