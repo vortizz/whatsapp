@@ -25,7 +25,7 @@
         replyTo.isMine ? 'border-emerald-500' : 'border-amber-500',
         isGroup ? 'mt-1.5' : ''
       ]"
-      @click.stop="$emit('scroll-to', replyTo._id)"
+      @click.stop="$emit('scroll-to', replyTo)"
     >
       <div class="text-sm font-semibold truncate mb-0.5" :class="replyTo.isMine ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
         {{ replyTo.senderName }}
@@ -43,18 +43,22 @@
       :_id="_id"
       :text="text"
       :isMenuOpen="isMenuOpen"
+      :isGroup="isGroup"
+      :senderName="from?.name"
       buttonClass="bg-white/95 text-gray-500 dark:bg-neutral-800/95 dark:text-white/60"
       @toggle-menu="$emit('toggle-menu')"
       @enter-select="$emit('enter-select', $event)"
       @enter-forward="$emit('enter-forward', $event)"
       @reply="$emit('reply')"
+      @reply-privately="$emit('reply-privately')"
+      @message-user="$emit('message-user')"
     />
   </div>
 </template>
 
 <script setup>
 const props = defineProps(['_id', 'text', 'date', 'isFirst', 'isMenuOpen', 'isSelecting', 'replyTo', 'forwarded', 'from', 'isGroup'])
-defineEmits(['toggle-menu', 'delete', 'enter-select', 'enter-forward', 'reply', 'scroll-to', 'view-member'])
+defineEmits(['toggle-menu', 'delete', 'enter-select', 'enter-forward', 'reply', 'scroll-to', 'view-member', 'reply-privately', 'message-user'])
 
 const menuRef = ref(null)
 

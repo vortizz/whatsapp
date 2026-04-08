@@ -44,7 +44,9 @@
               @enter-select="enterSelectionMode(msg._id)"
               @enter-forward="enterForwardMode(msg._id)"
               @reply="handleReply(msg)"
-              @scroll-to="scrollToMessage"
+              @reply-privately="handleReplyPrivately(msg)"
+              @message-user="openDmWith(msg.from)"
+              @scroll-to="scrollToReply"
               @view-member="$emit('view-member', $event)"
             />
             <HomeMainMessageTo
@@ -63,7 +65,7 @@
               @enter-select="enterSelectionMode(msg._id)"
               @enter-forward="enterForwardMode(msg._id)"
               @reply="handleReply(msg)"
-              @scroll-to="scrollToMessage"
+              @scroll-to="scrollToReply"
             />
           </div>
         </template>
@@ -98,6 +100,27 @@ function handleReply(msg) {
   setReply({ _id: msg._id, text: msg.text, senderName: msg.isMine ? 'You' : msg.from?.name || '' })
 }
 
+async function openDmWith(user) {
+  try {
+    const chats = await useMyAuthFetch('chat', { method: 'GET' })
+    const existing = chats.find(c => !c.isGroup && c.users.some(u => (u._id || u) === user._id))
+    if (existing) {
+      const chatUser = existing.users.find(u => u._id !== userId.value) ?? user
+      chatStore.setChat({ _id: existing._id, user: JSON.parse(JSON.stringify(chatUser)) })
+    } else {
+      chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
+    }
+  } catch {
+    chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
+  }
+}
+
+async function handleReplyPrivately(msg) {
+  await openDmWith(msg.from)
+  await nextTick()
+  setReply({ _id: msg._id, text: msg.text, senderName: msg.from?.name || '' })
+}
+
 async function deleteSelected() {
   const ids = [...selectedIds.value]
   try {
@@ -118,6 +141,32 @@ async function scrollToMessage(id) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   highlightedId.value = id
   setTimeout(() => { highlightedId.value = null }, 2000)
+}
+
+async function scrollToReply(replyTo) {
+  const replyId = replyTo._id ?? replyTo
+  const sourceChatId = replyTo.chat?._id ?? replyTo.chat
+
+  await nextTick()
+  const el = document.querySelector(`[data-message-id="${replyId}"]`)
+  if (el) {
+    scrollToMessage(replyId)
+    return
+  }
+
+  if (!sourceChatId || sourceChatId === chatId.value) return
+
+  try {
+    const chats = await useMyAuthFetch('chat', { method: 'GET' })
+    const sourceChat = chats.find(c => c._id === sourceChatId)
+    if (!sourceChat) return
+
+    pendingScrollId = replyId
+    const chatUser = sourceChat.isGroup
+      ? { _id: sourceChat._id, name: sourceChat.name, isGroup: true, users: sourceChat.users, groupAdmins: sourceChat.groupAdmins, createdAt: sourceChat.createdAt, createdBy: sourceChat.createdBy }
+      : sourceChat.users.find(u => u._id !== userId.value)
+    chatStore.setChat({ _id: sourceChat._id, user: chatUser })
+  } catch { /* ignore */ }
 }
 
 function getSelectedMessages() {

@@ -1,6 +1,7 @@
 <template>
     <div class="p-1">
-        <button 
+        <button
+            v-if="isGroupAdmin(userId)"
             class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50"
             @click="openAddMemberModal"
         >
@@ -11,10 +12,10 @@
             <Icon class="text-base" name="material-symbols:info-outline-rounded"></Icon>
             <span class="text-sm">Group info</span>
         </button>
-        <button class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50">
+        <!-- <button class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50">
             <Icon class="text-base" name="material-symbols:check-box-outline"></Icon>
             <span class="text-sm">Select messages</span>
-        </button>
+        </button> -->
         <button @click="closeChat" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50">
             <Icon class="text-base" name="zondicons:close-outline"></Icon>
             <span class="text-sm">Close chat</span>
@@ -37,14 +38,28 @@
 
 <script setup>
 import { useChatStore } from '../../../store/chat'
+import { useUserStore } from '../../../store/user'
 
 const emit = defineEmits(['close', 'showContactInfo'])
 
 const chatStore = useChatStore()
+const userStore = useUserStore()
 
+const { user: chatUser } = storeToRefs(chatStore)
+const { _id: userId } = storeToRefs(userStore)
 const { openModal, isClearChatDisabled } = useClearChatModal()
 const { openModal: openAddMemberModal } = useAddMemberModal()
 const { openModal: openExitGroupModal } = useExitGroupModal()
+
+const groupAdminIds = computed(() =>
+  new Set((chatUser.value?.groupAdmins ?? []).map(a =>
+    typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString()
+  ))
+)
+
+function isGroupAdmin(memberId) {
+  return groupAdminIds.value.has(memberId?.toString())
+}
 
 function closeChat() {
     emit('close')

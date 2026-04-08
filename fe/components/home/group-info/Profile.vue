@@ -24,11 +24,17 @@
             <template v-else>
                 <span class="text-2xl font-semibold text-neutral-950 dark:text-white text-center flex-1 flex justify-center">{{ chatUser.name }}</span>
                 <button
+                    v-if="isGroupAdmin(userId)"
                     class="p-2 text-neutral-950 dark:text-white transition-colors flex items-center rounded-full dark:hover:bg-white/10 hover:bg-stone-200"
                     @click="startEdit"
                 >
                     <Icon name="material-symbols:edit-outline-rounded" class="text-2xl" />
                 </button>
+                <CustomTooltip v-else text="only admin can edit this group's info">
+                    <div class="p-2 flex items-center">
+                        <Icon name="material-symbols:info-outline" class="text-2xl text-black/50 dark:text-white/50"/>
+                    </div>
+                </CustomTooltip>
             </template>
         </div>
 
@@ -40,6 +46,7 @@
         <!-- Action buttons -->
         <div class="flex gap-3 w-full mt-1">
             <button
+                v-if="isGroupAdmin(userId)"
                 class="flex-1 flex flex-col items-center gap-1.5 pt-3 pb-2 rounded-xl bg-transparent hover:bg-stone-100 hover:dark:bg-white/5 transition-colors border border-black/20 dark:border-white/10"
                 @click="emit('openAddMember')"
             >
@@ -75,17 +82,23 @@
             <template v-else>
                 <span 
                     class="flex-1" 
-                    :class="chatUser.description ? 'text-neutral-950 dark:text-white' : 'text-emerald-500 cursor-pointer'"
-                    @click="chatUser.description ? null : startDescriptionEdit()"
+                    :class="chatUser.description || !isGroupAdmin(userId) ? 'text-neutral-950 dark:text-white' : 'text-emerald-500 cursor-pointer'"
+                    @click="chatUser.description || !isGroupAdmin(userId) ? null : startDescriptionEdit()"
                 >
-                    {{ chatUser.description || 'Add group description' }}
+                    {{ isGroupAdmin(userId) ? chatUser.description || 'Add group description' : chatUser.description ?? 'No description' }}
                 </span>
                 <button
+                    v-if="isGroupAdmin(userId)"
                     class="p-2 text-neutral-950 dark:text-white transition-colors flex items-center rounded-full dark:hover:bg-white/10 hover:bg-stone-200"
                     @click="startDescriptionEdit"
                 >
                     <Icon name="material-symbols:edit-outline-rounded" class="text-2xl" />
                 </button>
+                <CustomTooltip v-else text="only admin can edit this group's info">
+                    <div class="p-2 flex items-center">
+                        <Icon name="material-symbols:info-outline" class="text-2xl text-black/50 dark:text-white/50"/>
+                    </div>
+                </CustomTooltip>
             </template>
         </div>
 
@@ -100,6 +113,7 @@
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 import { useUserStore } from '../../../store/user'
+import CustomTooltip from '~/components/CustomTooltip.vue'
 
 const emit = defineEmits(['openAddMember', 'search'])
 
@@ -146,6 +160,16 @@ const createdAtLabel = computed(() => {
 const editing = ref(false)
 const editedName = ref('')
 const nameInput = ref(null)
+
+const groupAdminIds = computed(() =>
+  new Set((chatUser.value?.groupAdmins ?? []).map(a =>
+    typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString()
+  ))
+)
+
+function isGroupAdmin(memberId) {
+  return groupAdminIds.value.has(memberId?.toString())
+}
 
 function startEdit() {
     editedName.value = chatUser.value.name

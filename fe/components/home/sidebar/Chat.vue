@@ -37,7 +37,7 @@
                         { 'invisible': !lastMessage?.text }
                     ]"
                 >
-                    {{ lastMessage.text || 'X' }}
+                    {{ isGroup && lastMessage.text ? (lastMessage.isMine ? 'You' : lastMessage.senderName) + ': ' + lastMessage.text : lastMessage.text || 'X' }}
                 </div>
                 <div class="flex-none">
                     <div v-if="!isClearing" class="flex flex-row items-center gap-0.5">

@@ -10,6 +10,7 @@
 
         <!-- Add member -->
         <div
+            v-if="isGroupAdmin(userId)"
             class="flex items-center gap-4 px-4 py-3 hover:bg-stone-100 dark:hover:bg-white/5 cursor-pointer mx-2.5 rounded-xl"
             @click="emit('openAddMember')"
         >
@@ -50,6 +51,7 @@
             <HomeGroupInfoMembersMenu
                 :_id="member._id"
                 :isAdmin="isGroupAdmin(member._id)"
+                :currentUserIsAdmin="isGroupAdmin(userId)"
                 :isMenuOpen="isMenuOpen === member._id"
                 @toggle-menu="toggleMenu(member._id)"
                 @make-group-admin="makeGroupAdmin"

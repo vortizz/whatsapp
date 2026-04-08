@@ -12,13 +12,23 @@
     <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
       <div
         v-if="isMenuOpen"
-        class="absolute w-40 rounded-xl bg-white shadow-lg ring-1 ring-black/10 ring-opacity-5 dark:bg-neutral-900 dark:ring-white/10 p-1"
+        class="absolute w-52 rounded-xl bg-white shadow-lg ring-1 ring-black/10 ring-opacity-5 dark:bg-neutral-900 dark:ring-white/10 p-1"
         :class="menuPositionClass"
       >
         <button @click.stop="reply" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
           <Icon class="text-base" name="mdi:reply" />
           Reply
         </button>
+        <template v-if="isGroup">
+          <button @click.stop="replyPrivately" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
+            <Icon class="text-base" name="mdi:reply-outline" />
+            Reply privately
+          </button>
+          <button @click.stop="messageUser" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
+            <Icon class="text-base" name="mdi:message-outline" />
+            Message {{ senderName }}
+          </button>
+        </template>
         <button @click.stop="copyText" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
           <Icon class="text-base" name="mdi:content-copy" />
           Copy
@@ -37,8 +47,8 @@
 </template>
 
 <script setup>
-const props = defineProps(['_id', 'text', 'isMenuOpen', 'buttonClass'])
-const emit = defineEmits(['toggle-menu', 'enter-select', 'enter-forward', 'reply'])
+const props = defineProps(['_id', 'text', 'isMenuOpen', 'buttonClass', 'isGroup', 'senderName'])
+const emit = defineEmits(['toggle-menu', 'enter-select', 'enter-forward', 'reply', 'reply-privately', 'message-user'])
 
 const btnRef = ref(null)
 const menuPos = ref({ vertical: 'bottom', horizontal: 'right' })
@@ -95,6 +105,16 @@ function enterForward() {
 
 function reply() {
   emit('reply')
+  emit('toggle-menu')
+}
+
+function replyPrivately() {
+  emit('reply-privately')
+  emit('toggle-menu')
+}
+
+function messageUser() {
+  emit('message-user')
   emit('toggle-menu')
 }
 

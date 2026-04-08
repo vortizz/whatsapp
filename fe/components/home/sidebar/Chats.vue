@@ -89,13 +89,21 @@ async function getChats() {
             user: chat.isGroup
                 ? { _id: chat._id, name: chat.name, isGroup: true, users: chat.users, groupAdmins: chat.groupAdmins, createdAt: chat.createdAt, createdBy: chat.createdBy }
                 : chat.users.find(user => user._id !== userId.value),
-            lastMessage: chat.lastMessage ? {
-                _id: chat.lastMessage._id,
-                text: chat.lastMessage.text,
-                createdAt: chat.lastMessage.createdAt,
-                status: chat.lastMessage.status,
-                isMine: getUserId(chat.lastMessage.from) === userId.value
-            } : emptyLastMessage(),
+            lastMessage: chat.lastMessage ? (() => {
+                const fromId = getUserId(chat.lastMessage.from)
+                const isMine = fromId === userId.value
+                const senderName = chat.lastMessage.from?.name
+                    ?? chat.users?.find(u => u._id === fromId)?.name
+                    ?? ''
+                return {
+                    _id: chat.lastMessage._id,
+                    text: chat.lastMessage.text,
+                    createdAt: chat.lastMessage.createdAt,
+                    status: chat.lastMessage.status,
+                    isMine,
+                    senderName
+                }
+            })() : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
         }))
     } catch (error) {
@@ -169,7 +177,8 @@ function newMessage(message) {
         text: message.text,
         createdAt: message.createdAt,
         status: message.status,
-        isMine
+        isMine,
+        senderName: message.from?.name ?? ''
     }
     if (!isMine && chatId.value !== chat._id) {
         chat.countUnreadMessages += 1
@@ -212,7 +221,8 @@ function newChat(message) {
             text: message.text,
             createdAt: message.createdAt,
             status: message.status,
-            isMine
+            isMine,
+            senderName: message.from?.name ?? ''
         },
         countUnreadMessages: isMine ? 0 : 1
     }

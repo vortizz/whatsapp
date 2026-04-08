@@ -16,7 +16,7 @@
       v-if="replyTo"
       class="mb-1.5 rounded-md overflow-hidden border-l-4 bg-black/5 dark:bg-white/5 px-2 py-2 cursor-pointer"
       :class="replyTo.isMine ? 'border-emerald-600' : 'border-amber-500'"
-      @click.stop="$emit('scroll-to', replyTo._id)"
+      @click.stop="$emit('scroll-to', replyTo)"
     >
       <div class="text-sm font-semibold truncate mb-0.5" :class="replyTo.isMine ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
         {{ replyTo.senderName }}
