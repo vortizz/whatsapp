@@ -40,6 +40,12 @@ export class ChatController {
     }
 
     @Auth()
+    @Get(':id/events')
+    async findEventsByChatId(@Param('id') id: string) {
+        return await this.chatService.findEventsByChatId(id)
+    }
+
+    @Auth()
     @Patch(':id/name')
     async updateGroupName(@AuthUser() user: User, @Param('id') id: string, @Body('name') name: string): Promise<Chat> {
         return await this.chatService.updateGroupName(id, name, user)

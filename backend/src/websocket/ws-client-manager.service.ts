@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
 import { UserService } from "src/user/user.service";
 import { Message } from "src/message/entities/message.schema";
+import { ChatEvent } from "src/chat/entities/chat-event.schema";
 
 export type DecodedAuthToken = {
     id: string
@@ -14,10 +16,12 @@ export class WsClientManager {
     private readonly logger = new Logger(WsClientManager.name)
     private readonly connectedClients = new Map<string, any>()
 
-    constructor(
-        private readonly userService: UserService
-    ) {}
-    
+    constructor(private readonly moduleRef: ModuleRef) {}
+
+    private get userService(): UserService {
+        return this.moduleRef.get(UserService, { strict: false })
+    }
+
     async addConnection(client: any, decodedAuthToken: DecodedAuthToken) {
         this.logger.debug('Add ws connection: ' + decodedAuthToken.id)
 
@@ -78,7 +82,7 @@ export class WsClientManager {
             const deletedByUserId = user?._id?.toString() || user?.toString()
             return deletedByUserId === message.to._id.toString()
         })
-    
+
         const data = { name: 'new-message', data: message }
         if (ownConnectedClient) {
             ownConnectedClient.send(JSON.stringify(data))
@@ -102,7 +106,7 @@ export class WsClientManager {
     sendStatusReceivedToClient(data: { chat: string, from: string, messages: any[] }[]): void {
         data.forEach(item => {
             const connectedClient = this.connectedClients.get(item.from.toString())
-            
+
             if (connectedClient) {
                 connectedClient.send(JSON.stringify({ name: 'received-message', data: item }))
             }
@@ -112,11 +116,21 @@ export class WsClientManager {
     sendStatusReadToClient(data: { chat: string, from: string, messages: any[] }[]): void {
         data.forEach(item => {
             const connectedClient = this.connectedClients.get(item.from.toString())
-            
+
             if (connectedClient) {
                 connectedClient.send(JSON.stringify({ name: 'read-message', data: item }))
             }
         })
+    }
+
+    sendChatEventToClients(event: ChatEvent, memberIds: string[]): void {
+        const data = { name: 'chat-event', data: event }
+        for (const memberId of memberIds) {
+            const client = this.connectedClients.get(memberId)
+            if (client) {
+                client.send(JSON.stringify(data))
+            }
+        }
     }
 
     isClientConnected(userId: string): boolean {

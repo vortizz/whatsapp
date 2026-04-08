@@ -5,12 +5,14 @@ import { InjectModel } from "@nestjs/mongoose";
 import { User } from "src/user/entities/user.schema";
 import { Status } from "src/message/entities/status.enum";
 import { ChatEvent } from "./entities/chat-event.schema";
+import { WsClientManager } from "src/websocket/ws-client-manager.service";
 
 @Injectable()
 export class ChatService {
     constructor(
         @InjectModel(Chat.name) private chatModel: mongoose.Model<Chat>,
         @InjectModel(ChatEvent.name) private chatEventModel: mongoose.Model<ChatEvent>,
+        private readonly wsClientManager: WsClientManager,
     ) {}
 
     async create(users: User[]): Promise<Chat> {
@@ -39,9 +41,18 @@ export class ChatService {
         return await newChat.save()
     }
 
-    async createChatEvent(chatEvent: ChatEvent): Promise<ChatEvent> {
+    async createChatEvent(chatEvent: ChatEvent, memberIds?: string[]): Promise<ChatEvent> {
         const newChatEvent = new this.chatEventModel(chatEvent)
-        return await newChatEvent.save()
+        const saved = await newChatEvent.save()
+        if (memberIds?.length) {
+            const populated = <ChatEvent>await this.chatEventModel.findById(saved._id)
+            this.wsClientManager.sendChatEventToClients(populated, memberIds)
+        }
+        return saved
+    }
+
+    async findEventsByChatId(chatId: string): Promise<ChatEvent[]> {
+        return await this.chatEventModel.find({ chat: chatId }).sort({ createdAt: 1 })
     }
 
     async findByUser(user: User, username?: string): Promise<Chat[]> {
@@ -208,8 +219,10 @@ export class ChatService {
         chat._id = _id
         newEvent.chat = chat
         newEvent.isNameChanged = true
+        newEvent.newName = name
         newEvent.doneBy = user
-        await this.createChatEvent(newEvent)
+        const memberIds = chatFound.users.map(u => u._id.toString())
+        await this.createChatEvent(newEvent, memberIds)
         return await this.chatModel.findByIdAndUpdate(_id, { name }, { new: true })
     }
 
@@ -230,7 +243,8 @@ export class ChatService {
         newEvent.chat = chat
         newEvent.isDescriptionChanged = true
         newEvent.doneBy = user
-        await this.createChatEvent(newEvent)
+        const memberIds = chatFound.users.map(u => u._id.toString())
+        await this.createChatEvent(newEvent, memberIds)
         return await this.chatModel.findByIdAndUpdate(_id, { description }, { new: true })
     }
 
@@ -266,7 +280,8 @@ export class ChatService {
             return newEvent
         })
         
-        await Promise.all(newEvents.map(ne => this.createChatEvent(ne)))
+        const allMemberIds = [...chatFound.users.map(u => u._id.toString()), ...userIds]
+        await Promise.all(newEvents.map(ne => this.createChatEvent(ne, allMemberIds)))
 
         return await this.chatModel.findByIdAndUpdate(
             _id,
@@ -306,7 +321,8 @@ export class ChatService {
         newEvent.isUserRemoved = true
         newEvent.userRemoved = removedUser
 
-        await this.createChatEvent(newEvent)
+        const memberIds = chatFound.users.map(u => u._id.toString())
+        await this.createChatEvent(newEvent, memberIds)
 
         return await this.chatModel.findByIdAndUpdate(
             _id,
@@ -342,7 +358,8 @@ export class ChatService {
         newEvent.isUserRemoved = true
         newEvent.userRemoved = exitUser
 
-        await this.createChatEvent(newEvent)
+        const memberIds = chatFound.users.map(u => u._id.toString())
+        await this.createChatEvent(newEvent, memberIds)
 
         return await this.chatModel.findByIdAndUpdate(
             _id,

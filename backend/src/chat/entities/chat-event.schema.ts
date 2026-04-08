@@ -28,31 +28,22 @@ export class ChatEvent {
     @Prop({ type: Boolean })
     isNameChanged?: boolean
 
+    @Prop({ type: String })
+    newName?: string
+
     @Prop({ type: Boolean })
     isDescriptionChanged?: boolean
 
     @Prop({ type: Boolean })
     isUserAdded?: boolean
 
-    @Prop({
-        type: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: User.name,
-            autopopulate: true
-        },
-    })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name, autopopulate: true })
     userAdded?: User
 
     @Prop({ type: Boolean })
     isUserRemoved?: boolean
 
-    @Prop({
-        type: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: User.name,
-            autopopulate: true
-        },
-    })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name, autopopulate: true })
     userRemoved?: User
 
     createdAt: Date
