@@ -39,8 +39,8 @@
                         class="relative"
                     >
                         <div
-                            class="flex items-center gap-4 px-3.5 py-3 rounded-xl hover:bg-stone-400/10 dark:hover:bg-white/5 cursor-pointer"
-                            :class="member._id?.toString() === userId ? 'cursor-default' : 'cursor-pointer'"
+                            class="flex items-center gap-4 px-3.5 py-3 rounded-xl"
+                            :class="member._id?.toString() === userId ? 'cursor-default' : 'cursor-pointer hover:bg-stone-400/10 dark:hover:bg-white/5'"
                             @click.stop="member._id?.toString() !== userId && toggleMenu(member._id, $event)"
                         >
                             <AvatarPlaceholder :size="48" class="flex-none" />
@@ -141,7 +141,14 @@ const activeMenu = ref(null)
 const menuStyle = ref({})
 const menuRefs = ref({})
 
-const members = computed(() => chatUser.value?.users ?? [])
+const members = computed(() => {
+    const users = chatUser.value?.users ?? []
+    return [...users].sort((a, b) => {
+        if (a._id?.toString() === userId.value) return -1
+        if (b._id?.toString() === userId.value) return 1
+        return 0
+    })
+})
 const groupAdminIds = computed(() =>
     new Set((chatUser.value?.groupAdmins ?? []).map(a =>
         typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString()

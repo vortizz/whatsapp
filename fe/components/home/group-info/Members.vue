@@ -22,8 +22,8 @@
         <div
             v-for="member in members"
             :key="member._id"
-            class="flex items-center gap-4 px-4 py-3 dark:hover:bg-white/5 mx-2.5 rounded-xl group relative"
-            :class="member._id?.toString() !== userId ? 'cursor-pointer hover:bg-stone-100' : ''"
+            class="flex items-center gap-4 px-4 py-3 mx-2.5 rounded-xl group relative"
+            :class="member._id?.toString() !== userId ? 'cursor-pointer hover:bg-stone-100 dark:hover:bg-white/5' : ''"
             @click="member._id?.toString() !== userId && emit('viewMember', member)"
             @contextmenu.prevent="member._id?.toString() !== userId && toggleMenu(member._id)"
         >
@@ -89,7 +89,14 @@ const { openModal: openClearChatModal } = useClearChatModal()
 
 const isMenuOpen = ref(null)
 
-const members = computed(() => chatUser.value?.users ?? [])
+const members = computed(() => {
+  const users = chatUser.value?.users ?? []
+  return [...users].sort((a, b) => {
+    if (a._id?.toString() === userId.value) return -1
+    if (b._id?.toString() === userId.value) return 1
+    return 0
+  })
+})
 const groupAdminIds = computed(() =>
   new Set((chatUser.value?.groupAdmins ?? []).map(a =>
     typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString()
