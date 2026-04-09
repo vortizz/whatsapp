@@ -34,7 +34,6 @@ export class WsClientManager {
 
         // SET CONNECTED USER
         await this.userService.updateIsConnected(client.userId, true)
-        // await this.messageService.updateStatusToReceived(client.userId)
         this.connectedClients.set(decodedAuthToken.id, client)
 
         setTimeout(() => {

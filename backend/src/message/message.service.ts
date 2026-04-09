@@ -70,6 +70,14 @@ export class MessageService {
 
         this.wsClientManager.sendMessageToClient(messageCreated)
 
+        if (messageCreated.status === Status.RECEIVED) {
+            this.wsClientManager.sendStatusReceivedToClient([{
+                chat: messageCreated.chat._id.toString(),
+                from: messageCreated.from._id.toString(),
+                messages: [messageCreated]
+            }])
+        }
+
         return messageCreated
     }
 
@@ -101,7 +109,7 @@ export class MessageService {
             { to: user._id, status: Status.SENT, deletedBy: { $ne: user._id } },
             { $set: { status: Status.RECEIVED } }
         )
-        
+
         this.wsClientManager.sendStatusReceivedToClient(messagesToBeUpdated)
     }
 

@@ -29,12 +29,6 @@ export class MessageController {
     }
 
     @Auth()
-    @Put('/received')
-    async updateToReceived(@AuthUser() user: User): Promise<void> {
-        await this.messageService.updateStatusToReceived(user)
-    }
-
-    @Auth()
     @Put('/:chat_id/read')
     async updateToRead(
         @AuthUser() user: User,

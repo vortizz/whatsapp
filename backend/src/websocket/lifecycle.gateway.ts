@@ -4,6 +4,8 @@ import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit } from "@nestjs
 import { JwtService } from "@nestjs/jwt";
 import { DecodedAuthToken, WsClientManager } from "./ws-client-manager.service";
 import { ConfigService } from "@nestjs/config";
+import { ModuleRef } from "@nestjs/core";
+import { MessageService } from "src/message/message.service";
 
 @Injectable()
 export class LifecycleGateway
@@ -15,16 +17,21 @@ export class LifecycleGateway
     constructor(
         private configService: ConfigService,
         private readonly jwtService: JwtService,
-        private readonly wsClientManager: WsClientManager
+        private readonly wsClientManager: WsClientManager,
+        private readonly moduleRef: ModuleRef
     ) {
         super()
+    }
+
+    private get messageService(): MessageService {
+        return this.moduleRef.get(MessageService, { strict: false })
     }
     
     afterInit(server: any) {
         this.logger.debug('Websockets initialized: ' + LifecycleGateway.name)
     }
 
-    handleConnection(client: any, ...args: any[]) {
+    async handleConnection(client: any, ...args: any[]) {
         const decodedAuthToken = this.getDecodedAuthToken(client)
 
         if (!decodedAuthToken) {
@@ -32,7 +39,8 @@ export class LifecycleGateway
             return
         }
 
-        this.wsClientManager.addConnection(client, decodedAuthToken)
+        await this.wsClientManager.addConnection(client, decodedAuthToken)
+        await this.messageService.updateStatusToReceived({ _id: decodedAuthToken.id } as any)
     }
 
     handleDisconnect(client: any) {

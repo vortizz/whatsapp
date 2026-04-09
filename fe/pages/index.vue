@@ -164,12 +164,7 @@ watch(pendingMessageMember, async (val) => {
     } catch {}
 })
 
-async function updateStatusToReceived() {
-    await useMyAuthFetch('message/received', { method: 'PUT' })
-}
-
 onMounted(() => {
-    updateStatusToReceived()
     clearChat()
 
     if (conn.value?.readyState !== WebSocket.OPEN) {
