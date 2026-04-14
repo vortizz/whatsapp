@@ -91,9 +91,20 @@ export class UserService {
     }
 
     async updateIsConnected(_id: string, isConnected: boolean): Promise<User> {
+        if (!isConnected) {
+            await this.updateLastSeenAt(_id)
+        }
         return await this.userModel.findByIdAndUpdate(
             _id,
             { $set: { isConnected } },
+            { new: true }
+        )
+    }
+
+    async updateLastSeenAt(_id: string): Promise<User> {
+        return await this.userModel.findByIdAndUpdate(
+            _id,
+            { $set: { lastSeenAt: new Date() } },
             { new: true }
         )
     }
@@ -205,4 +216,6 @@ export class UserService {
             )
         }))
     }
+
+
 }

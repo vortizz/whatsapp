@@ -3,6 +3,8 @@ import { ModuleRef } from "@nestjs/core";
 import { UserService } from "src/user/user.service";
 import { Message } from "src/message/entities/message.schema";
 import { ChatEvent } from "src/chat/entities/chat-event.schema";
+import { ChatService } from "src/chat/chat.service";
+import { User } from "src/user/entities/user.schema";
 
 export type DecodedAuthToken = {
     id: string
@@ -22,6 +24,10 @@ export class WsClientManager {
         return this.moduleRef.get(UserService, { strict: false })
     }
 
+    private get chatService(): ChatService {
+        return this.moduleRef.get(ChatService, { strict: false })
+    }
+
     async addConnection(client: any, decodedAuthToken: DecodedAuthToken) {
         this.logger.debug('Add ws connection: ' + decodedAuthToken.id)
 
@@ -33,8 +39,9 @@ export class WsClientManager {
         }
 
         // SET CONNECTED USER
-        await this.userService.updateIsConnected(client.userId, true)
+        const updatedUser = await this.userService.updateIsConnected(client.userId, true)
         this.connectedClients.set(decodedAuthToken.id, client)
+        this.sendLastSeenToClients(client.userId, true, updatedUser.lastSeenAt)
 
         setTimeout(() => {
             client.close()
@@ -51,8 +58,9 @@ export class WsClientManager {
         this.logger.debug('Remove ws connection: ' + client.userId)
 
         // SET DISCONNECTED USER
-        await this.userService.updateIsConnected(client.userId, false)
+        const updatedUser = await this.userService.updateIsConnected(client.userId, false)
         this.connectedClients.delete(client.userId)
+        this.sendLastSeenToClients(client.userId, false, updatedUser.lastSeenAt)
     }
 
     // async sendMessageToClient(wsAuthUserId: string, sendMessageDto: SendMessageDto) {
@@ -126,6 +134,30 @@ export class WsClientManager {
         const data = { name: 'chat-event', data: event }
         for (const memberId of memberIds) {
             const client = this.connectedClients.get(memberId)
+            if (client) {
+                client.send(JSON.stringify(data))
+            }
+        }
+    }
+
+    async sendLastSeenToClients(userId: string, isConnected: boolean, lastSeenAt: Date): Promise<void> {
+        const userRef = new User()
+        userRef._id = userId
+        const chats = await this.chatService.findByUserSimple(userRef)
+
+        const contactIds = new Set<string>()
+        for (const chat of chats) {
+            for (const member of chat.users) {
+                const id = member._id?.toString() || member.toString()
+                if (id !== userId) {
+                    contactIds.add(id)
+                }
+            }
+        }
+
+        const data = { name: 'user-status', data: { userId, isConnected, lastSeenAt } }
+        for (const contactId of contactIds) {
+            const client = this.connectedClients.get(contactId)
             if (client) {
                 client.send(JSON.stringify(data))
             }

@@ -56,6 +56,9 @@ export class User {
     })
     blockedUsers: User[]
 
+    @Prop({ type: Date, default: () => Date.now() })
+    lastSeenAt: Date
+
     createdAt: Date
     updatedAt: Date
 }

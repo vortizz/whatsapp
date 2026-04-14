@@ -5,6 +5,8 @@ interface IUser {
     name: string
     email: string
     about: string
+    isConnected: boolean
+    lastSeenAt: Date
 }
 
 interface IChat {
@@ -31,6 +33,13 @@ export const useChatStore = defineStore('chat', {
         setUnreadCounts(chats: Array<{ countUnreadMessages: number }>) {
             this.unreadChatsCount = chats.filter(c => c.countUnreadMessages > 0).length
             this.unreadMessagesCount = chats.reduce((sum, c) => sum + c.countUnreadMessages, 0)
+        },
+        updateChatUserStatus(userId: string, isConnected: boolean, lastSeenAt: Date) {
+            const user = this.user as IUser
+            if (user?._id === userId) {
+                user.isConnected = isConnected
+                user.lastSeenAt = lastSeenAt
+            }
         }
     },
     persist: true
