@@ -269,6 +269,14 @@ const handledMessages = computed(() => {
 
 const messagesOnly = computed(() => messages.value.filter(m => !m.isEvent))
 
+function isUnreadByMe(msg) {
+  if (msg.isMine) return false
+  if (chatUser.value?.isGroup) {
+    return !(msg.readBy ?? []).includes(userId.value)
+  }
+  return msg.status === StatusMessage.RECEIVED
+}
+
 function showUnreadMessage(messageId) {
   const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
   if (msgIndex <= 0) return false
@@ -276,8 +284,7 @@ function showUnreadMessage(messageId) {
   const previousMsg = messagesOnly.value[msgIndex - 1]
   const currentMsg = messagesOnly.value[msgIndex]
 
-  return !currentMsg.isMine && currentMsg.status === StatusMessage.RECEIVED &&
-    !(!previousMsg.isMine && previousMsg.status === StatusMessage.RECEIVED)
+  return isUnreadByMe(currentMsg) && !isUnreadByMe(previousMsg)
 }
 
 function numberOfUnreadMessages(messageId) {
