@@ -164,6 +164,29 @@ export class WsClientManager {
         }
     }
 
+    async sendTypingToClients(fromUserId: string, chatId: string): Promise<void> {
+        const [user, chat] = await Promise.all([
+            this.userService.findById(fromUserId),
+            this.chatService.findById(chatId)
+        ])
+
+        if (!user || !chat) return
+
+        const memberIds = chat.users.map(u => u._id?.toString() || u.toString())
+        const payload = JSON.stringify({
+            name: 'typing',
+            data: { chatId, from: { _id: fromUserId, name: user.name } }
+        })
+
+        for (const memberId of memberIds) {
+            if (memberId === fromUserId) continue
+            const client = this.connectedClients.get(memberId)
+            if (client) {
+                client.send(payload)
+            }
+        }
+    }
+
     isClientConnected(userId: string): boolean {
         return !!this.connectedClients.get(userId)
     }
