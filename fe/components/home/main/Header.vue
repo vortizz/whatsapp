@@ -6,11 +6,11 @@
                 <div class="text-base font-semibold text-black dark:text-white leading-tight">
                     {{ chatUser.name }}
                 </div>
-                <div v-if="chatUser.isGroup" class="text-xs text-black/50 dark:text-white/50 truncate">
-                    {{ groupMembers }}
+                <div v-if="chatUser.isGroup" class="text-xs truncate" :class="isTypingInChat(chatId) ? 'text-emerald-500' : 'text-black/50 dark:text-white/50'">
+                    {{ isTypingInChat(chatId) ? getTypingUsers(chatId).map(u => u.name).join(', ') + ' typing...' : groupMembers }}
                 </div>
-                <div v-else class="text-xs text-black/50 dark:text-white/50 truncate">
-                    {{ chatUser.isConnected ? 'online' : lastSeen(chatUser.lastSeenAt) }}
+                <div v-else class="text-xs truncate" :class="isTypingInChat(chatId) ? 'text-emerald-500' : 'text-black/50 dark:text-white/50'">
+                    {{ isTypingInChat(chatId) ? 'Typing...' : chatUser.isConnected ? 'online' : lastSeen(chatUser.lastSeenAt) }}
                 </div>
             </div>
         </div>
@@ -50,6 +50,8 @@ import { useWsStore } from '../../../store/websocket'
 
 const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
 
+const { setTyping, isTypingInChat, getTypingUsers } = useTypingState()
+
 const chatStore = useChatStore()
 const userStore = useUserStore()
 const wsStore = useWsStore()
@@ -62,6 +64,8 @@ function handleEvent(event) {
     const { name, data } = JSON.parse(event.data)
     if (name === 'user-status') {
         chatStore.updateChatUserStatus(data.userId, data.isConnected, data.lastSeenAt)
+    } else if (name === 'typing') {
+        setTyping(data.chatId, data.from)
     }
 }
 

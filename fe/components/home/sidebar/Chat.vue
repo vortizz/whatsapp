@@ -24,15 +24,22 @@
                 </div>
             </div>
             <div class="flex items-end place-items-center">
-                <span v-if="lastMessage?.isMine" class="text-base leading-none mr-0.5" :class="lastMessage?.status === StatusMessage.READ ? 'text-sky-400' : 'text-gray-500'">
+                <span v-if="!isTyping && lastMessage?.isMine" class="text-base leading-none mr-0.5" :class="lastMessage?.status === StatusMessage.READ ? 'text-sky-400' : 'text-gray-500'">
                     <Icon name="mdi:check" v-if="lastMessage?.status === StatusMessage.SENT" />
                     <Icon name="mdi:check-all" v-else />
                 </span>
-                <div 
-                    class="text-sm grow max-h-5 text-ellipsis overflow-hidden" 
+                <div
+                    v-if="isTyping"
+                    class="text-sm grow max-h-5 text-ellipsis overflow-hidden text-emerald-500 font-medium"
+                >
+                    {{ typingLabel }}
+                </div>
+                <div
+                    v-else
+                    class="text-sm grow max-h-5 text-ellipsis overflow-hidden"
                     :class="[
-                        countUnreadMessages && !lastMessage?.isMine 
-                            ? 'font-semibold dark:text-white' 
+                        countUnreadMessages && !lastMessage?.isMine
+                            ? 'font-semibold dark:text-white'
                             : 'dark:text-white/60',
                         { 'invisible': !lastMessage?.text }
                     ]"
@@ -61,7 +68,14 @@
 
 <script setup>
 const emit = defineEmits(['openMenu'])
-const props = defineProps(['name', 'isGroup', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing'])
+const props = defineProps(['name', 'isGroup', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing', 'typingUsers'])
+
+const isTyping = computed(() => props.typingUsers?.length > 0)
+const typingLabel = computed(() => {
+    if (!isTyping.value) return ''
+    if (!props.isGroup) return 'Typing...'
+    return props.typingUsers.map(u => u.name).join(', ') + ' typing...'
+})
 
 function openMenu(event) {
     const rect = event.currentTarget.getBoundingClientRect()

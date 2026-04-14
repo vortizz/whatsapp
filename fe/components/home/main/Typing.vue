@@ -25,7 +25,7 @@
                     rows="1"
                     class="flex-1 w-full text-sm text-neutral-950 dark:placeholder:text-white/60 dark:text-white rounded-3xl py-3.5 px-5 focus:outline-none placeholder:text-gray-600 caret-emerald-500 dark:bg-neutral-800 resize-none overflow-hidden leading-normal"
                     @focus="onFocusInput"
-                    @input="autoResize"
+                    @input="onInput"
                     @keydown.enter.exact.prevent="send"
                     @keydown.shift.enter="$nextTick(autoResize)"
                 ></textarea>
@@ -49,16 +49,19 @@
 import { mapActions, mapState } from 'pinia'
 import { useChatStore } from '../../../store/chat'
 import { useMessageReplyStore } from '../../../store/messageReply'
+import { useWsStore } from '../../../store/websocket'
 
 export default {
     setup() {
         const replyStore = useMessageReplyStore()
-        return { replyStore }
+        const wsStore = useWsStore()
+        return { replyStore, wsStore }
     },
     data() {
         return {
             message: '',
-            isLoading: false
+            isLoading: false,
+            _typingThrottleTimer: null
         }
     },
     computed: {
@@ -87,6 +90,24 @@ export default {
         ...mapActions(useChatStore, {
             setChatAction: 'setChat'
         }),
+        onInput() {
+            this.autoResize()
+            if (this.chatId === 'new-chat') return
+            if (!this._typingThrottleTimer) {
+                this.sendTypingEvent()
+                this._typingThrottleTimer = setTimeout(() => {
+                    this._typingThrottleTimer = null
+                }, 2000)
+            }
+        },
+        sendTypingEvent() {
+            const conn = this.wsStore.conn
+            if (!conn || conn.readyState !== WebSocket.OPEN) return
+            conn.send(JSON.stringify({
+                event: 'typing',
+                data: { chatId: this.chatId }
+            }))
+        },
         autoResize() {
             const el = this.$refs.rInput
             el.style.height = 'auto'

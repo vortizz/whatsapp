@@ -9,6 +9,7 @@
             :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
             :lastMessage="chat.lastMessage"
             :countUnreadMessages="chat.countUnreadMessages"
+            :typingUsers="getTypingUsers(chat._id)"
             @click="setChat(chat)"
             @openMenu="openMenu(chat, $event)"
         />
@@ -34,6 +35,8 @@ import { useWsStore } from '../../../store/websocket'
 import { StatusMessage } from '../../../utils/status-message'
 
 const emit = defineEmits(['showContactInfo'])
+
+const { setTyping, getTypingUsers } = useTypingState()
 
 const chats = ref([])
 const containerEl = ref(null)
@@ -78,6 +81,8 @@ function handleEvent(event) {
         receivedMessage(msg)
     } else if (name === 'read-message') {
         readMessage(msg)
+    } else if (name === 'typing') {
+        setTyping(msg.chatId, msg.from)
     }
 }
 

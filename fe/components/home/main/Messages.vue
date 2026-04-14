@@ -84,6 +84,23 @@
         </template>
       </div>
     </div>
+    <div v-if="isTypingInChat(chatId)" class="flex items-end gap-2 mb-2" :class="chatUser?.isGroup ? 'pl-9 pr-16' : 'px-16'">
+      <div v-if="chatUser?.isGroup" class="flex -space-x-2 flex-shrink-0">
+        <AvatarPlaceholder
+          v-for="u in getTypingUsers(chatId)"
+          :key="u._id"
+          :size="28"
+          class="ring-2 ring-[#efeae2] dark:ring-neutral-900"
+        />
+      </div>
+      <div class="bg-white dark:bg-neutral-800 rounded-2xl py-2 px-2.5 shadow-sm flex items-center">
+        <div class="flex gap-1 items-center h-4">
+          <span class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+          <span class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+          <span class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+        </div>
+      </div>
+    </div>
     <div ref="bottomEl"></div>
   </div>
 </template>
@@ -96,6 +113,8 @@ import { useWsStore } from '../../../store/websocket'
 import { useMessageSelectionStore } from '../../../store/messageSelection'
 import { useMessageReplyStore } from '../../../store/messageReply'
 import { StatusMessage } from '../../../utils/status-message'
+
+const { typingChats, setTyping, isTypingInChat, getTypingUsers } = useTypingState()
 
 const messages = ref([])
 const bottomEl = ref(null)
@@ -342,6 +361,8 @@ function handleEvent(event) {
     readMessage(msg)
   } else if (name === 'chat-event') {
     newChatEvent(msg)
+  } else if (name === 'typing') {
+    setTyping(msg.chatId, msg.from)
   }
 }
 
@@ -409,6 +430,24 @@ watch(() => deletedChatState.value.nonce, () => {
   }
 
   messages.value = []
+})
+
+function isNearBottom() {
+  let el = bottomEl.value?.parentElement
+  while (el) {
+    const overflow = getComputedStyle(el).overflowY
+    if (overflow === 'auto' || overflow === 'scroll') {
+      return el.scrollHeight - el.scrollTop - el.clientHeight <= 100
+    }
+    el = el.parentElement
+  }
+  return true
+}
+
+watch(() => typingChats.value[chatId.value], (isTyping) => {
+  if (isTyping && isNearBottom()) {
+    scrollToBottom({ behavior: 'smooth' })
+  }
 })
 
 watch(chatId, async (value, oldValue) => {
