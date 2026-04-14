@@ -1,7 +1,8 @@
 <template>
     <div class="px-4 py-2.5 bg-white dark:bg-neutral-900 flex items-center justify-between shadow-sm">
         <div class="flex flex-row items-center gap-3 flex-1 min-w-0 cursor-pointer" @click="emit('showContactInfo')">
-            <AvatarPlaceholder :size="40" :group="chatUser.isGroup" />
+            <GroupAvatarPlaceholder v-if="chatUser.isGroup" :size="40" :users="chatUser.users" />
+            <AvatarPlaceholder v-else :size="40" :name="chatUser.name" />
             <div class="flex-1 min-w-0">
                 <div class="text-base font-semibold text-black dark:text-white leading-tight">
                     {{ chatUser.name }}

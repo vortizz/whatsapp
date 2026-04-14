@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col justify-center items-center p-8">
         <div class="mb-4">
-            <AvatarPlaceholder :size="128" />
+            <AvatarPlaceholder :size="128" :name="displayUser.name" />
         </div>
         <div class="text-2xl text-neutral-950 dark:text-white">
             {{ displayUser.name }}

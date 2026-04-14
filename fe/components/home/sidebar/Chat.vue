@@ -5,7 +5,8 @@
     @contextmenu.prevent="openMenuAtPointer"
 >
     <div>
-        <AvatarPlaceholder :size="48" :group="isGroup" />
+        <GroupAvatarPlaceholder v-if="isGroup" :size="48" :users="users" />
+        <AvatarPlaceholder v-else :size="48" :name="name" />
     </div>
     <div class="flex-1 flex flex-col justify-center pb-3.5">
         <div>
@@ -68,7 +69,7 @@
 
 <script setup>
 const emit = defineEmits(['openMenu'])
-const props = defineProps(['name', 'isGroup', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing', 'typingUsers'])
+const props = defineProps(['name', 'isGroup', 'users', 'active', 'lastMessage', 'countUnreadMessages', 'isClearing', 'typingUsers'])
 
 const isTyping = computed(() => props.typingUsers?.length > 0)
 const typingLabel = computed(() => {

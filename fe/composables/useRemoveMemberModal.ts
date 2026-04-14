@@ -6,6 +6,13 @@ export function useRemoveMemberModal() {
     const targetMember = useState<{ _id: string, name: string } | null>('remove-member-target', () => null)
     const isSubmitting = useState('remove-member-submitting', () => false)
 
+    const membersUpdatedState = useState('members-updated-state', () => ({
+        chatId: '',
+        users: [] as any[],
+        groupAdmins: [] as any[],
+        nonce: 0
+    }))
+
     const chatStore = useChatStore()
     const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
 
@@ -32,6 +39,12 @@ export function useRemoveMemberModal() {
                 (state.user as any).users = updated.users
                 ;(state.user as any).groupAdmins = updated.groupAdmins
             })
+            membersUpdatedState.value = {
+                chatId: updated._id,
+                users: updated.users,
+                groupAdmins: updated.groupAdmins,
+                nonce: membersUpdatedState.value.nonce + 1
+            }
             closeModal()
         } catch (error: any) {
             const data = error?.data || {}

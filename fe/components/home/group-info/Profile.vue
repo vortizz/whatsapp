@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col items-center px-8 pt-8 pb-4 gap-4">
         <!-- Avatar -->
-        <AvatarPlaceholder :size="128" :group="true" />
+        <GroupAvatarPlaceholder :size="128" :users="chatUser.users" />
 
         <!-- Name + edit -->
         <div class="flex items-center gap-2 w-full">

@@ -43,7 +43,7 @@
                             :class="member._id?.toString() === userId ? 'cursor-default' : 'cursor-pointer hover:bg-stone-400/10 dark:hover:bg-white/5'"
                             @click.stop="member._id?.toString() !== userId && toggleMenu(member._id, $event)"
                         >
-                            <AvatarPlaceholder :size="48" class="flex-none" />
+                            <AvatarPlaceholder :size="48" class="flex-none" :name="member.name" />
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="text-base text-neutral-950 dark:text-white truncate">

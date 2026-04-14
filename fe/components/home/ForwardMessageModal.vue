@@ -46,7 +46,7 @@
                             >
                                 <Icon v-if="selectedUserIds.includes(user._id)" name="mdi:check" class="text-white text-sm" />
                             </div>
-                            <AvatarPlaceholder :size="49" />
+                            <AvatarPlaceholder :size="49" :name="user.name" />
                             <div class="flex-1 text-left min-w-0">
                                 <div class="text-base font-medium text-neutral-950 dark:text-white truncate">{{ user.name }}</div>
                                 <div class="text-sm text-black/50 dark:text-white/50 truncate">{{ user.about }}</div>

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-row mx-2.5 px-3.5 pt-3.5 gap-3.5 hover:bg-stone-400/15 rounded-xl group cursor-pointer">
     <div>
-        <AvatarPlaceholder :size="48" />
+        <AvatarPlaceholder :size="48" :name="name" />
     </div>
     <div class="flex-1 flex flex-col justify-center pb-3.5 ">
         <div>

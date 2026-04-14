@@ -28,7 +28,7 @@
             @click="member._id?.toString() !== userId && emit('viewMember', member)"
             @contextmenu.prevent="member._id?.toString() !== userId && toggleMenu(member._id)"
         >
-            <AvatarPlaceholder :size="48" class="flex-none" />
+            <AvatarPlaceholder :size="48" class="flex-none" :name="member.name" />
             <div class="flex-1 min-w-0">
                 <div class="flex justify-between">
                     <div class="text-base text-neutral-950 dark:text-white truncate">

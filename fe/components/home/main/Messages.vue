@@ -90,6 +90,7 @@
           v-for="u in getTypingUsers(chatId)"
           :key="u._id"
           :size="28"
+          :name="u.name"
           class="ring-2 ring-[#efeae2] dark:ring-neutral-900"
         />
       </div>

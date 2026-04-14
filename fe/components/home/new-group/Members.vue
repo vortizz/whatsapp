@@ -7,7 +7,7 @@
                 :key="user._id"
                 class="flex items-center gap-2 rounded-full px-2 py-1"
             >
-                <AvatarPlaceholder :size="26" />
+                <AvatarPlaceholder :size="26" :name="user.name" />
                 <span class="text-base text-neutral-950 dark:text-white">{{ user.name }}</span>
                 <button @click="emit('deselect', user)" class="flex items-center p-0.5 text-black/60 dark:text-white/60 hover:bg-stone-400/15 rounded-full">
                     <Icon name="material-symbols:close" class="text-2xl" />
@@ -45,7 +45,7 @@
                         @click="toggle(u)"
                     >
                         <div class="relative">
-                            <AvatarPlaceholder :size="48" />
+                            <AvatarPlaceholder :size="48" :name="u.name" />
                             <div
                                 v-if="isSelected(u)"
                                 class="absolute bottom-2 -right-1 bg-emerald-500 rounded-full text-white flex items-center justify-center w-5 h-5"

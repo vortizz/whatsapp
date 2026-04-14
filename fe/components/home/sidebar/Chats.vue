@@ -9,6 +9,7 @@
             :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
             :lastMessage="chat.lastMessage"
             :countUnreadMessages="chat.countUnreadMessages"
+            :users="chat.user.users"
             :typingUsers="getTypingUsers(chat._id)"
             @click="setChat(chat)"
             @openMenu="openMenu(chat, $event)"
@@ -284,6 +285,19 @@ watch(() => deletedChatState.value.nonce, () => {
     }
 
     removeChat(deletedChatState.value.chatId)
+})
+
+const { membersUpdatedState } = useAddMemberModal()
+watch(() => membersUpdatedState.value.nonce, () => {
+    if (!membersUpdatedState.value.chatId) {
+        return
+    }
+
+    const chat = chats.value.find(c => c._id === membersUpdatedState.value.chatId)
+    if (chat?.user?.isGroup) {
+        chat.user.users = membersUpdatedState.value.users
+        chat.user.groupAdmins = membersUpdatedState.value.groupAdmins
+    }
 })
 
 onMounted(async () => {

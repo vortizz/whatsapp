@@ -1,7 +1,5 @@
 <template>
-  <div v-if="isGroup && isFirst" class="text-sm rounded-full bg-indigo-200 dark:bg-stone-800 text-indigo-700 dark:text-amber-300 flex items-center size-7 justify-center self-start cursor-pointer flex-none" @click.stop="$emit('view-member', from)">
-    <span>{{ initials }}</span>
-  </div>
+  <AvatarPlaceholder v-if="isGroup && isFirst" :size="28" :name="from?.name" class="self-start cursor-pointer flex-none" @click.stop="$emit('view-member', from)" />
   <div
     data-message-bubble
     class="w-fit max-w-[70%] relative group bg-white pt-1.5 pb-2 pl-2.5 pr-2 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] dark:bg-neutral-800"
@@ -15,7 +13,7 @@
       <Icon name="mdi:share" class="text-sm" />
       Forwarded
     </div>
-    <div v-if="isGroup && isFirst" class="text-xs font-semibold text-indigo-600 dark:text-amber-300 cursor-pointer w-fit hover:underline" @click.stop="$emit('view-member', from)">
+    <div v-if="isGroup && isFirst" class="text-xs font-semibold cursor-pointer w-fit hover:underline" :style="{ color: senderColor }" @click.stop="$emit('view-member', from)">
       {{ from?.name || "Unknown" }}
     </div>
     <div
@@ -57,25 +55,18 @@
 </template>
 
 <script setup>
+import { getAvatarColor } from '~/utils/avatar-color'
+
 const props = defineProps(['_id', 'text', 'date', 'isFirst', 'isMenuOpen', 'isSelecting', 'replyTo', 'forwarded', 'from', 'isGroup'])
 defineEmits(['toggle-menu', 'delete', 'enter-select', 'enter-forward', 'reply', 'scroll-to', 'view-member', 'reply-privately', 'message-user'])
 
 const menuRef = ref(null)
 
+const senderColor = computed(() => getAvatarColor(props.from?.name || 'Unknown'))
+
 const formattedTime = computed(() => {
   const date = new Date(props.date)
   return date.toLocaleTimeString(navigator.language, { hour: '2-digit', minute: '2-digit' })
-})
-
-const initials = computed(() => {
-  const name = props.from?.name || "Unknown"
-  const i = name
-    .split(" ")
-    .map(word => word[0])
-    .join("")
-    .toUpperCase()
-  if (i.length > 2) return i[0] + i[1]
-  return i
 })
 </script>
 

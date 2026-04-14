@@ -23,7 +23,7 @@
                             :key="u._id"
                             class="flex items-center rounded-full px-2 py-1"
                         >
-                            <AvatarPlaceholder :size="26" />
+                            <AvatarPlaceholder :size="26" :name="u.name" />
                             <span class="text-base text-neutral-950 dark:text-white ml-2 mr-1.5">{{ u.name }}</span>
                             <button @click="deselect(u)" class="flex items-center p-0.5 text-black/60 dark:text-white/60 hover:bg-stone-400/20 rounded-full">
                                 <Icon name="material-symbols:close" class="text-2xl" />
@@ -68,7 +68,7 @@
                             >
                                 <Icon v-if="isSelected(u)" name="mdi:check" class="text-white dark:text-neutral-950 text-sm" />
                             </div>
-                            <AvatarPlaceholder :size="48" />
+                            <AvatarPlaceholder :size="48" :name="u.name" />
                             <div class="flex-1 min-w-0">
                                 <div class="text-base text-neutral-950 dark:text-white truncate">{{ u.name }}</div>
                                 <div class="text-sm text-black/50 dark:text-white/50 truncate">{{ u.about }}</div>

@@ -20,7 +20,7 @@
                     class="p-2 rounded-full transition-colors"
                     :class="currentPage === Pages.PROFILE ? activeButtonClass : inactiveButtonClass"
                 >
-                    <AvatarPlaceholder :size="28" />
+                    <AvatarPlaceholder :size="28" :name="userName" />
                 </button>
             </div>
         </aside>
@@ -35,11 +35,14 @@
 import { storeToRefs } from 'pinia'
 import { Pages, usePageStore } from '~/store/page'
 import { useChatStore } from '~/store/chat'
+import { useUserStore } from '~/store/user'
 
 const pageStore = usePageStore()
 const { currentPage } = storeToRefs(pageStore)
 const chatStore = useChatStore()
 const { unreadChatsCount } = storeToRefs(chatStore)
+const userStore = useUserStore()
+const { name: userName } = storeToRefs(userStore)
 const { resetPage } = pageStore
 
 const activeButtonClass = 'bg-black/10 text-black dark:bg-white/10 dark:text-white'
