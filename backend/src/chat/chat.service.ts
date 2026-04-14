@@ -70,12 +70,20 @@ export class ChatService {
             } },
             ...(usernameRegex ? [{
                 $match: {
-                    usersData: {
-                        $elemMatch: {
-                            _id: { $ne: userId },
+                    $or: [
+                        {
+                            usersData: {
+                                $elemMatch: {
+                                    _id: { $ne: userId },
+                                    name: usernameRegex
+                                }
+                            }
+                        },
+                        {
+                            isGroup: true,
                             name: usernameRegex
                         }
-                    }
+                    ]
                 }
             }] : []),
             { $lookup: {
