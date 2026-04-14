@@ -60,6 +60,24 @@ export class Message {
     @Prop({
         type: [{
             type: mongoose.Schema.Types.ObjectId,
+            ref: User.name
+        }],
+        default: []
+    })
+    receivedBy?: mongoose.Types.ObjectId[]
+
+    @Prop({
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: User.name
+        }],
+        default: []
+    })
+    readBy?: mongoose.Types.ObjectId[]
+
+    @Prop({
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
             ref: User.name,
             autopopulate: true
         }],

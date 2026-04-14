@@ -145,7 +145,7 @@ export class ChatService {
             } },
             { $lookup: {
                 from: 'messages',
-                let: { chatId: '$_id' },
+                let: { chatId: '$_id', isGroup: { $ifNull: ['$isGroup', false] } },
                 pipeline: [
                     { $match: {
                         $expr: {
@@ -153,8 +153,20 @@ export class ChatService {
                                 { $eq: ['$chat', '$$chatId'] },
                                 { $not: { $in: [userId, { $ifNull: ['$clearedBy', []] }] } },
                                 { $not: { $in: [userId, { $ifNull: ['$deletedBy', []] }] } },
-                                { $in: ['$status', [Status.RECEIVED, Status.SENT]] },
-                                { $eq: ['$to', userId] }
+                                { $ne: ['$from', userId] },
+                                { $or: [
+                                    // 1:1 message: addressed to me and not yet read
+                                    { $and: [
+                                        { $not: ['$$isGroup'] },
+                                        { $eq: ['$to', userId] },
+                                        { $in: ['$status', [Status.RECEIVED, Status.SENT]] }
+                                    ]},
+                                    // Group message: I haven't read it yet
+                                    { $and: [
+                                        '$$isGroup',
+                                        { $not: { $in: [userId, { $ifNull: ['$readBy', []] }] } }
+                                    ]}
+                                ]}
                             ]
                         }
                     } },
@@ -200,7 +212,11 @@ export class ChatService {
     }
 
     async findByUserSimple(user: User): Promise<Chat[]> {
-        return await this.chatModel.find({ users: user }) 
+        return await this.chatModel.find({ users: user })
+    }
+
+    async findGroupChatsByUser(userId: string): Promise<Chat[]> {
+        return await this.chatModel.find({ users: userId, isGroup: true })
     }
 
     async findByUsers(users: User[]): Promise<Chat> {
