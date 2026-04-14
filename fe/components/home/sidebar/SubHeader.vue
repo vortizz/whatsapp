@@ -13,7 +13,7 @@
       <input
         ref="rtextinput"
         type="text"
-        :placeholder="unreadChats ? 'Search unread chats' : 'Search or start a new chat'"
+        :placeholder="filter === 'unread' ? 'Search unread chats' : filter === 'groups' ? 'Search groups' : 'Search or start a new chat'"
         class="bg-transparent text-sm flex-1 text-neutral-950 placeholder:text-slate-500 dark:placeholder:text-white/60 h-full outline-none dark:text-zinc-50 "
         :value="text"
         @input="debouncedInput"
@@ -27,25 +27,35 @@
       </div>
     </div>
     <div class="mt-2 flex items-center gap-2">
-      <button 
-        @click="unreadChats = false"
+      <button
+        @click="setFilter('all')"
         class="text-sm font-semibold rounded-full px-3 py-1 border border-bg-black/20 dark:border-white/10 transition-colors"
         :class="{
-          'bg-emerald-100 text-green-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-green-100': !unreadChats,
-          'hover:bg-stone-100 dark:hover:bg-stone-400/15 dark:bg-neutral-900 dark:text-white/60': unreadChats
+          'bg-emerald-100 text-green-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-green-100': filter === 'all',
+          'hover:bg-stone-100 dark:hover:bg-stone-400/15 dark:bg-neutral-900 dark:text-white/60': filter !== 'all'
         }"
       >
         All
       </button>
-      <button 
+      <button
         class="text-sm font-semibold rounded-full px-3 py-1 border border-bg-black/20 dark:border-white/10 transition-colors"
-        @click="unreadChats = true"
+        @click="setFilter('unread')"
         :class="{
-          'bg-emerald-100 text-green-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-green-100': unreadChats,
-          'hover:bg-stone-100 dark:hover:bg-stone-400/15 dark:bg-neutral-900 dark:text-white/60': !unreadChats
+          'bg-emerald-100 text-green-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-green-100': filter === 'unread',
+          'hover:bg-stone-100 dark:hover:bg-stone-400/15 dark:bg-neutral-900 dark:text-white/60': filter !== 'unread'
         }"
       >
         Unread {{ unreadMessagesCount }}
+      </button>
+      <button
+        class="text-sm font-semibold rounded-full px-3 py-1 border border-bg-black/20 dark:border-white/10 transition-colors"
+        @click="setFilter('groups')"
+        :class="{
+          'bg-emerald-100 text-green-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-green-100': filter === 'groups',
+          'hover:bg-stone-100 dark:hover:bg-stone-400/15 dark:bg-neutral-900 dark:text-white/60': filter !== 'groups'
+        }"
+      >
+        Groups
       </button>
     </div>
     <!-- <div class="w-11 flex justify-center">
@@ -71,7 +81,14 @@ export default {
       isSearching: false,
       text: '',
       debouncedInput: debounce((e) => this.text = e.target.value, 500),
-      unreadChats: false
+      filter: 'all'
+    }
+  },
+  methods: {
+    setFilter(value) {
+      this.filter = value
+      this.$emit('setunreadChats', value === 'unread')
+      this.$emit('setgroupChats', value === 'groups')
     }
   },
   watch: {
@@ -87,11 +104,6 @@ export default {
     text: {
       handler(newValue) {
         this.$emit('settext', newValue)
-      }
-    },
-    unreadChats: {
-      handler(newValue) {
-        this.$emit('setunreadChats', newValue)
       }
     }
   }

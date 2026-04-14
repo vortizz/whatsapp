@@ -1,7 +1,7 @@
 <template>
     <div ref="containerEl" class="relative flex flex-col gap-1" @click="closeMenu">
         <HomeSidebarChat
-            v-for="(chat, i) in chats"
+            v-for="(chat, i) in displayedChats"
             :key="i"
             :name="chat.user.name"
             :isGroup="chat.user.isGroup"
@@ -35,11 +35,23 @@ import { useChatStore } from '../../../store/chat'
 import { useWsStore } from '../../../store/websocket'
 import { StatusMessage } from '../../../utils/status-message'
 
+const props = defineProps({ groupChats: { type: Boolean, default: false } })
 const emit = defineEmits(['showContactInfo'])
 
 const { setTyping, getTypingUsers } = useTypingState()
 
 const chats = ref([])
+const displayedChats = ref([])
+
+watch(
+    [chats, () => props.groupChats],
+    ([newChats, isGroups]) => {
+        displayedChats.value = isGroups
+            ? newChats.filter(chat => chat.user?.isGroup)
+            : newChats
+    },
+    { immediate: true, deep: true }
+)
 const containerEl = ref(null)
 const isMenuOpen = ref(false)
 const menuPosition = ref({ x: 0, y: 0 })
@@ -84,6 +96,8 @@ function handleEvent(event) {
         readMessage(msg)
     } else if (name === 'typing') {
         setTyping(msg.chatId, msg.from)
+    } else if (name === 'chat-event') {
+        handleChatEvent(msg)
     }
 }
 
@@ -234,6 +248,15 @@ function newChat(message) {
     }
     chats.value.push(chat)
     sortChats()
+}
+
+function handleChatEvent(event) {
+    const chat = chats.value.find(c => c._id === event.chat._id)
+    if (!chat) return
+
+    if (event.isNameChanged && chat.user?.isGroup) {
+        chat.user.name = event.newName
+    }
 }
 
 function sortChats() {

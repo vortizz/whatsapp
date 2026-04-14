@@ -3,20 +3,20 @@
         <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
             Looking for chats or users
         </div>
-        <div v-else-if="!filteredChats.length && !users.length" class="flex flex-col items-center gap-4 text-center py-[72px] text-base dark:text-gray-400 text-black/60">
+        <div v-else-if="!chatsSection.length && !groupsInCommon.length && !users.length" class="flex flex-col items-center gap-4 text-center py-[72px] text-base dark:text-gray-400 text-black/60">
             <div class="font-semibold">
                 No chats, contacts or messages found
             </div>
         </div>
-        <div v-if="filteredChats.length">
-            <div class="py-7 pl-4 text-sm dark:text-white/60">
-                <!-- {{ unreadChats && !text ? 'FILTERED BY UNREAD' : 'CHATS' }} -->
-                Chats
-            </div>
+
+        <div v-if="chatsSection.length">
+            <div class="py-7 pl-4 text-sm dark:text-white/60">Chats</div>
             <HomeSidebarChat
-                v-for="(chat) in filteredChats"
+                v-for="(chat) in chatsSection"
                 :key="chat._id"
                 :name="chat.user.name"
+                :isGroup="chat.user.isGroup"
+                :users="chat.user.users"
                 :active="chatId === chat._id"
                 :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
                 :lastMessage="chat.lastMessage"
@@ -24,7 +24,22 @@
                 @click="setChat(chat)"
             />
         </div>
-        <div v-if="users.length && !unreadChats">
+        <div v-if="groupsInCommon.length">
+            <div class="py-7 pl-4 text-sm dark:text-white/60">Groups in common</div>
+            <HomeSidebarChat
+                v-for="(chat) in groupsInCommon"
+                :key="chat._id"
+                :name="chat.user.name"
+                :isGroup="chat.user.isGroup"
+                :users="chat.user.users"
+                :active="chatId === chat._id"
+                :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
+                :lastMessage="chat.lastMessage"
+                :countUnreadMessages="chat.countUnreadMessages"
+                @click="setChat(chat)"
+            />
+        </div>
+        <div v-if="users.length && !unreadChats && !props.groupChats">
             <div class="p-7 text-teal-600">
                 USERS
             </div>
@@ -47,7 +62,7 @@ import { useChatStore } from '../../../store/chat'
 import { useWsStore } from '../../../store/websocket'
 import { StatusMessage } from '../../../utils/status-message'
 
-const props = defineProps(['text', 'unreadChats'])
+const props = defineProps(['text', 'unreadChats', 'groupChats'])
 
 const chats = ref([])
 const users = ref([])
@@ -69,12 +84,31 @@ function getUserId(user) {
     return user?._id || user
 }
 
-const filteredChats = computed(() => {
+// Non-group chats + groups whose name matches the search → shown under "Chats"
+const chatsSection = computed(() => {
+    const q = props.text?.toLowerCase() ?? ''
+    let result = chats.value.filter(chat => {
+        if (chat.user?.isGroup) {
+            return chat.user.name?.toLowerCase().includes(q)
+        }
+        return !props.groupChats
+    })
     if (props.unreadChats) {
-        return chats.value.filter(chat => chat.countUnreadMessages || chat._id === chatId.value)
+        result = result.filter(chat => chat.countUnreadMessages || chat._id === chatId.value)
     }
+    return result
+})
 
-    return chats.value
+// Groups where only a member's name matches (group name doesn't match) → shown under "Groups in common"
+const groupsInCommon = computed(() => {
+    const q = props.text?.toLowerCase() ?? ''
+    let result = chats.value.filter(chat =>
+        chat.user?.isGroup && !chat.user.name?.toLowerCase().includes(q)
+    )
+    if (props.unreadChats) {
+        result = result.filter(chat => chat.countUnreadMessages || chat._id === chatId.value)
+    }
+    return result
 })
 
 const currentSelectedChatHasMessages = computed(() => {
@@ -122,14 +156,24 @@ async function getChats() {
         const response = await useMyAuthFetch('chat', { method: 'GET', query: { username: props.text } })
         chats.value = response.map(chat => ({
             _id: chat._id,
-            user: chat.users.find(user => user._id !== userId.value),
-            lastMessage: chat.lastMessage ? {
-                _id: chat.lastMessage._id,
-                text: chat.lastMessage.text,
-                createdAt: chat.lastMessage.createdAt,
-                status: chat.lastMessage.status,
-                isMine: getUserId(chat.lastMessage.from) === userId.value
-            } : emptyLastMessage(),
+            user: chat.isGroup
+                ? { _id: chat._id, name: chat.name, isGroup: true, users: chat.users, groupAdmins: chat.groupAdmins, createdAt: chat.createdAt, createdBy: chat.createdBy }
+                : chat.users.find(user => user._id !== userId.value),
+            lastMessage: chat.lastMessage ? (() => {
+                const fromId = getUserId(chat.lastMessage.from)
+                const isMine = fromId === userId.value
+                const senderName = chat.lastMessage.from?.name
+                    ?? chat.users?.find(u => u._id === fromId)?.name
+                    ?? ''
+                return {
+                    _id: chat.lastMessage._id,
+                    text: chat.lastMessage.text,
+                    createdAt: chat.lastMessage.createdAt,
+                    status: chat.lastMessage.status,
+                    isMine,
+                    senderName
+                }
+            })() : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
         }))
     } catch (error) {
