@@ -98,6 +98,12 @@ function handleEvent(event) {
         setTyping(msg.chatId, msg.from)
     } else if (name === 'chat-event') {
         handleChatEvent(msg)
+    } else if (name === 'user-status') {
+        const chat = chats.value.find(c => !c.user?.isGroup && c.user?._id === msg.userId)
+        if (chat) {
+            chat.user.isConnected = msg.isConnected
+            chat.user.lastSeenAt = msg.lastSeenAt
+        }
     }
 }
 
