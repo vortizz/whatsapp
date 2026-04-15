@@ -222,7 +222,13 @@ function handleClickOutside() {
   openMenuId.value = null
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside))
+onMounted(async () => {
+  document.addEventListener('click', handleClickOutside)
+  if (chatId.value && chatId.value !== 'new-chat') {
+    await getMessages()
+    conn.value?.addEventListener('message', handleEvent)
+  }
+})
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 const { clearedChatState } = useClearChatState()
 const { deletedChatState } = useDeleteChatState()
