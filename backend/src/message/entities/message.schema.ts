@@ -57,23 +57,29 @@ export class Message {
     @Prop({ type: Boolean, default: false })
     forwarded?: boolean
 
-    @Prop({
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: User.name
-        }],
-        default: []
-    })
-    receivedBy?: mongoose.Types.ObjectId[]
+    @Prop({ type: Date })
+    receivedAt?: Date
+
+    @Prop({ type: Date })
+    readAt?: Date
 
     @Prop({
         type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: User.name
+            user: { type: mongoose.Schema.Types.ObjectId, ref: User.name },
+            at: { type: Date }
         }],
         default: []
     })
-    readBy?: mongoose.Types.ObjectId[]
+    receivedBy?: { user: mongoose.Types.ObjectId, at: Date }[]
+
+    @Prop({
+        type: [{
+            user: { type: mongoose.Schema.Types.ObjectId, ref: User.name },
+            at: { type: Date }
+        }],
+        default: []
+    })
+    readBy?: { user: mongoose.Types.ObjectId, at: Date }[]
 
     @Prop({
         type: [{

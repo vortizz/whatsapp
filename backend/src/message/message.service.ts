@@ -35,12 +35,13 @@ export class MessageService {
             )
 
             const allReceived = onlineNonSenderIds.length === nonSenderIds.length && nonSenderIds.length > 0
+            const now = new Date()
 
             const newMessage = new this.messageModel({
                 ...createMessageDto,
                 from: user,
                 status: allReceived ? Status.RECEIVED : Status.SENT,
-                receivedBy: onlineNonSenderIds.map(id => new mongoose.Types.ObjectId(id)),
+                receivedBy: onlineNonSenderIds.map(id => ({ user: new mongoose.Types.ObjectId(id), at: now })),
             })
             const messageCreated = <Message>await newMessage.save()
 
@@ -77,12 +78,13 @@ export class MessageService {
             return blockedUserId === user._id.toString()
         })
 
+        const isOnline = !recipientBlockedSender && this.wsClientManager.isClientConnected(createMessageDto.to)
+
         const newMessage = new this.messageModel({
             ...createMessageDto,
             from: user,
-            status: !recipientBlockedSender && this.wsClientManager.isClientConnected(createMessageDto.to)
-                ? Status.RECEIVED
-                : Status.SENT,
+            status: isOnline ? Status.RECEIVED : Status.SENT,
+            ...(isOnline ? { receivedAt: new Date() } : {}),
             ...(recipientBlockedSender ? { deletedBy: [to] } : {})
         })
         const messageCreated = <Message>await newMessage.save()
@@ -128,9 +130,10 @@ export class MessageService {
         ])
 
         // Update 1:1 messages
+        const receivedNow = new Date()
         await this.messageModel.updateMany(
             { to: user._id, status: Status.SENT, deletedBy: { $ne: user._id } },
-            { $set: { status: Status.RECEIVED } }
+            { $set: { status: Status.RECEIVED, receivedAt: receivedNow } }
         )
         this.wsClientManager.sendStatusReceivedToClient(messagesToBeUpdated)
 
@@ -143,9 +146,9 @@ export class MessageService {
                 chat: { $in: groupChatIds },
                 status: Status.SENT,
                 from: { $ne: userObjectId },
-                receivedBy: { $nin: [userObjectId] }
+                receivedBy: { $not: { $elemMatch: { user: userObjectId } } }
             },
-            { $addToSet: { receivedBy: userObjectId } }
+            { $push: { receivedBy: { user: userObjectId, at: receivedNow } } }
         )
 
         // Promote to RECEIVED where all non-sender members have received the message.
@@ -186,19 +189,33 @@ export class MessageService {
             const memberCount = chatDoc.users.length
 
             // Track that this user has read group messages they didn't send
+            const readNow = new Date()
             await this.messageModel.updateMany(
                 {
                     chat: chatObjectId,
                     status: { $in: [Status.SENT, Status.RECEIVED] },
                     from: { $ne: userObjectId },
-                    readBy: { $nin: [userObjectId] }
+                    readBy: { $not: { $elemMatch: { user: userObjectId } } }
                 },
-                {
-                    $addToSet: {
-                        readBy: userObjectId,
-                        receivedBy: userObjectId
+                [
+                    {
+                        $set: {
+                            readBy: {
+                                $concatArrays: [
+                                    '$readBy',
+                                    [{ user: userObjectId, at: readNow }]
+                                ]
+                            },
+                            receivedBy: {
+                                $cond: {
+                                    if: { $not: [{ $anyElementTrue: { $map: { input: '$receivedBy', as: 'r', in: { $eq: ['$$r.user', userObjectId] } } } }] },
+                                    then: { $concatArrays: ['$receivedBy', [{ user: userObjectId, at: readNow }]] },
+                                    else: '$receivedBy'
+                                }
+                            }
+                        }
                     }
-                }
+                ]
             )
 
             // Promote messages to READ when all non-sender members have read them
@@ -253,7 +270,7 @@ export class MessageService {
                 clearedBy: { $ne: user._id },
                 deletedBy: { $ne: user._id },
             },
-            { $set: { status: Status.READ } }
+            { $set: { status: Status.READ, readAt: new Date() } }
         )
 
         this.wsClientManager.sendStatusReadToClient(messagesToBeUpdated)
@@ -278,5 +295,65 @@ export class MessageService {
             { _id: { $in: messageIds }, $or: [{ from: user._id }, { to: user._id }] },
             { $addToSet: { deletedBy: user } }
         )
+    }
+
+    async getMessageInfo(user: User, messageId: string) {
+        const message = await this.messageModel.findById(messageId)
+
+        if (!message) {
+            throw new NotFoundException('Message not found')
+        }
+
+        if (message.from._id.toString() !== user._id.toString()) {
+            throw new BadRequestException('You can only view info for messages you sent')
+        }
+
+        const chat = await this.chatService.findById(message.chat._id.toString())
+
+        if (!chat) {
+            throw new NotFoundException('Chat not found')
+        }
+
+        if (!chat.isGroup) {
+            return {
+                sentAt: message.createdAt,
+                isGroup: false,
+                receivedAt: message.receivedAt ?? null,
+                readAt: message.readAt ?? null,
+            }
+        }
+
+        // For group messages, populate user info for receivedBy and readBy
+        const nonSenders = chat.users.filter(u => u._id.toString() !== user._id.toString())
+
+        const receivedByMap = new Map(
+            (message.receivedBy ?? []).map(r => [r.user.toString(), r.at])
+        )
+        const readByMap = new Map(
+            (message.readBy ?? []).map(r => [r.user.toString(), r.at])
+        )
+
+        const sent: { _id: string, name: string }[] = []
+        const received: { _id: string, name: string, at: Date }[] = []
+        const read: { _id: string, name: string, at: Date }[] = []
+
+        for (const member of nonSenders) {
+            const memberId = member._id.toString()
+            if (readByMap.has(memberId)) {
+                read.push({ _id: memberId, name: member.name, at: readByMap.get(memberId)! })
+            } else if (receivedByMap.has(memberId)) {
+                received.push({ _id: memberId, name: member.name, at: receivedByMap.get(memberId)! })
+            } else {
+                sent.push({ _id: memberId, name: member.name })
+            }
+        }
+
+        return {
+            sentAt: message.createdAt,
+            isGroup: true,
+            sent,
+            received,
+            read,
+        }
     }
 }

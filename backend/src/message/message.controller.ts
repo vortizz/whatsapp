@@ -20,6 +20,15 @@ export class MessageController {
     }
 
     @Auth()
+    @Get('/:message_id/info')
+    async getMessageInfo(
+        @AuthUser() user: User,
+        @Param('message_id') messageId: string
+    ) {
+        return await this.messageService.getMessageInfo(user, messageId)
+    }
+
+    @Auth()
     @Get('/:chat_id')
     async findByChat(
         @AuthUser() user: User,
