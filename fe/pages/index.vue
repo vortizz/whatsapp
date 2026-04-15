@@ -38,6 +38,7 @@
                 @showContactInfo="isDisplayingContactInfo = true"
                 @showSearchMessages="showSearchMessages"
                 @viewMember="viewGroupMember"
+                @showMessageInfo="showMessageInfo"
             />
             <!--****************-->
             <HomeGroupInfo
@@ -52,6 +53,11 @@
                 @close="handleContactInfoClose"
                 @goToMessage="goToMessage"
                 @goToChat="goToChat"
+            />
+            <HomeMainMessageInfo
+                v-if="messageInfoMsg"
+                :message="messageInfoMsg"
+                @close="messageInfoMsg = null"
             />
             <HomeSearchMessages
                 v-if="isDisplayingSearchMessages"
@@ -90,9 +96,14 @@ const isDisplayingNewGroup = ref(false)
 const isDisplayingSearchMessages = ref(false)
 const homeMainRef = ref(null)
 const viewingGroupMember = ref(null)
+const messageInfoMsg = ref(null)
 
 function viewGroupMember(member) {
     viewingGroupMember.value = member
+}
+
+function showMessageInfo(msg) {
+    messageInfoMsg.value = msg
 }
 
 function handleContactInfoClose() {
@@ -181,6 +192,7 @@ watch(chatId, () => {
     isDisplayingContactInfo.value = false
     isDisplayingSearchMessages.value = false
     viewingGroupMember.value = null
+    messageInfoMsg.value = null
 })
 </script>
 

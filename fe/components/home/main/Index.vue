@@ -13,7 +13,7 @@
             @click="closeContextMenu"
         >
             <HomeForwardMessageModal />
-            <HomeMainMessages ref="messagesRef" @view-member="emit('viewMember', $event)" />
+            <HomeMainMessages ref="messagesRef" @view-member="emit('viewMember', $event)" @message-info="(payload) => emit('showMessageInfo', payload)" />
             <HomeMainMenu
                 :is-menu-button="isContextMenuOpen"
                 :x="menuPosition.x"
@@ -74,7 +74,7 @@ import { useUserStore } from '../../../store/user'
 import { useMessageSelectionStore } from '../../../store/messageSelection'
 import { useMessageReplyStore } from '../../../store/messageReply'
 
-const emit = defineEmits(['showContactInfo', 'showSearchMessages', 'viewMember'])
+const emit = defineEmits(['showContactInfo', 'showSearchMessages', 'viewMember', 'showMessageInfo'])
 
 const chatStore = useChatStore()
 const userStore = useUserStore()

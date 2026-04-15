@@ -37,6 +37,10 @@
           <Icon class="text-base" name="mdi:share" />
           Forward
         </button>
+        <button v-if="isMine" @click.stop="messageInfo" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
+          <Icon class="text-base" name="mdi:information-outline" />
+          Message info
+        </button>
         <button @click.stop="enterSelect" class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-rose-600/10 dark:hover:bg-rose-500/10 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm">
           <Icon class="text-base" name="line-md:trash" />
           Delete
@@ -47,8 +51,8 @@
 </template>
 
 <script setup>
-const props = defineProps(['_id', 'text', 'isMenuOpen', 'buttonClass', 'isGroup', 'senderName'])
-const emit = defineEmits(['toggle-menu', 'enter-select', 'enter-forward', 'reply', 'reply-privately', 'message-user'])
+const props = defineProps(['_id', 'text', 'isMenuOpen', 'buttonClass', 'isGroup', 'senderName', 'isMine'])
+const emit = defineEmits(['toggle-menu', 'enter-select', 'enter-forward', 'reply', 'reply-privately', 'message-user', 'message-info'])
 
 const btnRef = ref(null)
 const menuPos = ref({ vertical: 'bottom', horizontal: 'right' })
@@ -115,6 +119,11 @@ function replyPrivately() {
 
 function messageUser() {
   emit('message-user')
+  emit('toggle-menu')
+}
+
+function messageInfo() {
+  emit('message-info')
   emit('toggle-menu')
 }
 

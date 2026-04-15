@@ -38,11 +38,13 @@
       :_id="_id"
       :text="text"
       :isMenuOpen="isMenuOpen"
+      :isMine="showInfoButton !== false"
       buttonClass="bg-[#D9FDD3]/95 text-black/45 dark:bg-emerald-900/95 dark:text-white/60"
       @toggle-menu="$emit('toggle-menu')"
       @enter-select="$emit('enter-select', $event)"
       @enter-forward="$emit('enter-forward', $event)"
       @reply="$emit('reply')"
+      @message-info="$emit('message-info')"
     />
   </div>
 </template>
@@ -50,8 +52,8 @@
 <script setup>
 import { StatusMessage } from '../../../utils/status-message'
 
-const props = defineProps(['_id', 'text', 'date', 'status', 'isFirst', 'isMenuOpen', 'isSelecting', 'replyTo', 'forwarded'])
-defineEmits(['toggle-menu', 'delete', 'enter-select', 'enter-forward', 'reply', 'scroll-to'])
+const props = defineProps(['_id', 'text', 'date', 'status', 'isFirst', 'isMenuOpen', 'isSelecting', 'replyTo', 'forwarded', 'showInfoButton'])
+defineEmits(['toggle-menu', 'delete', 'enter-select', 'enter-forward', 'reply', 'scroll-to', 'message-info'])
 
 const menuRef = ref(null)
 

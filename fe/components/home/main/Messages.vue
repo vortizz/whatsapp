@@ -78,6 +78,7 @@
                 @enter-forward="enterForwardMode(item._id)"
                 @reply="handleReply(item)"
                 @scroll-to="scrollToReply"
+                @message-info="$emit('message-info', item)"
               />
             </div>
           </template>
@@ -212,6 +213,7 @@ function scheduleScrollToMessage(id) {
   pendingScrollId = id
 }
 
+const emit = defineEmits(['message-info', 'view-member'])
 defineExpose({ deleteSelected, scrollToMessage, getSelectedMessages, scheduleScrollToMessage })
 
 function toggleMenu(id) {
@@ -278,7 +280,7 @@ const messagesOnly = computed(() => messages.value.filter(m => !m.isEvent))
 function isUnreadByMe(msg) {
   if (msg.isMine) return false
   if (chatUser.value?.isGroup) {
-    return !(msg.readBy ?? []).includes(userId.value)
+    return !(msg.readBy ?? []).some(r => (r.user?._id ?? r.user) === userId.value)
   }
   return msg.status === StatusMessage.RECEIVED
 }
