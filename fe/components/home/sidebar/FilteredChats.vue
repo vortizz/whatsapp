@@ -80,6 +80,22 @@ const { _id: chatId } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
 const { setChat: setChatAction } = chatStore
 
+const { decryptMessage, decryptGroupMessage } = useCrypto()
+
+async function decryptLastMessage(lm, chatEntry) {
+    if (!lm?.iv) return lm?.text ?? ''
+    try {
+        if (chatEntry.user?.isGroup) {
+            return await decryptGroupMessage(lm.text, lm.iv, chatEntry._id)
+        }
+        const peer = chatEntry.user
+        if (!peer?._id) return lm.text
+        return await decryptMessage(lm.text, lm.iv, peer._id)
+    } catch {
+        return '[encrypted]'
+    }
+}
+
 function getUserId(user) {
     return user?._id || user
 }
@@ -153,7 +169,7 @@ async function load() {
 async function getChats() {
     try {
         const response = await useMyAuthFetch('chat', { method: 'GET', query: { username: props.text } })
-        chats.value = response.map(chat => ({
+        const mapped = response.map(chat => ({
             _id: chat._id,
             user: chat.isGroup
                 ? { _id: chat._id, name: chat.name, isGroup: true, users: chat.users, groupAdmins: chat.groupAdmins, createdAt: chat.createdAt, createdBy: chat.createdBy }
@@ -167,6 +183,7 @@ async function getChats() {
                 return {
                     _id: chat.lastMessage._id,
                     text: chat.lastMessage.text,
+                    iv: chat.lastMessage.iv,
                     createdAt: chat.lastMessage.createdAt,
                     status: chat.lastMessage.status,
                     isMine,
@@ -175,6 +192,12 @@ async function getChats() {
             })() : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
         }))
+        await Promise.all(mapped.map(async (chat) => {
+            if (chat.lastMessage?._id) {
+                chat.lastMessage.text = await decryptLastMessage(chat.lastMessage, chat)
+            }
+        }))
+        chats.value = mapped
     } catch (error) {
         const data = error?.data || {}
         const message = Array.isArray(data.message) ? data.message[0] : data.message
@@ -213,16 +236,18 @@ function setUser(user) {
     })
 }
 
-function newMessage(message) {
+async function newMessage(message) {
     const chat = chats.value.find(item => item._id === message.chat._id)
     if (!chat) {
         return
     }
 
     const isMine = message.from._id === userId.value
+    const lm = { text: message.text, iv: message.iv }
+    const text = await decryptLastMessage(lm, chat)
     chat.lastMessage = {
         _id: message._id,
-        text: message.text,
+        text,
         createdAt: message.createdAt,
         status: message.status,
         isMine
