@@ -8,7 +8,7 @@
         </header>
         <main
             ref="messagesPane"
-            class="relative border-r-2 border-transparent flex-1 overflow-y-auto scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent"
+            class="relative border-r-2 border-transparent flex-1 overflow-y-auto overflow-x-hidden scrollbar scrollbar-w-2 scrollbar-thumb-gray-300 scrollbar-track-transparent"
             @contextmenu="openContextMenu"
             @click="closeContextMenu"
         >

@@ -57,8 +57,9 @@ const emit = defineEmits(['toggle-menu', 'enter-select', 'enter-forward', 'reply
 const btnRef = ref(null)
 const menuPos = ref({ vertical: 'bottom', horizontal: 'right' })
 
-const MENU_WIDTH = 160
-const MENU_HEIGHT = 90
+const MENU_WIDTH = 208
+const ITEM_HEIGHT = 36
+const MENU_PADDING = 8
 
 const menuPositionClass = computed(() => ({
   'top-7': menuPos.value.vertical === 'bottom',
@@ -67,12 +68,21 @@ const menuPositionClass = computed(() => ({
   'right-0': menuPos.value.horizontal === 'left',
 }))
 
+const menuHeight = computed(() => {
+  let count = 4 // Reply + Copy + Forward + Delete
+  if (props.isGroup) count += 2 // Reply privately + Message user
+  if (props.isMine) count++ // Message info
+  return count * ITEM_HEIGHT + MENU_PADDING
+})
+
 function calcMenuPos(clientX, clientY, target) {
   const pane = target.closest('[class*="overflow-y-auto"]')
-  const bottomBoundary = pane ? pane.getBoundingClientRect().bottom : window.innerHeight
+  const paneRect = pane ? pane.getBoundingClientRect() : null
+  const bottomBoundary = paneRect ? paneRect.bottom : window.innerHeight
+  const rightBoundary = paneRect ? paneRect.right : window.innerWidth
   return {
-    vertical: bottomBoundary - clientY >= MENU_HEIGHT ? 'bottom' : 'top',
-    horizontal: window.innerWidth - clientX >= MENU_WIDTH ? 'right' : 'left',
+    vertical: bottomBoundary - clientY >= menuHeight.value ? 'bottom' : 'top',
+    horizontal: rightBoundary - clientX >= MENU_WIDTH ? 'right' : 'left',
   }
 }
 
