@@ -20,7 +20,7 @@
 
 <script setup>
 const props = defineProps(['member'])
-const emit = defineEmits(['close', 'goToMessage'])
+const emit = defineEmits(['close', 'goToMessage', 'goToChat'])
 
 const showSearch = ref(false)
 const directChatId = ref('')

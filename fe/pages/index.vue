@@ -126,11 +126,23 @@ function goToMessage(id, overrideChatId) {
     }
 }
 
-function goToChat(id) {
+async function goToChat(id) {
     if (id) {
         chatStore.setChat({ _id: id, user: viewingGroupMember.value })
         isDisplayingContactInfo.value = false
         viewingGroupMember.value = null
+    } else if (viewingGroupMember.value) {
+        try {
+            const member = viewingGroupMember.value
+            const chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: member._id } })
+            chatStore.setChat({ _id: chat._id, user: member })
+            isDisplayingContactInfo.value = false
+            viewingGroupMember.value = null
+        } catch (error) {
+            const data = error?.data || {}
+            const message = Array.isArray(data.message) ? data.message[0] : data.message
+            useNuxtApp().$toast.error(message)
+        }
     }
 }
 
@@ -169,9 +181,12 @@ watch(pendingMessageMember, async (val) => {
         if (direct) {
             const otherUser = direct.users.find(u => (u._id ?? u) !== userId.value)
             chatStore.setChat({ _id: direct._id, user: otherUser })
-            isDisplayingContactInfo.value = false
-            viewingGroupMember.value = null
+        } else {
+            const chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: val._id } })
+            chatStore.setChat({ _id: chat._id, user: val })
         }
+        isDisplayingContactInfo.value = false
+        viewingGroupMember.value = null
     } catch {}
 })
 
