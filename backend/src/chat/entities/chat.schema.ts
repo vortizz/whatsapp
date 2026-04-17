@@ -1,62 +1,68 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import * as mongoose from "mongoose";
-import { User } from "src/user/entities/user.schema";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import * as mongoose from 'mongoose'
+import { User } from 'src/user/entities/user.schema'
 
 export type ChatDocument = mongoose.HydratedDocument<Chat>
 
 @Schema({ timestamps: true, versionKey: false })
 export class Chat {
-    _id: string
+  _id: string
 
-    @Prop({
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: User.name,
-            autopopulate: true
-        }],
-        required: true
-    })
-    users: User[]
+  @Prop({
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: User.name,
+        autopopulate: true,
+      },
+    ],
+    required: true,
+  })
+  users: User[]
 
-    @Prop({ type: Boolean, default: false })
-    isGroup?: boolean
+  @Prop({ type: Boolean, default: false })
+  isGroup?: boolean
 
-    @Prop({ type: String, trim: true })
-    name?: string
+  @Prop({ type: String, trim: true })
+  name?: string
 
-    @Prop({ type: String, trim: true })
-    description?: string
+  @Prop({ type: String, trim: true })
+  description?: string
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name })
-    createdBy?: User
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name })
+  createdBy?: User
 
-    @Prop({
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: User.name,
-            autopopulate: true
-        }]
-    })
-    groupAdmins?: User[]
+  @Prop({
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: User.name,
+        autopopulate: true,
+      },
+    ],
+  })
+  groupAdmins?: User[]
 
-    @Prop({
-        type: [{
-            userId: { type: String, required: true },
-            encryptedKey: { type: String, required: true },
-            iv: { type: String, required: true },
-            ephemeralPublicKey: { type: String, required: true }
-        }],
-        default: []
-    })
-    encryptedKeys?: {
-        userId: string
-        encryptedKey: string
-        iv: string
-        ephemeralPublicKey: string
-    }[]
+  @Prop({
+    type: [
+      {
+        userId: { type: String, required: true },
+        encryptedKey: { type: String, required: true },
+        iv: { type: String, required: true },
+        ephemeralPublicKey: { type: String, required: true },
+      },
+    ],
+    default: [],
+  })
+  encryptedKeys?: {
+    userId: string
+    encryptedKey: string
+    iv: string
+    ephemeralPublicKey: string
+  }[]
 
-    createdAt: Date
-    updatedAt: Date
+  createdAt: Date
+  updatedAt: Date
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat)

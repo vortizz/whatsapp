@@ -9,21 +9,21 @@ import { UserModule } from 'src/user/user.module'
 import { PassportModule } from '@nestjs/passport'
 
 @Module({
-    imports: [
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                signOptions: {
-                    expiresIn: '1d',
-                },
-                secret: config.get<string>('app.jwtSecretKey')
-            })
-        }),
-        UserModule,
-        PassportModule
-    ],
-    controllers: [AuthController],
-    providers: [AuthService, LocalStrategy, JwtStrategy]
+  imports: [
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        signOptions: {
+          expiresIn: '1d',
+        },
+        secret: config.get<string>('app.jwtSecretKey'),
+      }),
+    }),
+    UserModule,
+    PassportModule,
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy, JwtStrategy],
 })
 export class AuthModule {}

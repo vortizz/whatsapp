@@ -12,22 +12,22 @@ import { WebsocketModule } from './websocket/websocket.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration]
+      load: [configuration],
     }),
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('mongo.uri'),
         user: config.get<string>('mongo.user'),
         pass: config.get<string>('mongo.password'),
-        dbName: config.get<string>('mongo.db')
+        dbName: config.get<string>('mongo.db'),
       }),
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
     UserModule,
     AuthModule,
     ChatModule,
     MessageModule,
-    WebsocketModule
-  ]
+    WebsocketModule,
+  ],
 })
 export class AppModule {}

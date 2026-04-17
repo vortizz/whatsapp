@@ -1,26 +1,26 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator"
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 export class CreateMessageDto {
-    @IsNotEmpty()
-    @IsMongoId()
-    chat: string
+  @IsNotEmpty()
+  @IsMongoId()
+  chat: string
 
-    @IsOptional()
-    @IsMongoId()
-    to?: string
+  @IsOptional()
+  @IsMongoId()
+  to?: string
 
-    @IsNotEmpty()
-    @IsString()
-    text: string
+  @IsNotEmpty()
+  @IsString()
+  text: string
 
-    @IsOptional()
-    @IsString()
-    iv?: string
+  @IsOptional()
+  @IsString()
+  iv?: string
 
-    @IsOptional()
-    @IsMongoId()
-    replyTo?: string
+  @IsOptional()
+  @IsMongoId()
+  replyTo?: string
 
-    @IsOptional()
-    forwarded?: boolean
+  @IsOptional()
+  forwarded?: boolean
 }

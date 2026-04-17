@@ -6,17 +6,17 @@ import { Auth } from 'src/common/decorator/auth.decorator'
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-    @UseGuards(AuthGuard('local'))
-    @Post('login')
-    async login(@Req() req: any): Promise<User> {
-        return await this.authService.login(req.user)
-    }
+  @UseGuards(AuthGuard('local'))
+  @Post('login')
+  async login(@Req() req: any): Promise<User> {
+    return await this.authService.login(req.user)
+  }
 
-    @Auth()
-    @Post('valid-token')
-    async validToken() {
-        return { valid: true }
-    }
+  @Auth()
+  @Post('valid-token')
+  async validToken() {
+    return { valid: true }
+  }
 }

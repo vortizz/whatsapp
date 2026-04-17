@@ -1,28 +1,30 @@
-import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Message, MessageSchema } from "./entities/message.schema";
-import { MessageController } from "./message.controller";
-import { MessageService } from "./message.service";
-import { UserModule } from "src/user/user.module";
-import { ChatModule } from "src/chat/chat.module";
-import { WebsocketModule } from "src/websocket/websocket.module";
+import { Module } from '@nestjs/common'
+import { MongooseModule } from '@nestjs/mongoose'
+import { Message, MessageSchema } from './entities/message.schema'
+import { MessageController } from './message.controller'
+import { MessageService } from './message.service'
+import { UserModule } from 'src/user/user.module'
+import { ChatModule } from 'src/chat/chat.module'
+import { WebsocketModule } from 'src/websocket/websocket.module'
 
 @Module({
-    imports: [
-        MongooseModule.forFeatureAsync([{ 
-            name: Message.name, 
-            useFactory: () => {
-                const schema = MessageSchema
-                schema.plugin(require('mongoose-autopopulate'))
-                return schema
-            },
-        }]),
-        UserModule,
-        ChatModule,
-        WebsocketModule
-    ],
-    controllers: [MessageController],
-    providers: [MessageService],
-    exports: [MessageService]
+  imports: [
+    MongooseModule.forFeatureAsync([
+      {
+        name: Message.name,
+        useFactory: () => {
+          const schema = MessageSchema
+          schema.plugin(require('mongoose-autopopulate'))
+          return schema
+        },
+      },
+    ]),
+    UserModule,
+    ChatModule,
+    WebsocketModule,
+  ],
+  controllers: [MessageController],
+  providers: [MessageService],
+  exports: [MessageService],
 })
 export class MessageModule {}
