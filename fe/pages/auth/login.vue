@@ -1,16 +1,16 @@
 <template>
-  <div class="rounded-2xl p-10 max-w-[27rem] w-11/12 flex flex-col justify-center bg-white shadow-lg">
+  <div class="rounded-2xl p-10 max-w-[27rem] w-11/12 flex flex-col justify-center bg-white shadow-lg dark:bg-zinc-900 ">
     <form @submit.prevent="onSubmit">
       <div class='flex flex-row gap-1 justify-center items-center'>
         <Icon name="ic:baseline-whatsapp" class='text-teal-600 text-[3rem]' />
-        <h1 class='text-2xl uppercase'>Whats#<span class='text-teal-600'>App</span></h1>
+        <h1 class='text-2xl uppercase dark:text-zinc-300'>Whats#<span class='text-teal-600'>App</span></h1>
       </div>
-      <div class="text-center text-lg mt-5">Create or access your WhatsApp account to text your friends.</div>
+      <div class="text-center text-lg mt-5 dark:text-zinc-300">Create or access your WhatsApp account to text your friends.</div>
       <div class="flex flex-col gap-1 mt-6">
-        <label class="uppercase text-xs font-semibold">E-mail</label>
+        <label class="uppercase text-xs font-semibold dark:text-zinc-300">E-mail</label>
         <input
           type="email"
-          class="text-lg border border-slate-300 rounded-2xl py-3 px-4 p font-medium bg-slate-50 focus:bg-white focus:outline-none"
+          class="text-lg border border-slate-300 rounded-2xl py-3 px-4 p font-medium bg-slate-50 focus:bg-white focus:outline-none dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700 dark:placeholder-zinc-500"
           v-model="form.email"
           :class="errors.email ? 'focus:border-red-600' : 'focus:border-teal-600'"
         />
@@ -19,15 +19,15 @@
         </span>
       </div>
       <div class="flex flex-col gap-1 mt-6">
-        <label class="uppercase text-xs font-semibold">Password</label>
+        <label class="uppercase text-xs font-semibold dark:text-zinc-300">Password</label>
         <div class='relative'>
           <input
             :type="isPasswordVisible ? 'text' : 'password'"
-            class="w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 p font-medium bg-zinc-50 focus:bg-white focus:outline-none"
+            class="w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 p font-medium bg-zinc-50 focus:bg-white focus:outline-none dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700 dark:placeholder-zinc-500"
             v-model="form.password"
             :class="errors.password ? 'focus:border-red-600' : 'focus:border-teal-600'"
           />
-          <button type="button" class='absolute inset-y-0 right-0 text-slate-400 px-4 text-lg' @click="isPasswordVisible = !isPasswordVisible">
+          <button type="button" class='absolute inset-y-0 right-0 text-slate-400 px-4 text-lg dark:text-zinc-400' @click="isPasswordVisible = !isPasswordVisible">
             <Icon v-if="isPasswordVisible" name="mdi:eye-outline" />  
             <Icon v-else name="mdi:eye-off-outline" />
           </button>
@@ -35,13 +35,6 @@
         <span v-show="errors.password" class="text-red-600 text-xs">
           {{ errors.password }}
         </span>
-        
-        <button
-          type="button"
-          class="ml-auto font-semibold text-teal-700 hover:underline duration-300"
-        >
-          Forgot my password
-        </button>
       </div>
       <button
         type="submit"

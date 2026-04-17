@@ -1,28 +1,28 @@
 <template>
-    <div class="rounded-2xl p-10 max-w-[27rem] w-11/12 flex flex-col justify-center bg-white shadow-lg relative">
+    <div class="rounded-2xl p-10 max-w-[27rem] w-11/12 flex flex-col justify-center bg-white shadow-lg relative dark:bg-zinc-900">
         <form @submit.prevent="onSubmit">
             <button
                 @click="isLoading ? () => {} : $router.push('/auth/login')"
                 type="button"
-                class="absolute -left-3 -top-3 p-2 rounded-full border-2 border-teal-600 bg-teal-600 text-white font-semibold hover:bg-teal-700 duration-300"
+                class="absolute -left-3 -top-3 p-2 rounded-full border-2 border-teal-600 bg-teal-600 text-white font-semibold hover:bg-teal-700 duration-300 flex items-center"
             >
                 <Icon name="ep:back" class="text-2xl" />
             </button>
             <div class='flex flex-row gap-1 justify-center items-center'>
                 <Icon name="ic:baseline-whatsapp" class='text-teal-600 text-[3rem]' />
-                <h1 class='text-2xl uppercase'>Whats#<span class='text-teal-600'>App</span></h1>
+                <h1 class='text-2xl uppercase dark:text-zinc-300'>Whats#<span class='text-teal-600'>App</span></h1>
             </div>
-            <span class="text-center text-lg mt-5 inline-block">
+            <span class="text-center text-lg mt-5 inline-block dark:text-zinc-300">
                 Create your WhatsApp account to start your journey.
             </span>
         
             <div class="flex flex-col mt-6 gap-6">
                 <div class="flex flex-col gap-1">
-                    <label for="name" class="uppercase text-xs font-semibold">Name</label>
+                    <label for="name" class="uppercase text-xs font-semibold dark:text-zinc-300">Name</label>
                     <input
                         name="name"
                         type="text"
-                        class='text-lg border border-slate-300 rounded-2xl py-3 px-4 p font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-teal-600'
+                        class='text-lg border border-slate-300 rounded-2xl py-3 px-4 p font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-teal-600 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700'
                         :class="errors.name ? 'focus:border-red-600' : 'focus:border-teal-600'"
                         v-model="form.name"
                     />
@@ -31,11 +31,11 @@
                     </span>
                 </div>
                 <div class="flex flex-col gap-1">
-                    <label for="email" class="uppercase text-xs font-semibold">E-mail</label>
+                    <label for="email" class="uppercase text-xs font-semibold dark:text-zinc-300">E-mail</label>
                     <input
                         name="email"
                         type="email"
-                        class='text-lg border border-slate-300 rounded-2xl py-3 px-4 p font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-teal-600'
+                        class='text-lg border border-slate-300 rounded-2xl py-3 px-4 p font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-teal-600 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700'
                         :class="errors.email ? 'focus:border-red-600' : 'focus:border-teal-600'"
                         v-model="form.email"
                     />
@@ -44,16 +44,16 @@
                     </span>
                 </div>
                 <div class="flex flex-col gap-1">
-                    <label for="password" class="uppercase text-xs font-semibold">Password</label>
+                    <label for="password" class="uppercase text-xs font-semibold dark:text-zinc-300">Password</label>
                     <div class='relative'>
                         <input
                             name="password"
                             :type="isPasswordVisible ? 'text' : 'password'"
-                            class='w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 p font-medium bg-zinc-50 focus:bg-white focus:outline-none focus:border-teal-600'
+                            class='w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 p font-medium bg-zinc-50 focus:bg-white focus:outline-none focus:border-teal-600 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700'
                             :class="errors.password ? 'focus:border-red-600' : 'focus:border-teal-600'"
                             v-model="form.password"
                         />
-                        <button type="button" class='absolute inset-y-0 right-0 text-slate-400 px-4 text-lg' @click="isPasswordVisible = !isPasswordVisible">
+                        <button type="button" class='absolute inset-y-0 right-0 text-slate-400 px-4 text-lg dark:text-zinc-400' @click="isPasswordVisible = !isPasswordVisible">
                             <Icon v-if="isPasswordVisible" name="mdi:eye-outline" />  
                             <Icon v-else name="mdi:eye-off-outline" />
                         </button>
@@ -63,12 +63,12 @@
                     </span>
                 </div>
                 <div class="flex flex-col gap-1">
-                    <label for="confirmPassword" class="uppercase text-xs font-semibold">Confirm Password</label>
+                    <label for="confirmPassword" class="uppercase text-xs font-semibold dark:text-zinc-300">Confirm Password</label>
                     <div class='relative'>
                         <input
                             name="confirmPassword"
                             :type="isConfirmPasswordVisible ? 'text' : 'password'"
-                            class="w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 p font-medium bg-zinc-50 focus:bg-white focus:outline-none focus:border-teal-600"
+                            class="w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 p font-medium bg-zinc-50 focus:bg-white focus:outline-none focus:border-teal-600 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700"
                             :class="errors.confirmPassword ? 'focus:border-red-600' : 'focus:border-teal-600'"
                             v-model="form.confirmPassword"
                         />
