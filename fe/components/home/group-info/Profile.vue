@@ -53,7 +53,7 @@
                 <Icon name="material-symbols:group-add-outline-rounded" class="text-2xl text-emerald-500" />
                 <span class="text-sm text-neutral-950 dark:text-white">Add</span>
             </button>
-            <button 
+            <button
                 class="flex-1 flex flex-col items-center gap-1.5 pt-3 pb-2 rounded-xl bg-transparent hover:bg-stone-100 hover:dark:bg-white/5 transition-colors border border-black/20 dark:border-white/10"
                 @click="emit('search')"
             >
@@ -121,6 +121,7 @@ const chatStore = useChatStore()
 const userStore = useUserStore()
 const { user: chatUser, _id: chatId } = storeToRefs(chatStore)
 const { _id: userId } = storeToRefs(userStore)
+
 
 const createdAtLabel = computed(() => {
     const createdAt = chatUser.value.createdAt

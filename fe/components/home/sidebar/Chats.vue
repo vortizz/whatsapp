@@ -39,6 +39,7 @@ const props = defineProps({ groupChats: { type: Boolean, default: false } })
 const emit = defineEmits(['showContactInfo'])
 
 const { setTyping, getTypingUsers } = useTypingState()
+const { decryptMessage, decryptGroupMessage } = useCrypto()
 
 const chats = ref([])
 const displayedChats = ref([])
@@ -81,15 +82,14 @@ function emptyLastMessage() {
     }
 }
 
-function handleEvent(event) {
-    console.log('MSG RECEIVED (CHATS.VUE) -> ', JSON.parse(event.data))
+async function handleEvent(event) {
     const data = JSON.parse(event.data)
 
     const name = data.name
     const msg = data.data
 
     if (name === 'new-message') {
-        newMessage(msg)
+        await newMessage(msg)
     } else if (name === 'received-message') {
         receivedMessage(msg)
     } else if (name === 'read-message') {
@@ -107,10 +107,26 @@ function handleEvent(event) {
     }
 }
 
+async function decryptLastMessage(chat) {
+    const lm = chat.lastMessage
+    if (!lm?.iv) return lm?.text ?? ''
+    try {
+        if (chat.isGroup) {
+            return await decryptGroupMessage(lm.text, lm.iv, chat._id)
+        }
+        const peer = chat.users.find(u => u._id !== userId.value)
+        if (!peer) return lm.text
+        return await decryptMessage(lm.text, lm.iv, peer._id)
+    } catch (e) {
+        console.error('[Chats] decryptLastMessage failed:', e?.message ?? e)
+        return '[encrypted]'
+    }
+}
+
 async function getChats() {
     try {
         const response = await useMyAuthFetch('chat', { method: 'GET' })
-        chats.value = response.map(chat => ({
+        chats.value = await Promise.all(response.map(async chat => ({
             _id: chat._id,
             user: chat.isGroup
                 ? { _id: chat._id, name: chat.name, isGroup: true, users: chat.users, groupAdmins: chat.groupAdmins, createdAt: chat.createdAt, createdBy: chat.createdBy }
@@ -124,6 +140,7 @@ async function getChats() {
                 return {
                     _id: chat.lastMessage._id,
                     text: chat.lastMessage.text,
+                    iv: chat.lastMessage.iv,
                     createdAt: chat.lastMessage.createdAt,
                     status: chat.lastMessage.status,
                     isMine,
@@ -131,6 +148,18 @@ async function getChats() {
                 }
             })() : emptyLastMessage(),
             countUnreadMessages: chat.countUnreadMessages || 0
+        })))
+
+        // Decrypt last message previews after the full list is built
+        await Promise.all(chats.value.map(async (chat) => {
+            if (chat.lastMessage?._id) {
+                chat.lastMessage.text = await decryptLastMessage({
+                    ...chat,
+                    isGroup: chat.user?.isGroup,
+                    lastMessage: chat.lastMessage,
+                    users: response.find(r => r._id === chat._id)?.users ?? []
+                })
+            }
         }))
     } catch (error) {
         const data = error?.data || {}
@@ -188,7 +217,7 @@ function handleWindowPointerDown(event) {
     closeMenu()
 }
 
-function newMessage(message) {
+async function newMessage(message) {
     const chat = chats.value.find(item => item._id === message.chat._id)
     if (!chat) {
         if (message._id) {
@@ -197,10 +226,25 @@ function newMessage(message) {
         return
     }
 
+    let text = message.text
+    if (message.iv) {
+        try {
+            if (chat.user?.isGroup) {
+                text = await decryptGroupMessage(message.text, message.iv, chat._id)
+            } else {
+                const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
+                if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
+            }
+        } catch (e) {
+            console.error('[Chats] newMessage decrypt failed:', e?.message ?? e)
+            text = '[encrypted]'
+        }
+    }
+
     const isMine = message.from._id === userId.value
     chat.lastMessage = {
         _id: message._id,
-        text: message.text,
+        text,
         createdAt: message.createdAt,
         status: message.status,
         isMine,
@@ -234,17 +278,33 @@ function readMessage(message) {
     chat.lastMessage.status = StatusMessage.READ
 }
 
-function newChat(message) {
+async function newChat(message) {
     const isMine = getUserId(message.from) === userId.value
+    const isGroup = message.chat.isGroup
+
+    let text = message.text
+    if (message.iv) {
+        try {
+            if (isGroup) {
+                text = await decryptGroupMessage(message.text, message.iv, message.chat._id)
+            } else {
+                const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
+                if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
+            }
+        } catch (e) {
+            console.error('[Chats] newChat decrypt failed:', e?.message ?? e)
+            text = '[encrypted]'
+        }
+    }
 
     const chat = {
         _id: message.chat._id,
-        user: message.chat.isGroup
+        user: isGroup
             ? { _id: message.chat._id, name: message.chat.name, isGroup: true, users: message.chat.users, groupAdmins: message.chat.groupAdmins, createdAt: message.chat.createdAt, createdBy: message.chat.createdBy }
             : message.chat.users.find(user => user._id !== userId.value),
         lastMessage: {
             _id: message._id,
-            text: message.text,
+            text,
             createdAt: message.createdAt,
             status: message.status,
             isMine,

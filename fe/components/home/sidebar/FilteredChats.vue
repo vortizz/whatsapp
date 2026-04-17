@@ -127,7 +127,6 @@ function emptyLastMessage() {
 }
 
 function handleEvent(event) {
-    console.log('MSG RECEIVED (FILTEREDCHATS.VUE) -> ', JSON.parse(event.data))
     const data = JSON.parse(event.data)
 
     const name = data.name

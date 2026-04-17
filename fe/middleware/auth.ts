@@ -20,6 +20,17 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             wsStore.disconnectWs()
             return navigateTo('/auth/login')
         }
+
+        // Initialize E2E keys before the page renders so every component
+        // that mounts can decrypt immediately. Client-only: IndexedDB is not
+        // available on the server.
+        if (import.meta.client && isAuth && to?.name && !toAuth.includes(to?.name?.toString())) {
+            const userStore = useUserStore($pinia)
+            if (userStore._id) {
+                const { initKeys } = useCrypto()
+                await initKeys(userStore._id)
+            }
+        }
     }
 
     if (!token.value && to?.name && !toAuth.includes(to?.name?.toString())) {

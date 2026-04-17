@@ -79,6 +79,12 @@ const { _id: userId } = storeToRefs(userStore)
 const effectiveChatId = computed(() => props.chatIdOverride || storeChatId.value)
 const effectiveChatName = computed(() => props.chatNameOverride || chatUser.value?.name)
 
+// When chatIdOverride is provided the component is opened from contact-info (always 1:1).
+// Otherwise use the current chat's isGroup flag.
+const isGroupChat = computed(() => !props.chatIdOverride && (chatUser.value?.isGroup ?? false))
+
+const { decryptMessage, decryptGroupMessage } = useCrypto()
+
 const query = ref('')
 const messages = ref([])
 const inputEl = ref(null)
@@ -103,6 +109,20 @@ function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-GB')
 }
 
+async function decryptText(msg) {
+    if (!msg.iv) return msg.text ?? ''
+    try {
+        if (isGroupChat.value) {
+            return await decryptGroupMessage(msg.text, msg.iv, effectiveChatId.value)
+        }
+        const peerId = msg.from._id === userId.value ? msg.to?._id : msg.from._id
+        if (!peerId) return msg.text ?? ''
+        return await decryptMessage(msg.text, msg.iv, peerId)
+    } catch {
+        return '[encrypted]'
+    }
+}
+
 async function fetchMessages() {
     if (!effectiveChatId.value || effectiveChatId.value === 'new-chat') {
         messages.value = []
@@ -110,10 +130,11 @@ async function fetchMessages() {
     }
     try {
         const response = await useMyAuthFetch(`message/${effectiveChatId.value}`, { method: 'GET' })
-        messages.value = response.map(msg => ({
+        messages.value = await Promise.all(response.map(async msg => ({
             ...msg,
+            text: await decryptText(msg),
             isMine: msg.from._id === userId.value
-        }))
+        })))
     } catch {
         messages.value = []
     }

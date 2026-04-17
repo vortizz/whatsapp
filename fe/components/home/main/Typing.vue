@@ -55,7 +55,8 @@ export default {
     setup() {
         const replyStore = useMessageReplyStore()
         const wsStore = useWsStore()
-        return { replyStore, wsStore }
+        const crypto = useCrypto()
+        return { replyStore, wsStore, crypto }
     },
     data() {
         return {
@@ -137,10 +138,25 @@ export default {
                     chatId = chat._id
                 }
 
+                const actualChatId = chatId || this.chatId
+                let encryptedText = this.message
+                let iv
+
+                if (!this.chatUser.isGroup) {
+                    const result = await this.crypto.encryptMessage(this.message, this.chatUser._id)
+                    encryptedText = result.ciphertext
+                    iv = result.iv
+                } else {
+                    const result = await this.crypto.encryptGroupMessage(this.message, actualChatId)
+                    encryptedText = result.ciphertext
+                    iv = result.iv
+                }
+
                 const body = {
-                    chat: chatId || this.chatId,
+                    chat: actualChatId,
                     ...(!this.chatUser.isGroup ? { to: this.chatUser._id } : {}),
-                    text: this.message,
+                    text: encryptedText,
+                    iv,
                     ...(this.replyTo ? { replyTo: this.replyTo._id } : {})
                 }
                 await useMyAuthFetch('message', { method: 'POST', body })

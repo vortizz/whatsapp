@@ -60,9 +60,9 @@
   </div>
   </template>
   
-<script>
+<script setup>
 import * as yup from 'yup'
-import { mapActions } from 'pinia'
+import { reactive, ref, computed, watch } from 'vue'
 import { useUserStore } from '../../store/user'
 import { useWsStore } from '../../store/websocket'
 
@@ -71,97 +71,103 @@ definePageMeta({
   middleware: 'auth'
 })
 
-export default {
-  data() {
-    return {
-      isPasswordVisible: false,
-      form: {
-        email: '',
-        password: ''
-      },
-      errors: {
-        email: '',
-        password: ''
-      },
-      isLoading: '' 
+const userStore = useUserStore()
+const wsStore = useWsStore()
+const { initKeys } = useCrypto()
+
+const isPasswordVisible = ref(false)
+const isLoading = ref(false)
+
+const form = reactive({
+  email: '',
+  password: ''
+})
+
+const errors = reactive({
+  email: '',
+  password: ''
+})
+
+const schema = computed(() =>
+  yup.object().shape({
+    email: yup.string().required().email(),
+    password: yup.string().required()
+  })
+)
+
+function clearError() {
+  errors.email = ''
+  errors.password = ''
+}
+
+async function validate() {
+  clearError()
+
+  try {
+    await schema.value.validate(form, { abortEarly: false })
+    return true
+  } catch (err) {
+    err.inner.forEach(error => {
+      errors[error.path] = error.message
+    })
+    return false
+  }
+}
+
+watch(
+  form,
+  async () => {
+    if (Object.values(errors).some(Boolean)) {
+      await validate()
     }
   },
-  computed: {
-    schema() {
-      return yup.object().shape({
-        email: yup.string()
-          .required()
-          .email(),
-        password: yup.string()
-          .required()
-      })
+  { deep: true }
+)
+
+async function onSubmit() {
+  const isValid = await validate()
+  if (!isValid) return
+
+  const body = {
+    email: form.email,
+    password: form.password
+  }
+
+  isLoading.value = true
+
+  try {
+    const data = await useMyFetch('auth/login', {
+      method: 'POST',
+      body
+    })
+
+    if (!data.token) {
+      throw new Error('Error')
     }
-  },
-  watch: {
-    form: {
-      handler() {
-        if (Object.keys(this.errors).some(key => !!this.errors[key])) {
-          this.validate()
-        }
-      },
-      deep: true
-    }  
-  },
-  methods: {
-    ...mapActions(useUserStore, ['setUser']),
-    ...mapActions(useWsStore, ['connectWs']),
-    clearError() {
-      this.errors = {
-        email: '',
-        password: ''
-      }
-    },
-    async validate() {
-      this.clearError()
-      try {
-          await this.schema.validate(this.form, { abortEarly: false })
-          return true
-      } catch (err) {
-          err.inner.forEach(error => {
-            this.errors[error.path] = error.message
-          })
-          return false
-      }
-    },
-    async onSubmit() {
-      const isValid = await this.validate()
-      if (!isValid) {
-        return
-      }
-      const form = JSON.parse(JSON.stringify(this.form))
-      const body = {
-        email: form.email,
-        password: form.password
-      }
-      this.isLoading = true
-      try {
-        const data = await useMyFetch('auth/login', { method: 'POST', body })
-        if (!data.token) {
-          throw new Error('Error')
-        }
-        this.setUser({
-          _id: data._id,
-          name: data.name,
-          email: data.email,
-          about: data.about,
-          token: data.token,
-          blockedUsers: data.blockedUsers || []
-        })
-        this.connectWs({ token: data.token })
-        this.$router.push('/')
-      } catch (error) {
-        const data = error?.data || {}
-        const message = Array.isArray(data.message) ? data.message[0] : data.message
-        useNuxtApp().$toast.error(message)
-      } finally {
-        this.isLoading = false
-      }
-    }
+
+    userStore.setUser({
+      _id: data._id,
+      name: data.name,
+      email: data.email,
+      about: data.about,
+      token: data.token,
+      blockedUsers: data.blockedUsers || []
+    })
+
+    wsStore.connectWs({ token: data.token })
+
+    await initKeys(data._id)
+
+    await useRouter().push('/')
+  } catch (error) {
+    const data = error?.data || {}
+    const message = Array.isArray(data.message)
+      ? data.message[0]
+      : data.message
+
+    useNuxtApp().$toast.error(message)
+  } finally {
+    isLoading.value = false
   }
 }
 </script>

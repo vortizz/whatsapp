@@ -117,6 +117,7 @@ import { useMessageReplyStore } from '../../../store/messageReply'
 import { StatusMessage } from '../../../utils/status-message'
 
 const { typingChats, setTyping, isTypingInChat, getTypingUsers } = useTypingState()
+const crypto = useCrypto()
 
 const messages = ref([])
 const bottomEl = ref(null)
@@ -243,12 +244,13 @@ const { _id: userId } = storeToRefs(userStore)
 const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
 const { conn } = storeToRefs(wsStore)
 
-function resolveReplyTo(replyTo) {
+async function resolveReplyTo(replyTo) {
   if (!replyTo) return null
   const fromId = replyTo.from?._id || replyTo.from
   const isMine = fromId === userId.value
   return {
     ...replyTo,
+    text: await decryptText(replyTo),
     isMine,
     senderName: isMine ? 'You' : replyTo.from?.name || ''
   }
@@ -335,17 +337,34 @@ async function scrollToBottom(options) {
   bottomEl.value?.scrollIntoView(options)
 }
 
+async function decryptText(msg) {
+  if (!msg.iv) return msg.text
+  try {
+    if (chatUser.value?.isGroup) {
+      console.log('[Messages] Decrypting group message for chat', chatId.value, 'with text length', msg)
+      return await crypto.decryptGroupMessage(msg.text, msg.iv, chatId.value)
+    }
+    const peerId = msg.from._id === userId.value ? msg.to?._id : msg.from._id
+    if (!peerId) return msg.text
+    return await crypto.decryptMessage(msg.text, msg.iv, peerId)
+  } catch (e) {
+    console.error('[Messages] decryptText failed:', e?.message ?? e)
+    return '[encrypted]'
+  }
+}
+
 async function getMessages() {
   try {
     const [response, events] = await Promise.all([
       useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' }),
       chatUser.value?.isGroup ? useMyAuthFetch(`chat/${chatId.value}/events`, { method: 'GET' }) : Promise.resolve([])
     ])
-    const mappedMessages = response.map(msg => ({
+    const mappedMessages = await Promise.all(response.map(async (msg) => ({
       ...msg,
+      text: await decryptText(msg),
       isMine: msg.from._id === userId.value,
-      replyTo: resolveReplyTo(msg.replyTo)
-    }))
+      replyTo: await resolveReplyTo(msg.replyTo)
+    })))
     const mappedEvents = events.map(e => ({ ...e, isEvent: true }))
     messages.value = sortMessages([...mappedMessages, ...mappedEvents])
     if (pendingScrollId) {
@@ -362,15 +381,14 @@ async function getMessages() {
   }
 }
 
-function handleEvent(event) {
-  console.log('MSG RECEIVED (MESSAGES.VUE) -> ', JSON.parse(event.data))
+async function handleEvent(event) {
   const data = JSON.parse(event.data)
 
   const name = data.name
   const msg = data.data
 
   if (name === 'new-message') {
-    newMessage(msg)
+    await newMessage(msg)
   } else if (name === 'received-message') {
     receivedMessage(msg)
   } else if (name === 'read-message') {
@@ -390,11 +408,13 @@ function newChatEvent(event) {
   }
 }
 
-function newMessage(message) {
+async function newMessage(message) {
+  const text = await decryptText(message)
+
   if (message.chat._id === chatId.value) {
     const isMine = message.from._id === userId.value
-    const replyTo = resolveReplyTo(message.replyTo)
-    messages.value.push({ ...message, isMine, replyTo })
+    const replyTo = await resolveReplyTo(message.replyTo)
+    messages.value.push({ ...message, text, isMine, replyTo })
     messages.value = sortMessages(messages.value)
 
     const receivedMessages = messages.value.filter(msg => !msg.isMine && msg.status === StatusMessage.RECEIVED)
