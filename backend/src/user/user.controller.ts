@@ -4,7 +4,7 @@ import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
 import { BlockUserDto } from './dtos/block-user.dto'
 import { Auth } from 'src/common/decorator/auth.decorator'
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, Query } from '@nestjs/common'
 import { AuthUser } from 'src/common/decorator/user.decorator'
 
 @Controller('user')
@@ -68,5 +68,19 @@ export class UserController {
     @Delete('/block/:user_id')
     async unblockUser(@AuthUser() user: User, @Param('user_id') userId: string): Promise<User> {
         return await this.userService.unblockUser(user._id, userId)
+    }
+
+    @Auth()
+    @Put('/public-key')
+    async uploadPublicKey(@AuthUser() user: User, @Body('publicKey') publicKey: string): Promise<void> {
+        await this.userService.updatePublicKey(user._id, publicKey)
+    }
+
+    @Auth()
+    @Get('/:_id/public-key')
+    async getPublicKey(@Param('_id') _id: string): Promise<{ publicKey: string }> {
+        const publicKey = await this.userService.getPublicKey(_id)
+        if (!publicKey) throw new NotFoundException('Public key not found for this user')
+        return { publicKey }
     }
 }

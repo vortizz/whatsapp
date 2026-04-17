@@ -176,6 +176,15 @@ export class UserService {
         )
     }
 
+    async updatePublicKey(_id: string, publicKey: string): Promise<void> {
+        await this.userModel.findByIdAndUpdate(_id, { $set: { publicKey } })
+    }
+
+    async getPublicKey(_id: string): Promise<string | null> {
+        const user = await this.userModel.findById(_id).select('publicKey')
+        return user?.publicKey ?? null
+    }
+
     async userWithNoChat(user: User, username: string): Promise<User[]> {
         const users = await this.userModel.find({ name: { $regex: username, $options: 'i' }, _id: { $ne: user._id } })
 

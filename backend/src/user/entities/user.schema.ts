@@ -59,6 +59,9 @@ export class User {
     @Prop({ type: Date, default: () => Date.now() })
     lastSeenAt: Date
 
+    @Prop({ type: String, default: null })
+    publicKey?: string
+
     createdAt: Date
     updatedAt: Date
 }

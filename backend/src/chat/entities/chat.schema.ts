@@ -39,6 +39,22 @@ export class Chat {
     })
     groupAdmins?: User[]
 
+    @Prop({
+        type: [{
+            userId: { type: String, required: true },
+            encryptedKey: { type: String, required: true },
+            iv: { type: String, required: true },
+            ephemeralPublicKey: { type: String, required: true }
+        }],
+        default: []
+    })
+    encryptedKeys?: {
+        userId: string
+        encryptedKey: string
+        iv: string
+        ephemeralPublicKey: string
+    }[]
+
     createdAt: Date
     updatedAt: Date
 }

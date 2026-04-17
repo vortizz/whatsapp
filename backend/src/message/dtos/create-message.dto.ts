@@ -14,6 +14,10 @@ export class CreateMessageDto {
     text: string
 
     @IsOptional()
+    @IsString()
+    iv?: string
+
+    @IsOptional()
     @IsMongoId()
     replyTo?: string
 

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { SetGroupKeysDto } from "./dtos/set-group-keys.dto";
 import { ChatService } from "./chat.service";
 import { Chat } from "./entities/chat.schema";
 import { Auth } from "src/common/decorator/auth.decorator";
@@ -79,5 +80,24 @@ export class ChatController {
     @Patch(':id/group-admin/:user_id')
     async setUserGroupAdmin(@AuthUser() user: User, @Param('id') id: string, @Param('user_id') userId: string, @Body('is_admin') isAdmin: boolean): Promise<Chat> {
         return await this.chatService.setUserGroupAdmin(id, userId, isAdmin, user)
+    }
+
+    @Auth()
+    @Post(':id/group-key')
+    async setGroupKeys(
+        @AuthUser() user: User,
+        @Param('id') id: string,
+        @Body() dto: SetGroupKeysDto
+    ): Promise<void> {
+        await this.chatService.setGroupKeys(id, user._id, dto.keys)
+    }
+
+    @Auth()
+    @Get(':id/group-key')
+    async getGroupKey(
+        @AuthUser() user: User,
+        @Param('id') id: string
+    ): Promise<{ encryptedKey: string; iv: string; ephemeralPublicKey: string } | null> {
+        return await this.chatService.getGroupKey(id, user._id)
     }
 }

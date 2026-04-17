@@ -164,7 +164,16 @@ export class ChatService {
                                     // Group message: I haven't read it yet
                                     { $and: [
                                         '$$isGroup',
-                                        { $not: { $in: [userId, { $ifNull: ['$readBy', []] }] } }
+                                        { $not: { $in: [
+                                            userId,
+                                            {
+                                                $map: {
+                                                    input: { $ifNull: ['$readBy', []] },
+                                                    as: 'r',
+                                                    in: '$$r.user'
+                                                }
+                                            }
+                                        ]}}
                                     ]}
                                 ]}
                             ]
@@ -390,6 +399,53 @@ export class ChatService {
             { $pull: { users: exitUser } },
             { new: true }
         )
+    }
+
+    async setGroupKeys(
+        chatId: string,
+        userId: string,
+        keys: { userId: string; encryptedKey: string; iv: string; ephemeralPublicKey: string }[]
+    ): Promise<void> {
+        const chat = await this.findById(chatId)
+
+        if (!chat) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chat.isGroup) {
+            throw new BadRequestException('Chat is not a group')
+        }
+
+        if (!chat.users.some(u => u._id?.toString() === userId)) {
+            throw new BadRequestException('User does not belong to this chat')
+        }
+
+        // Replace all existing encrypted keys with the new set
+        await this.chatModel.findByIdAndUpdate(chatId, { $set: { encryptedKeys: keys } })
+    }
+
+    async getGroupKey(
+        chatId: string,
+        userId: string
+    ): Promise<{ encryptedKey: string; iv: string; ephemeralPublicKey: string } | null> {
+        const chat = await this.chatModel.findById(chatId).select('encryptedKeys isGroup users')
+
+        if (!chat) {
+            throw new BadRequestException('Chat not found')
+        }
+
+        if (!chat.isGroup) {
+            throw new BadRequestException('Chat is not a group')
+        }
+
+        if (!chat.users.some((u: any) => u.toString() === userId || u._id?.toString() === userId)) {
+            throw new BadRequestException('User does not belong to this chat')
+        }
+
+        const entry = chat.encryptedKeys?.find(k => k.userId === userId)
+        if (!entry) return null
+
+        return { encryptedKey: entry.encryptedKey, iv: entry.iv, ephemeralPublicKey: entry.ephemeralPublicKey }
     }
 
     async setUserGroupAdmin(_id: string, userId: string, isAdmin: boolean, user: User): Promise<Chat> {

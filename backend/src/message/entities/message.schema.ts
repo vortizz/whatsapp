@@ -25,6 +25,9 @@ export class Message {
     })
     text: string
 
+    @Prop({ type: String, required: false })
+    iv?: string
+
     @Prop({
         type: mongoose.Schema.Types.ObjectId,
         ref: User.name,
