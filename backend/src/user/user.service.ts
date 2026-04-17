@@ -218,8 +218,9 @@ export class UserService {
 
         return users.map(user => ({
             ...JSON.parse(JSON.stringify(user)),
-            chat: chats.find(chat => 
-                chat.users.some(u => 
+            chat: chats.find(chat =>
+                !chat.isGroup &&
+                chat.users.some(u =>
                     u._id.toString() === user._id.toString()
                 )
             )
