@@ -100,8 +100,10 @@ function blurMenuButton() {
 }
 
 function lastSeen(date) {
+  if (!date) return ''
   const now = new Date()
   const d = new Date(date)
+  if (isNaN(d.getTime())) return ''
 
   const isToday =
     d.getFullYear() === now.getFullYear() &&

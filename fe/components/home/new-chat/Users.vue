@@ -23,105 +23,88 @@
     </div>
 </template>
 
-<script>
-import { mapActions } from 'pinia'
+<script setup>
 import { useChatStore } from '../../../store/chat'
 
-export default {
-    props: ['text'],
-    data() {
-        return {
-            users: [
-            /**
-                {
-                    letter: 'A',
-                    users: [
-                        ...
-                    ]
-                },
-                {
-                    letter: 'B',
-                    users: [
-                        ...
-                    ]
-                }
-                */
-            ],
-            loading: false
-        }
-    },
-    watch: {
-        text() {
-            this.getUsers()
-        }
-    },
-    mounted() {
-        this.getUsers()
-    },
-    methods: {
-        ...mapActions(useChatStore, {
-            setChatAction: 'setChat'
-        }),
-        async getUsers() {
-            try {
-                this.loading = true
-                const query = this.text ? { query: { username: this.text } } : {}
-                const users = await useMyAuthFetch('user/new-chat', { method: 'GET', ...query })
-                this.users = this.splitByLetter(users.map(user => ({
+const props = defineProps(['text'])
+const emit = defineEmits(['close'])
+
+const chatStore = useChatStore()
+const users = ref([])
+const loading = ref(false)
+
+watch(() => props.text, () => {
+    getUsers()
+})
+
+onMounted(() => {
+    getUsers()
+})
+
+async function getUsers() {
+    try {
+        loading.value = true
+        const query = props.text ? { query: { username: props.text } } : {}
+        const result = await useMyAuthFetch('user/new-chat', { method: 'GET', ...query })
+        users.value = splitByLetter(result.map(user => ({
+            _id: user._id,
+            name: user.name,
+            about: user.about,
+            email: user.email,
+            isConnected: user.isConnected,
+            lastSeenAt: user.lastSeenAt,
+            chat: user.chat?._id ? {
+                _id: user.chat._id,
+                user: {
                     _id: user._id,
                     name: user.name,
-                    about: user.about,
                     email: user.email,
-                    chat: user.chat?._id ? {
-                        _id: user.chat._id,
-                        user: {
-                            _id: user._id,
-                            name: user.name,
-                            email: user.email,
-                            about: user.about
-                        }
-                    } : null
-                })))
-            } catch (error) {
-                const data = error?.data || {}
-                const message = Array.isArray(data.message) ? data.message[0] : data.message
-                useNuxtApp().$toast.error(message)
-            } finally {
-                this.loading = false
-            }
-        },
-        splitByLetter(users) {
-            const result = []
-
-            for (const user of users) {
-                const firstLetter = user.name.trim().toUpperCase().charAt(0)
-                const usersByTheLetter = users.filter(u => 
-                    u.name.trim().toUpperCase().charAt(0) === firstLetter && !u.handled
-                )
-
-                if (!usersByTheLetter.length) continue
-
-                result.push({
-                    letter: firstLetter,
-                    users: JSON.parse(JSON.stringify(usersByTheLetter))
-                })
-
-                for (const u of usersByTheLetter) {
-                    u.handled = true
+                    about: user.about,
+                    isConnected: user.isConnected,
+                    lastSeenAt: user.lastSeenAt,
                 }
-            }
-
-            return result
-        },
-        setUser(user) {
-            const clonedUser = JSON.parse(JSON.stringify(user))
-            this.setChatAction({
-                _id: clonedUser.chat?._id || 'new-chat',
-                user: clonedUser
-            })
-            this.$emit('close')
-        },
+            } : null
+        })))
+    } catch (error) {
+        const data = error?.data || {}
+        const message = Array.isArray(data.message) ? data.message[0] : data.message
+        useNuxtApp().$toast.error(message)
+    } finally {
+        loading.value = false
     }
+}
+
+function splitByLetter(users) {
+    const result = []
+
+    for (const user of users) {
+        const firstLetter = user.name.trim().toUpperCase().charAt(0)
+        const usersByTheLetter = users.filter(u =>
+            u.name.trim().toUpperCase().charAt(0) === firstLetter && !u.handled
+        )
+
+        if (!usersByTheLetter.length) continue
+
+        result.push({
+            letter: firstLetter,
+            users: JSON.parse(JSON.stringify(usersByTheLetter))
+        })
+
+        for (const u of usersByTheLetter) {
+            u.handled = true
+        }
+    }
+
+    return result
+}
+
+function setUser(user) {
+    const clonedUser = JSON.parse(JSON.stringify(user))
+    chatStore.setChat({
+        _id: clonedUser.chat?._id || 'new-chat',
+        user: clonedUser
+    })
+    emit('close')
 }
 </script>
 
