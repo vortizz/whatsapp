@@ -168,6 +168,7 @@
         this.replyStore.clearReply()
       },
       async send() {
+        if (!this.message.trim()) return
         try {
           this.isLoading = true
           let chatId
