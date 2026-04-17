@@ -248,9 +248,30 @@ async function resolveReplyTo(replyTo) {
   if (!replyTo) return null
   const fromId = replyTo.from?._id || replyTo.from
   const isMine = fromId === userId.value
+
+  let text = replyTo.text ?? ''
+  if (replyTo.iv) {
+    try {
+      // Use the replied message's own chat context, not the current chat.
+      // Group messages have no 'to' field; 1:1 messages do.
+      const sourceChatId = replyTo.chat?._id ?? replyTo.chat ?? chatId.value
+      const replyIsGroup = !replyTo.to
+      if (replyIsGroup) {
+        text = await crypto.decryptGroupMessage(replyTo.text, replyTo.iv, sourceChatId)
+      } else {
+        const peerId = fromId === userId.value
+          ? (replyTo.to?._id ?? replyTo.to)
+          : fromId
+        if (peerId) text = await crypto.decryptMessage(replyTo.text, replyTo.iv, peerId)
+      }
+    } catch {
+      text = '[encrypted]'
+    }
+  }
+
   return {
     ...replyTo,
-    text: await decryptText(replyTo),
+    text,
     isMine,
     senderName: isMine ? 'You' : replyTo.from?.name || ''
   }
