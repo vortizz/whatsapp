@@ -6,14 +6,14 @@
         <template v-for="item in date?.messages ?? []" :key="item._id">
           <HomeMainChatEvent
             v-if="item.isEvent"
-            :doneBy="item.doneBy"
-            :isNameChanged="item.isNameChanged"
-            :isDescriptionChanged="item.isDescriptionChanged"
-            :isUserAdded="item.isUserAdded"
-            :isUserRemoved="item.isUserRemoved"
-            :userAdded="item.userAdded"
-            :userRemoved="item.userRemoved"
-            :newName="item.newName"
+            :done-by="item.doneBy"
+            :is-name-changed="item.isNameChanged"
+            :is-description-changed="item.isDescriptionChanged"
+            :is-user-added="item.isUserAdded"
+            :is-user-removed="item.isUserRemoved"
+            :user-added="item.userAdded"
+            :user-removed="item.userRemoved"
+            :new-name="item.newName"
           />
           <template v-else>
             <HomeMainUnreadMessage
@@ -27,30 +27,40 @@
                 isSelecting ? 'px-4 cursor-pointer' : chatUser.isGroup ? 'pl-9 pr-16' : 'px-16',
                 isFirst(item._id) ? 'mt-3' : 'm-0.5',
                 isLast(item._id) ? 'mb-4' : '',
-                isSelecting && selectedIds.includes(item._id) ? 'bg-emerald-700/5 dark:bg-slate-200/5' : '',
-                highlightedId === item._id ? 'bg-emerald-500/10 dark:bg-emerald-400/10' : ''
+                isSelecting && selectedIds.includes(item._id)
+                  ? 'bg-emerald-700/5 dark:bg-slate-200/5'
+                  : '',
+                highlightedId === item._id ? 'bg-emerald-500/10 dark:bg-emerald-400/10' : '',
               ]"
               @click="isSelecting ? toggleSelection(item._id) : null"
             >
               <div
                 v-if="isSelecting"
                 class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center"
-                :class="selectedIds.includes(item._id) ? 'bg-emerald-500 border-emerald-500' : 'border-gray-400 dark:border-gray-500'"
+                :class="
+                  selectedIds.includes(item._id)
+                    ? 'bg-emerald-500 border-emerald-500'
+                    : 'border-gray-400 dark:border-gray-500'
+                "
               >
-                <Icon v-if="selectedIds.includes(item._id)" name="mdi:check" class="text-white text-base" />
+                <Icon
+                  v-if="selectedIds.includes(item._id)"
+                  name="mdi:check"
+                  class="text-white text-base"
+                />
               </div>
               <HomeMainMessageFrom
                 v-if="!item.isMine"
                 :_id="item._id"
                 :text="item.text"
                 :date="item.createdAt"
-                :isFirst="isFirst(item._id)"
-                :isMenuOpen="openMenuId === item._id"
-                :isSelecting="isSelecting"
-                :replyTo="item.replyTo"
+                :is-first="isFirst(item._id)"
+                :is-menu-open="openMenuId === item._id"
+                :is-selecting="isSelecting"
+                :reply-to="item.replyTo"
                 :forwarded="item.forwarded"
                 :from="item.from"
-                :isGroup="chatUser?.isGroup"
+                :is-group="chatUser?.isGroup"
                 @toggle-menu="toggleMenu(item._id)"
                 @delete="deleteMessage"
                 @enter-select="enterSelectionMode(item._id)"
@@ -59,7 +69,7 @@
                 @reply-privately="handleReplyPrivately(item)"
                 @message-user="openDmWith(item.from)"
                 @scroll-to="scrollToReply"
-                @view-member="$emit('view-member', $event)"
+                @view-member="emit('view-member', $event)"
               />
               <HomeMainMessageTo
                 v-else
@@ -67,10 +77,10 @@
                 :text="item.text"
                 :date="item.createdAt"
                 :status="item.status"
-                :isFirst="isFirst(item._id)"
-                :isMenuOpen="openMenuId === item._id"
-                :isSelecting="isSelecting"
-                :replyTo="item.replyTo"
+                :is-first="isFirst(item._id)"
+                :is-menu-open="openMenuId === item._id"
+                :is-selecting="isSelecting"
+                :reply-to="item.replyTo"
                 :forwarded="item.forwarded"
                 @toggle-menu="toggleMenu(item._id)"
                 @delete="deleteMessage"
@@ -78,14 +88,18 @@
                 @enter-forward="enterForwardMode(item._id)"
                 @reply="handleReply(item)"
                 @scroll-to="scrollToReply"
-                @message-info="$emit('message-info', item)"
+                @message-info="emit('message-info', item)"
               />
             </div>
           </template>
         </template>
       </div>
     </div>
-    <div v-if="isTypingInChat(chatId)" class="flex items-end gap-2 mb-2" :class="chatUser?.isGroup ? 'pl-9 pr-16' : 'px-16'">
+    <div
+      v-if="isTypingInChat(chatId)"
+      class="flex items-end gap-2 mb-2"
+      :class="chatUser?.isGroup ? 'pl-9 pr-16' : 'px-16'"
+    >
       <div v-if="chatUser?.isGroup" class="flex -space-x-2 flex-shrink-0">
         <AvatarPlaceholder
           v-for="u in getTypingUsers(chatId)"
@@ -97,437 +111,480 @@
       </div>
       <div class="bg-white dark:bg-neutral-800 rounded-2xl py-2 px-2.5 shadow-sm flex items-center">
         <div class="flex gap-1 items-center h-4">
-          <span class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-          <span class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-          <span class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+          <span
+            class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+            style="animation-delay: 0ms"
+          />
+          <span
+            class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+            style="animation-delay: 150ms"
+          />
+          <span
+            class="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+            style="animation-delay: 300ms"
+          />
         </div>
       </div>
     </div>
-    <div ref="bottomEl"></div>
+    <div ref="bottomEl" />
   </div>
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia'
-import { useUserStore } from '../../../store/user'
-import { useChatStore } from '../../../store/chat'
-import { useWsStore } from '../../../store/websocket'
-import { useMessageSelectionStore } from '../../../store/messageSelection'
-import { useMessageReplyStore } from '../../../store/messageReply'
-import { StatusMessage } from '../../../utils/status-message'
+  import { storeToRefs } from 'pinia'
+  import { useUserStore } from '../../../store/user'
+  import { useChatStore } from '../../../store/chat'
+  import { useWsStore } from '../../../store/websocket'
+  import { useMessageSelectionStore } from '../../../store/messageSelection'
+  import { useMessageReplyStore } from '../../../store/messageReply'
+  import { StatusMessage } from '../../../utils/status-message'
 
-const { typingChats, setTyping, isTypingInChat, getTypingUsers } = useTypingState()
-const crypto = useCrypto()
+  const { typingChats, setTyping, isTypingInChat, getTypingUsers } = useTypingState()
+  const crypto = useCrypto()
 
-const messages = ref([])
-const bottomEl = ref(null)
-const openMenuId = ref(null)
-const highlightedId = ref(null)
+  const messages = ref([])
+  const bottomEl = ref(null)
+  const openMenuId = ref(null)
+  const highlightedId = ref(null)
 
-const selectionStore = useMessageSelectionStore()
-const { isSelecting, selectedIds } = storeToRefs(selectionStore)
-const { enterSelectionMode, enterForwardMode, toggleSelection, cancelSelection } = selectionStore
+  const selectionStore = useMessageSelectionStore()
+  const { isSelecting, selectedIds } = storeToRefs(selectionStore)
+  const { enterSelectionMode, enterForwardMode, toggleSelection, cancelSelection } = selectionStore
 
-const replyStore = useMessageReplyStore()
-const { setReply } = replyStore
+  const replyStore = useMessageReplyStore()
+  const { setReply } = replyStore
 
-function handleReply(msg) {
-  setReply({ _id: msg._id, text: msg.text, senderName: msg.isMine ? 'You' : msg.from?.name || '' })
-}
-
-async function openDmWith(user) {
-  try {
-    const chats = await useMyAuthFetch('chat', { method: 'GET' })
-    const existing = chats.find(c => !c.isGroup && c.users.some(u => (u._id || u) === user._id))
-    if (existing) {
-      const chatUser = existing.users.find(u => u._id !== userId.value) ?? user
-      chatStore.setChat({ _id: existing._id, user: JSON.parse(JSON.stringify(chatUser)) })
-    } else {
-      chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
-    }
-  } catch {
-    chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
-  }
-}
-
-async function handleReplyPrivately(msg) {
-  await openDmWith(msg.from)
-  await nextTick()
-  setReply({ _id: msg._id, text: msg.text, senderName: msg.from?.name || '' })
-}
-
-async function deleteSelected() {
-  const ids = [...selectedIds.value]
-  try {
-    await useMyAuthFetch('message/bulk', { method: 'DELETE', body: { ids } })
-    messages.value = messages.value.filter(m => !ids.includes(m._id))
-  } catch (error) {
-    const data = error?.data || {}
-    const message = Array.isArray(data.message) ? data.message[0] : data.message
-    useNuxtApp().$toast.error(message)
-  }
-  cancelSelection()
-}
-
-async function scrollToMessage(id) {
-  await nextTick()
-  const el = document.querySelector(`[data-message-id="${id}"]`)
-  if (!el) return
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  highlightedId.value = id
-  setTimeout(() => { highlightedId.value = null }, 2000)
-}
-
-async function scrollToReply(replyTo) {
-  const replyId = replyTo._id ?? replyTo
-  const sourceChatId = replyTo.chat?._id ?? replyTo.chat
-
-  await nextTick()
-  const el = document.querySelector(`[data-message-id="${replyId}"]`)
-  if (el) {
-    scrollToMessage(replyId)
-    return
+  function handleReply(msg) {
+    setReply({
+      _id: msg._id,
+      text: msg.text,
+      senderName: msg.isMine ? 'You' : msg.from?.name || '',
+    })
   }
 
-  if (!sourceChatId || sourceChatId === chatId.value) return
-
-  try {
-    const chats = await useMyAuthFetch('chat', { method: 'GET' })
-    const sourceChat = chats.find(c => c._id === sourceChatId)
-    if (!sourceChat) return
-
-    pendingScrollId = replyId
-    const chatUser = sourceChat.isGroup
-      ? { _id: sourceChat._id, name: sourceChat.name, isGroup: true, users: sourceChat.users, groupAdmins: sourceChat.groupAdmins, createdAt: sourceChat.createdAt, createdBy: sourceChat.createdBy }
-      : sourceChat.users.find(u => u._id !== userId.value)
-    chatStore.setChat({ _id: sourceChat._id, user: chatUser })
-  } catch { /* ignore */ }
-}
-
-function getSelectedMessages() {
-  return messagesOnly.value.filter(m => selectedIds.value.includes(m._id)).map(m => ({ _id: m._id, text: m.text }))
-}
-
-let pendingScrollId = null
-
-function scheduleScrollToMessage(id) {
-  pendingScrollId = id
-}
-
-const emit = defineEmits(['message-info', 'view-member'])
-defineExpose({ deleteSelected, scrollToMessage, getSelectedMessages, scheduleScrollToMessage })
-
-function toggleMenu(id) {
-  openMenuId.value = openMenuId.value === id ? null : id
-}
-
-function handleClickOutside() {
-  openMenuId.value = null
-}
-
-onMounted(async () => {
-  document.addEventListener('click', handleClickOutside)
-  if (chatId.value && chatId.value !== 'new-chat') {
-    await getMessages()
-    conn.value?.addEventListener('message', handleEvent)
-  }
-})
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
-const { clearedChatState } = useClearChatState()
-const { deletedChatState } = useDeleteChatState()
-
-const userStore = useUserStore()
-const chatStore = useChatStore()
-const wsStore = useWsStore()
-
-const { _id: userId } = storeToRefs(userStore)
-const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
-const { conn } = storeToRefs(wsStore)
-
-async function resolveReplyTo(replyTo) {
-  if (!replyTo) return null
-  const fromId = replyTo.from?._id || replyTo.from
-  const isMine = fromId === userId.value
-
-  let text = replyTo.text ?? ''
-  if (replyTo.iv) {
+  async function openDmWith(user) {
     try {
-      // Use the replied message's own chat context, not the current chat.
-      // Group messages have no 'to' field; 1:1 messages do.
-      const sourceChatId = replyTo.chat?._id ?? replyTo.chat ?? chatId.value
-      const replyIsGroup = !replyTo.to
-      if (replyIsGroup) {
-        text = await crypto.decryptGroupMessage(replyTo.text, replyTo.iv, sourceChatId)
+      const chats = await useMyAuthFetch('chat', { method: 'GET' })
+      const existing = chats.find(
+        (c) => !c.isGroup && c.users.some((u) => (u._id || u) === user._id),
+      )
+      if (existing) {
+        const chatUser = existing.users.find((u) => u._id !== userId.value) ?? user
+        chatStore.setChat({ _id: existing._id, user: JSON.parse(JSON.stringify(chatUser)) })
       } else {
-        const peerId = fromId === userId.value
-          ? (replyTo.to?._id ?? replyTo.to)
-          : fromId
-        if (peerId) text = await crypto.decryptMessage(replyTo.text, replyTo.iv, peerId)
+        chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
       }
     } catch {
-      text = '[encrypted]'
+      chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
     }
   }
 
-  return {
-    ...replyTo,
-    text,
-    isMine,
-    senderName: isMine ? 'You' : replyTo.from?.name || ''
+  async function handleReplyPrivately(msg) {
+    await openDmWith(msg.from)
+    await nextTick()
+    setReply({ _id: msg._id, text: msg.text, senderName: msg.from?.name || '' })
   }
-}
 
-const handledMessages = computed(() => {
-  const grouped = {}
+  async function deleteSelected() {
+    const ids = [...selectedIds.value]
+    try {
+      await useMyAuthFetch('message/bulk', { method: 'DELETE', body: { ids } })
+      messages.value = messages.value.filter((m) => !ids.includes(m._id))
+    } catch (error) {
+      const data = error?.data || {}
+      const message = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(message)
+    }
+    cancelSelection()
+  }
 
-  for (const message of messages.value) {
-    const dateKey = new Date(message.createdAt).toDateString()
+  async function scrollToMessage(id) {
+    await nextTick()
+    const el = document.querySelector(`[data-message-id="${id}"]`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    highlightedId.value = id
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 2000)
+  }
 
-    if (!grouped[dateKey]) {
-      grouped[dateKey] = {
-        date: message.createdAt,
-        messages: []
+  async function scrollToReply(replyTo) {
+    const replyId = replyTo._id ?? replyTo
+    const sourceChatId = replyTo.chat?._id ?? replyTo.chat
+
+    await nextTick()
+    const el = document.querySelector(`[data-message-id="${replyId}"]`)
+    if (el) {
+      scrollToMessage(replyId)
+      return
+    }
+
+    if (!sourceChatId || sourceChatId === chatId.value) return
+
+    try {
+      const chats = await useMyAuthFetch('chat', { method: 'GET' })
+      const sourceChat = chats.find((c) => c._id === sourceChatId)
+      if (!sourceChat) return
+
+      pendingScrollId = replyId
+      const chatUser = sourceChat.isGroup
+        ? {
+            _id: sourceChat._id,
+            name: sourceChat.name,
+            isGroup: true,
+            users: sourceChat.users,
+            groupAdmins: sourceChat.groupAdmins,
+            createdAt: sourceChat.createdAt,
+            createdBy: sourceChat.createdBy,
+          }
+        : sourceChat.users.find((u) => u._id !== userId.value)
+      chatStore.setChat({ _id: sourceChat._id, user: chatUser })
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function getSelectedMessages() {
+    return messagesOnly.value
+      .filter((m) => selectedIds.value.includes(m._id))
+      .map((m) => ({ _id: m._id, text: m.text }))
+  }
+
+  let pendingScrollId = null
+
+  function scheduleScrollToMessage(id) {
+    pendingScrollId = id
+  }
+
+  const emit = defineEmits(['message-info', 'view-member'])
+  defineExpose({ deleteSelected, scrollToMessage, getSelectedMessages, scheduleScrollToMessage })
+
+  function toggleMenu(id) {
+    openMenuId.value = openMenuId.value === id ? null : id
+  }
+
+  function handleClickOutside() {
+    openMenuId.value = null
+  }
+
+  onMounted(async () => {
+    document.addEventListener('click', handleClickOutside)
+    if (chatId.value && chatId.value !== 'new-chat') {
+      await getMessages()
+      conn.value?.addEventListener('message', handleEvent)
+    }
+  })
+  onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
+  const { clearedChatState } = useClearChatState()
+  const { deletedChatState } = useDeleteChatState()
+
+  const userStore = useUserStore()
+  const chatStore = useChatStore()
+  const wsStore = useWsStore()
+
+  const { _id: userId } = storeToRefs(userStore)
+  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
+  const { conn } = storeToRefs(wsStore)
+
+  async function resolveReplyTo(replyTo) {
+    if (!replyTo) return null
+    const fromId = replyTo.from?._id || replyTo.from
+    const isMine = fromId === userId.value
+
+    let text = replyTo.text ?? ''
+    if (replyTo.iv) {
+      try {
+        // Use the replied message's own chat context, not the current chat.
+        // Group messages have no 'to' field; 1:1 messages do.
+        const sourceChatId = replyTo.chat?._id ?? replyTo.chat ?? chatId.value
+        const replyIsGroup = !replyTo.to
+        if (replyIsGroup) {
+          text = await crypto.decryptGroupMessage(replyTo.text, replyTo.iv, sourceChatId)
+        } else {
+          const peerId = fromId === userId.value ? (replyTo.to?._id ?? replyTo.to) : fromId
+          if (peerId) text = await crypto.decryptMessage(replyTo.text, replyTo.iv, peerId)
+        }
+      } catch {
+        text = '[encrypted]'
       }
     }
 
-    grouped[dateKey].messages.push(message)
+    return {
+      ...replyTo,
+      text,
+      isMine,
+      senderName: isMine ? 'You' : replyTo.from?.name || '',
+    }
   }
 
-  return Object.values(grouped).sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
-  )
-})
+  const handledMessages = computed(() => {
+    const grouped = {}
 
-const messagesOnly = computed(() => messages.value.filter(m => !m.isEvent))
+    for (const message of messages.value) {
+      const dateKey = new Date(message.createdAt).toDateString()
 
-function isUnreadByMe(msg) {
-  if (msg.isMine) return false
-  if (chatUser.value?.isGroup) {
-    return !(msg.readBy ?? []).some(r => (r.user?._id ?? r.user) === userId.value)
-  }
-  return msg.status === StatusMessage.RECEIVED
-}
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          date: message.createdAt,
+          messages: [],
+        }
+      }
 
-function showUnreadMessage(messageId) {
-  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
-  if (msgIndex <= 0) return false
+      grouped[dateKey].messages.push(message)
+    }
 
-  const previousMsg = messagesOnly.value[msgIndex - 1]
-  const currentMsg = messagesOnly.value[msgIndex]
+    return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date))
+  })
 
-  return isUnreadByMe(currentMsg) && !isUnreadByMe(previousMsg)
-}
+  const messagesOnly = computed(() => messages.value.filter((m) => !m.isEvent))
 
-function numberOfUnreadMessages(messageId) {
-  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
-  return messagesOnly.value.length - msgIndex
-}
-
-function isFirst(messageId) {
-  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
-  if (msgIndex <= 0) return true
-
-  const previousMsg = messagesOnly.value[msgIndex - 1]
-  const currentMsg = messagesOnly.value[msgIndex]
-
-  return currentMsg.from?._id !== previousMsg.from?._id
-}
-
-function isLast(messageId) {
-  const msgIndex = messagesOnly.value.findIndex(m => m._id === messageId)
-  return msgIndex === messagesOnly.value.length - 1
-}
-
-async function deleteMessage(messageId) {
-  try {
-    await useMyAuthFetch(`message/${messageId}/single`, { method: 'DELETE' })
-    messages.value = messages.value.filter(m => m._id !== messageId)
-  } catch (error) {
-    const data = error?.data || {}
-    const message = Array.isArray(data.message) ? data.message[0] : data.message
-    useNuxtApp().$toast.error(message)
-  }
-}
-
-function sortMessages(items) {
-  return [...items].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-}
-
-async function scrollToBottom(options) {
-  await nextTick()
-  bottomEl.value?.scrollIntoView(options)
-}
-
-async function decryptText(msg) {
-  if (!msg.iv) return msg.text
-  try {
+  function isUnreadByMe(msg) {
+    if (msg.isMine) return false
     if (chatUser.value?.isGroup) {
-      console.log('[Messages] Decrypting group message for chat', chatId.value, 'with text length', msg)
-      return await crypto.decryptGroupMessage(msg.text, msg.iv, chatId.value)
+      return !(msg.readBy ?? []).some((r) => (r.user?._id ?? r.user) === userId.value)
     }
-    const peerId = msg.from._id === userId.value ? msg.to?._id : msg.from._id
-    if (!peerId) return msg.text
-    return await crypto.decryptMessage(msg.text, msg.iv, peerId)
-  } catch (e) {
-    console.error('[Messages] decryptText failed:', e?.message ?? e)
-    return '[encrypted]'
+    return msg.status === StatusMessage.RECEIVED
   }
-}
 
-async function getMessages() {
-  try {
-    const [response, events] = await Promise.all([
-      useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' }),
-      chatUser.value?.isGroup ? useMyAuthFetch(`chat/${chatId.value}/events`, { method: 'GET' }) : Promise.resolve([])
-    ])
-    const mappedMessages = await Promise.all(response.map(async (msg) => ({
-      ...msg,
-      text: await decryptText(msg),
-      isMine: msg.from._id === userId.value,
-      replyTo: await resolveReplyTo(msg.replyTo)
-    })))
-    const mappedEvents = events.map(e => ({ ...e, isEvent: true }))
-    messages.value = sortMessages([...mappedMessages, ...mappedEvents])
-    if (pendingScrollId) {
-      const id = pendingScrollId
-      pendingScrollId = null
-      await scrollToMessage(id)
-    } else {
-      await scrollToBottom()
+  function showUnreadMessage(messageId) {
+    const msgIndex = messagesOnly.value.findIndex((m) => m._id === messageId)
+    if (msgIndex <= 0) return false
+
+    const previousMsg = messagesOnly.value[msgIndex - 1]
+    const currentMsg = messagesOnly.value[msgIndex]
+
+    return isUnreadByMe(currentMsg) && !isUnreadByMe(previousMsg)
+  }
+
+  function numberOfUnreadMessages(messageId) {
+    const msgIndex = messagesOnly.value.findIndex((m) => m._id === messageId)
+    return messagesOnly.value.length - msgIndex
+  }
+
+  function isFirst(messageId) {
+    const msgIndex = messagesOnly.value.findIndex((m) => m._id === messageId)
+    if (msgIndex <= 0) return true
+
+    const previousMsg = messagesOnly.value[msgIndex - 1]
+    const currentMsg = messagesOnly.value[msgIndex]
+
+    return currentMsg.from?._id !== previousMsg.from?._id
+  }
+
+  function isLast(messageId) {
+    const msgIndex = messagesOnly.value.findIndex((m) => m._id === messageId)
+    return msgIndex === messagesOnly.value.length - 1
+  }
+
+  async function deleteMessage(messageId) {
+    try {
+      await useMyAuthFetch(`message/${messageId}/single`, { method: 'DELETE' })
+      messages.value = messages.value.filter((m) => m._id !== messageId)
+    } catch (error) {
+      const data = error?.data || {}
+      const message = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(message)
     }
-  } catch (error) {
-    const data = error?.data || {}
-    const message = Array.isArray(data.message) ? data.message[0] : data.message
-    useNuxtApp().$toast.error(message)
   }
-}
 
-async function handleEvent(event) {
-  const data = JSON.parse(event.data)
-
-  const name = data.name
-  const msg = data.data
-
-  if (name === 'new-message') {
-    await newMessage(msg)
-  } else if (name === 'received-message') {
-    receivedMessage(msg)
-  } else if (name === 'read-message') {
-    readMessage(msg)
-  } else if (name === 'chat-event') {
-    newChatEvent(msg)
-  } else if (name === 'typing') {
-    setTyping(msg.chatId, msg.from)
+  function sortMessages(items) {
+    return [...items].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
   }
-}
 
-function newChatEvent(event) {
-  if ((event.chat?._id ?? event.chat) === chatId.value) {
-    messages.value.push({ ...event, isEvent: true })
-    messages.value = sortMessages(messages.value)
+  async function scrollToBottom(options) {
+    await nextTick()
+    bottomEl.value?.scrollIntoView(options)
+  }
+
+  async function decryptText(msg) {
+    if (!msg.iv) return msg.text
+    try {
+      if (chatUser.value?.isGroup) {
+        console.log(
+          '[Messages] Decrypting group message for chat',
+          chatId.value,
+          'with text length',
+          msg,
+        )
+        return await crypto.decryptGroupMessage(msg.text, msg.iv, chatId.value)
+      }
+      const peerId = msg.from._id === userId.value ? msg.to?._id : msg.from._id
+      if (!peerId) return msg.text
+      return await crypto.decryptMessage(msg.text, msg.iv, peerId)
+    } catch (e) {
+      console.error('[Messages] decryptText failed:', e?.message ?? e)
+      return '[encrypted]'
+    }
+  }
+
+  async function getMessages() {
+    try {
+      const [response, events] = await Promise.all([
+        useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' }),
+        chatUser.value?.isGroup
+          ? useMyAuthFetch(`chat/${chatId.value}/events`, { method: 'GET' })
+          : Promise.resolve([]),
+      ])
+      const mappedMessages = await Promise.all(
+        response.map(async (msg) => ({
+          ...msg,
+          text: await decryptText(msg),
+          isMine: msg.from._id === userId.value,
+          replyTo: await resolveReplyTo(msg.replyTo),
+        })),
+      )
+      const mappedEvents = events.map((e) => ({ ...e, isEvent: true }))
+      messages.value = sortMessages([...mappedMessages, ...mappedEvents])
+      if (pendingScrollId) {
+        const id = pendingScrollId
+        pendingScrollId = null
+        await scrollToMessage(id)
+      } else {
+        await scrollToBottom()
+      }
+    } catch (error) {
+      const data = error?.data || {}
+      const message = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(message)
+    }
+  }
+
+  async function handleEvent(event) {
+    const data = JSON.parse(event.data)
+
+    const name = data.name
+    const msg = data.data
+
+    if (name === 'new-message') {
+      await newMessage(msg)
+    } else if (name === 'received-message') {
+      receivedMessage(msg)
+    } else if (name === 'read-message') {
+      readMessage(msg)
+    } else if (name === 'chat-event') {
+      newChatEvent(msg)
+    } else if (name === 'typing') {
+      setTyping(msg.chatId, msg.from)
+    }
+  }
+
+  function newChatEvent(event) {
+    if ((event.chat?._id ?? event.chat) === chatId.value) {
+      messages.value.push({ ...event, isEvent: true })
+      messages.value = sortMessages(messages.value)
+      scrollToBottom({ behavior: 'smooth' })
+    }
+  }
+
+  async function newMessage(message) {
+    const text = await decryptText(message)
+
+    if (message.chat._id === chatId.value) {
+      const isMine = message.from._id === userId.value
+      const replyTo = await resolveReplyTo(message.replyTo)
+      messages.value.push({ ...message, text, isMine, replyTo })
+      messages.value = sortMessages(messages.value)
+
+      const receivedMessages = messages.value.filter(
+        (msg) => !msg.isMine && msg.status === StatusMessage.RECEIVED,
+      )
+      for (const msg of receivedMessages) {
+        msg.status = StatusMessage.READ
+      }
+    }
+
     scrollToBottom({ behavior: 'smooth' })
   }
-}
 
-async function newMessage(message) {
-  const text = await decryptText(message)
+  function receivedMessage(message) {
+    if (message.chat !== chatId.value) {
+      return
+    }
 
-  if (message.chat._id === chatId.value) {
-    const isMine = message.from._id === userId.value
-    const replyTo = await resolveReplyTo(message.replyTo)
-    messages.value.push({ ...message, text, isMine, replyTo })
-    messages.value = sortMessages(messages.value)
-
-    const receivedMessages = messages.value.filter(msg => !msg.isMine && msg.status === StatusMessage.RECEIVED)
-    for (const msg of receivedMessages) {
-      msg.status = StatusMessage.READ
+    for (const msg of message.messages) {
+      const matchedMessage = messages.value.find((m) => m._id === msg._id)
+      if (matchedMessage) {
+        matchedMessage.status = StatusMessage.RECEIVED
+      }
     }
   }
 
-  scrollToBottom({ behavior: 'smooth' })
-}
+  function readMessage(message) {
+    if (message.chat !== chatId.value) {
+      return
+    }
 
-function receivedMessage(message) {
-  if (message.chat !== chatId.value) {
-    return
-  }
-
-  for (const msg of message.messages) {
-    const matchedMessage = messages.value.find(m => m._id === msg._id)
-    if (matchedMessage) {
-      matchedMessage.status = StatusMessage.RECEIVED
+    for (const msg of message.messages) {
+      const matchedMessage = messages.value.find((m) => m._id === msg._id)
+      if (matchedMessage) {
+        matchedMessage.status = StatusMessage.READ
+      }
     }
   }
-}
 
-function readMessage(message) {
-  if (message.chat !== chatId.value) {
-    return
-  }
+  watch(
+    () => clearedChatState.value.nonce,
+    () => {
+      if (clearedChatState.value.chatId !== chatId.value) {
+        return
+      }
 
-  for (const msg of message.messages) {
-    const matchedMessage = messages.value.find(m => m._id === msg._id)
-    if (matchedMessage) {
-      matchedMessage.status = StatusMessage.READ
+      messages.value = []
+    },
+  )
+
+  watch(
+    () => deletedChatState.value.nonce,
+    () => {
+      if (deletedChatState.value.chatId !== chatId.value) {
+        return
+      }
+
+      messages.value = []
+    },
+  )
+
+  function isNearBottom() {
+    let el = bottomEl.value?.parentElement
+    while (el) {
+      const overflow = getComputedStyle(el).overflowY
+      if (overflow === 'auto' || overflow === 'scroll') {
+        return el.scrollHeight - el.scrollTop - el.clientHeight <= 100
+      }
+      el = el.parentElement
     }
-  }
-}
-
-watch(() => clearedChatState.value.nonce, () => {
-  if (clearedChatState.value.chatId !== chatId.value) {
-    return
+    return true
   }
 
-  messages.value = []
-})
+  watch(
+    () => typingChats.value[chatId.value],
+    (isTyping) => {
+      if (isTyping && isNearBottom()) {
+        scrollToBottom({ behavior: 'smooth' })
+      }
+    },
+  )
 
-watch(() => deletedChatState.value.nonce, () => {
-  if (deletedChatState.value.chatId !== chatId.value) {
-    return
-  }
-
-  messages.value = []
-})
-
-function isNearBottom() {
-  let el = bottomEl.value?.parentElement
-  while (el) {
-    const overflow = getComputedStyle(el).overflowY
-    if (overflow === 'auto' || overflow === 'scroll') {
-      return el.scrollHeight - el.scrollTop - el.clientHeight <= 100
+  watch(chatId, async (value, oldValue) => {
+    if (!value || value === oldValue) {
+      return
     }
-    el = el.parentElement
-  }
-  return true
-}
 
-watch(() => typingChats.value[chatId.value], (isTyping) => {
-  if (isTyping && isNearBottom()) {
-    scrollToBottom({ behavior: 'smooth' })
-  }
-})
+    conn.value?.removeEventListener('message', handleEvent)
 
-watch(chatId, async (value, oldValue) => {
-  if (!value || value === oldValue) {
-    return
-  }
+    if (value === 'new-chat') {
+      messages.value = []
+      return
+    }
 
-  conn.value?.removeEventListener('message', handleEvent)
+    await getMessages()
+    conn.value?.addEventListener('message', handleEvent)
+  })
 
-  if (value === 'new-chat') {
-    messages.value = []
-    return
-  }
-
-  await getMessages()
-  conn.value?.addEventListener('message', handleEvent)
-})
-
-onBeforeUnmount(() => {
-  conn.value?.removeEventListener('message', handleEvent)
-})
+  onBeforeUnmount(() => {
+    conn.value?.removeEventListener('message', handleEvent)
+  })
 </script>
 
-<style>
-
-</style>
+<style></style>

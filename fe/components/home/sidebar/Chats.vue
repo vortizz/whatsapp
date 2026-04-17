@@ -1,193 +1,206 @@
 <template>
-    <div ref="containerEl" class="relative flex flex-col gap-1" @click="closeMenu">
-        <HomeSidebarChat
-            v-for="(chat, i) in displayedChats"
-            :key="i"
-            :name="chat.user.name"
-            :isGroup="chat.user.isGroup"
-            :active="chatId === chat._id"
-            :isClearing="clearingChatId === chat._id || deletingChatId === chat._id"
-            :lastMessage="chat.lastMessage"
-            :countUnreadMessages="chat.countUnreadMessages"
-            :users="chat.user.users"
-            :typingUsers="getTypingUsers(chat._id)"
-            @click="setChat(chat)"
-            @openMenu="openMenu(chat, $event)"
-        />
-        <HomeMainMenu
-            :is-menu-button="isMenuOpen"
-            :x="menuPosition.x"
-            :y="menuPosition.y"
-            @showContactInfo="emit('showContactInfo')"
-            @close="closeMenu"
-        />
-        <div class="text-center text-xs p-3">
-            <Icon name="oi:lock-locked" />
-            Your personal messages are end-to-end encrypted
-        </div>
+  <div ref="containerEl" class="relative flex flex-col gap-1" @click="closeMenu">
+    <HomeSidebarChat
+      v-for="(chat, i) in displayedChats"
+      :key="i"
+      :name="chat.user.name"
+      :is-group="chat.user.isGroup"
+      :active="chatId === chat._id"
+      :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"
+      :last-message="chat.lastMessage"
+      :count-unread-messages="chat.countUnreadMessages"
+      :users="chat.user.users"
+      :typing-users="getTypingUsers(chat._id)"
+      @click="setChat(chat)"
+      @open-menu="openMenu(chat, $event)"
+    />
+    <HomeMainMenu
+      :is-menu-button="isMenuOpen"
+      :x="menuPosition.x"
+      :y="menuPosition.y"
+      @show-contact-info="emit('showContactInfo')"
+      @close="closeMenu"
+    />
+    <div class="text-center text-xs p-3">
+      <Icon name="oi:lock-locked" />
+      Your personal messages are end-to-end encrypted
     </div>
+  </div>
 </template>
 
 <script setup>
-import { storeToRefs } from 'pinia'
-import { useUserStore } from '../../../store/user'
-import { useChatStore } from '../../../store/chat'
-import { useWsStore } from '../../../store/websocket'
-import { StatusMessage } from '../../../utils/status-message'
+  import { storeToRefs } from 'pinia'
+  import { useUserStore } from '../../../store/user'
+  import { useChatStore } from '../../../store/chat'
+  import { useWsStore } from '../../../store/websocket'
+  import { StatusMessage } from '../../../utils/status-message'
 
-const props = defineProps({ groupChats: { type: Boolean, default: false } })
-const emit = defineEmits(['showContactInfo'])
+  const props = defineProps({ groupChats: { type: Boolean, default: false } })
+  const emit = defineEmits(['showContactInfo'])
 
-const { setTyping, getTypingUsers } = useTypingState()
-const { decryptMessage, decryptGroupMessage } = useCrypto()
+  const { setTyping, getTypingUsers } = useTypingState()
+  const { decryptMessage, decryptGroupMessage } = useCrypto()
 
-const chats = ref([])
-const displayedChats = ref([])
+  const chats = ref([])
+  const displayedChats = ref([])
 
-watch(
+  watch(
     [chats, () => props.groupChats],
     ([newChats, isGroups]) => {
-        displayedChats.value = isGroups
-            ? newChats.filter(chat => chat.user?.isGroup)
-            : newChats
+      displayedChats.value = isGroups ? newChats.filter((chat) => chat.user?.isGroup) : newChats
     },
-    { immediate: true, deep: true }
-)
-const containerEl = ref(null)
-const isMenuOpen = ref(false)
-const menuPosition = ref({ x: 0, y: 0 })
-const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
-const { deletingChatId, deletedChatState } = useDeleteChatState()
+    { immediate: true, deep: true },
+  )
+  const containerEl = ref(null)
+  const isMenuOpen = ref(false)
+  const menuPosition = ref({ x: 0, y: 0 })
+  const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
+  const { deletingChatId, deletedChatState } = useDeleteChatState()
 
-const userStore = useUserStore()
-const chatStore = useChatStore()
-const wsStore = useWsStore()
+  const userStore = useUserStore()
+  const chatStore = useChatStore()
+  const wsStore = useWsStore()
 
-const { _id: userId } = storeToRefs(userStore)
-const { _id: chatId } = storeToRefs(chatStore)
-const { conn } = storeToRefs(wsStore)
-const { setChat: setChatAction, setUnreadCounts } = chatStore
+  const { _id: userId } = storeToRefs(userStore)
+  const { _id: chatId } = storeToRefs(chatStore)
+  const { conn } = storeToRefs(wsStore)
+  const { setChat: setChatAction, setUnreadCounts } = chatStore
 
-function getUserId(user) {
+  function getUserId(user) {
     return user?._id || user
-}
+  }
 
-function emptyLastMessage() {
+  function emptyLastMessage() {
     return {
-        _id: '',
-        text: '',
-        createdAt: '',
-        status: '',
-        isMine: false
+      _id: '',
+      text: '',
+      createdAt: '',
+      status: '',
+      isMine: false,
     }
-}
+  }
 
-async function handleEvent(event) {
+  async function handleEvent(event) {
     const data = JSON.parse(event.data)
 
     const name = data.name
     const msg = data.data
 
     if (name === 'new-message') {
-        await newMessage(msg)
+      await newMessage(msg)
     } else if (name === 'received-message') {
-        receivedMessage(msg)
+      receivedMessage(msg)
     } else if (name === 'read-message') {
-        readMessage(msg)
+      readMessage(msg)
     } else if (name === 'typing') {
-        setTyping(msg.chatId, msg.from)
+      setTyping(msg.chatId, msg.from)
     } else if (name === 'chat-event') {
-        handleChatEvent(msg)
+      handleChatEvent(msg)
     } else if (name === 'user-status') {
-        const chat = chats.value.find(c => !c.user?.isGroup && c.user?._id === msg.userId)
-        if (chat) {
-            chat.user.isConnected = msg.isConnected
-            chat.user.lastSeenAt = msg.lastSeenAt
-        }
+      const chat = chats.value.find((c) => !c.user?.isGroup && c.user?._id === msg.userId)
+      if (chat) {
+        chat.user.isConnected = msg.isConnected
+        chat.user.lastSeenAt = msg.lastSeenAt
+      }
     }
-}
+  }
 
-async function decryptLastMessage(chat) {
+  async function decryptLastMessage(chat) {
     const lm = chat.lastMessage
     if (!lm?.iv) return lm?.text ?? ''
     try {
-        if (chat.isGroup) {
-            return await decryptGroupMessage(lm.text, lm.iv, chat._id)
-        }
-        const peer = chat.users.find(u => u._id !== userId.value)
-        if (!peer) return lm.text
-        return await decryptMessage(lm.text, lm.iv, peer._id)
+      if (chat.isGroup) {
+        return await decryptGroupMessage(lm.text, lm.iv, chat._id)
+      }
+      const peer = chat.users.find((u) => u._id !== userId.value)
+      if (!peer) return lm.text
+      return await decryptMessage(lm.text, lm.iv, peer._id)
     } catch (e) {
-        console.error('[Chats] decryptLastMessage failed:', e?.message ?? e)
-        return '[encrypted]'
+      console.error('[Chats] decryptLastMessage failed:', e?.message ?? e)
+      return '[encrypted]'
     }
-}
+  }
 
-async function getChats() {
+  async function getChats() {
     try {
-        const response = await useMyAuthFetch('chat', { method: 'GET' })
-        chats.value = await Promise.all(response.map(async chat => ({
-            _id: chat._id,
-            user: chat.isGroup
-                ? { _id: chat._id, name: chat.name, isGroup: true, users: chat.users, groupAdmins: chat.groupAdmins, createdAt: chat.createdAt, createdBy: chat.createdBy }
-                : chat.users.find(user => user._id !== userId.value),
-            lastMessage: chat.lastMessage ? (() => {
+      const response = await useMyAuthFetch('chat', { method: 'GET' })
+      chats.value = await Promise.all(
+        response.map(async (chat) => ({
+          _id: chat._id,
+          user: chat.isGroup
+            ? {
+                _id: chat._id,
+                name: chat.name,
+                isGroup: true,
+                users: chat.users,
+                groupAdmins: chat.groupAdmins,
+                createdAt: chat.createdAt,
+                createdBy: chat.createdBy,
+              }
+            : chat.users.find((user) => user._id !== userId.value),
+          lastMessage: chat.lastMessage
+            ? (() => {
                 const fromId = getUserId(chat.lastMessage.from)
                 const isMine = fromId === userId.value
-                const senderName = chat.lastMessage.from?.name
-                    ?? chat.users?.find(u => u._id === fromId)?.name
-                    ?? ''
+                const senderName =
+                  chat.lastMessage.from?.name ??
+                  chat.users?.find((u) => u._id === fromId)?.name ??
+                  ''
                 return {
-                    _id: chat.lastMessage._id,
-                    text: chat.lastMessage.text,
-                    iv: chat.lastMessage.iv,
-                    createdAt: chat.lastMessage.createdAt,
-                    status: chat.lastMessage.status,
-                    isMine,
-                    senderName
+                  _id: chat.lastMessage._id,
+                  text: chat.lastMessage.text,
+                  iv: chat.lastMessage.iv,
+                  createdAt: chat.lastMessage.createdAt,
+                  status: chat.lastMessage.status,
+                  isMine,
+                  senderName,
                 }
-            })() : emptyLastMessage(),
-            countUnreadMessages: chat.countUnreadMessages || 0
-        })))
+              })()
+            : emptyLastMessage(),
+          countUnreadMessages: chat.countUnreadMessages || 0,
+        })),
+      )
 
-        // Decrypt last message previews after the full list is built
-        await Promise.all(chats.value.map(async (chat) => {
-            if (chat.lastMessage?._id) {
-                chat.lastMessage.text = await decryptLastMessage({
-                    ...chat,
-                    isGroup: chat.user?.isGroup,
-                    lastMessage: chat.lastMessage,
-                    users: response.find(r => r._id === chat._id)?.users ?? []
-                })
-            }
-        }))
+      // Decrypt last message previews after the full list is built
+      await Promise.all(
+        chats.value.map(async (chat) => {
+          if (chat.lastMessage?._id) {
+            chat.lastMessage.text = await decryptLastMessage({
+              ...chat,
+              isGroup: chat.user?.isGroup,
+              lastMessage: chat.lastMessage,
+              users: response.find((r) => r._id === chat._id)?.users ?? [],
+            })
+          }
+        }),
+      )
     } catch (error) {
-        const data = error?.data || {}
-        const message = Array.isArray(data.message) ? data.message[0] : data.message
-        useNuxtApp().$toast.error(message)
+      const data = error?.data || {}
+      const message = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(message)
     }
-}
+  }
 
-function setChat(chat) {
+  function setChat(chat) {
     chat.countUnreadMessages = 0
     const clonedChat = JSON.parse(JSON.stringify(chat))
     setChatAction({
-        _id: clonedChat._id,
-        user: clonedChat.user
+      _id: clonedChat._id,
+      user: clonedChat.user,
     })
-}
+  }
 
-function closeMenu() {
+  function closeMenu() {
     isMenuOpen.value = false
-}
+  }
 
-function openMenu(chat, position) {
+  function openMenu(chat, position) {
     setChat(chat)
 
     const container = containerEl.value
     const scrollParent = container?.parentElement
     if (!(container && scrollParent)) {
-        return
+      return
     }
 
     const rect = container.getBoundingClientRect()
@@ -199,210 +212,229 @@ function openMenu(chat, position) {
     const maxX = container.clientWidth - menuWidth - horizontalPadding
 
     menuPosition.value = {
-        x: Math.max(horizontalPadding, Math.min(x, maxX)),
-        y: Math.max(verticalPadding, y)
+      x: Math.max(horizontalPadding, Math.min(x, maxX)),
+      y: Math.max(verticalPadding, y),
     }
     isMenuOpen.value = true
-}
+  }
 
-function handleWindowPointerDown(event) {
+  function handleWindowPointerDown(event) {
     if (!isMenuOpen.value) {
-        return
+      return
     }
 
     if (containerEl.value?.contains(event.target)) {
-        return
+      return
     }
 
     closeMenu()
-}
+  }
 
-async function newMessage(message) {
-    const chat = chats.value.find(item => item._id === message.chat._id)
+  async function newMessage(message) {
+    const chat = chats.value.find((item) => item._id === message.chat._id)
     if (!chat) {
-        if (message._id) {
-            newChat(message)
-        }
-        return
+      if (message._id) {
+        newChat(message)
+      }
+      return
     }
 
     let text = message.text
     if (message.iv) {
-        try {
-            if (chat.user?.isGroup) {
-                text = await decryptGroupMessage(message.text, message.iv, chat._id)
-            } else {
-                const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
-                if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
-            }
-        } catch (e) {
-            console.error('[Chats] newMessage decrypt failed:', e?.message ?? e)
-            text = '[encrypted]'
+      try {
+        if (chat.user?.isGroup) {
+          text = await decryptGroupMessage(message.text, message.iv, chat._id)
+        } else {
+          const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
+          if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
         }
+      } catch (e) {
+        console.error('[Chats] newMessage decrypt failed:', e?.message ?? e)
+        text = '[encrypted]'
+      }
     }
 
     const isMine = message.from._id === userId.value
     chat.lastMessage = {
-        _id: message._id,
-        text,
-        createdAt: message.createdAt,
-        status: message.status,
-        isMine,
-        senderName: message.from?.name ?? ''
+      _id: message._id,
+      text,
+      createdAt: message.createdAt,
+      status: message.status,
+      isMine,
+      senderName: message.from?.name ?? '',
     }
     if (!isMine && chatId.value !== chat._id) {
-        chat.countUnreadMessages += 1
+      chat.countUnreadMessages += 1
     } else {
-        chat.countUnreadMessages = 0
+      chat.countUnreadMessages = 0
     }
     sortChats()
-}
+  }
 
-function receivedMessage(message) {
-    const chat = chats.value.find(item => item._id === message.chat)
+  function receivedMessage(message) {
+    const chat = chats.value.find((item) => item._id === message.chat)
 
-    if (!(chat && message.messages.some(msg => msg._id === chat.lastMessage._id))) {
-        return
+    if (!(chat && message.messages.some((msg) => msg._id === chat.lastMessage._id))) {
+      return
     }
 
     chat.lastMessage.status = StatusMessage.RECEIVED
-}
+  }
 
-function readMessage(message) {
-    const chat = chats.value.find(item => item._id === message.chat)
+  function readMessage(message) {
+    const chat = chats.value.find((item) => item._id === message.chat)
 
-    if (!(chat && message.messages.some(msg => msg._id === chat.lastMessage._id))) {
-        return
+    if (!(chat && message.messages.some((msg) => msg._id === chat.lastMessage._id))) {
+      return
     }
 
     chat.lastMessage.status = StatusMessage.READ
-}
+  }
 
-async function newChat(message) {
+  async function newChat(message) {
     const isMine = getUserId(message.from) === userId.value
     const isGroup = message.chat.isGroup
 
     let text = message.text
     if (message.iv) {
-        try {
-            if (isGroup) {
-                text = await decryptGroupMessage(message.text, message.iv, message.chat._id)
-            } else {
-                const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
-                if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
-            }
-        } catch (e) {
-            console.error('[Chats] newChat decrypt failed:', e?.message ?? e)
-            text = '[encrypted]'
+      try {
+        if (isGroup) {
+          text = await decryptGroupMessage(message.text, message.iv, message.chat._id)
+        } else {
+          const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
+          if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
         }
+      } catch (e) {
+        console.error('[Chats] newChat decrypt failed:', e?.message ?? e)
+        text = '[encrypted]'
+      }
     }
 
     const chat = {
-        _id: message.chat._id,
-        user: isGroup
-            ? { _id: message.chat._id, name: message.chat.name, isGroup: true, users: message.chat.users, groupAdmins: message.chat.groupAdmins, createdAt: message.chat.createdAt, createdBy: message.chat.createdBy }
-            : message.chat.users.find(user => user._id !== userId.value),
-        lastMessage: {
-            _id: message._id,
-            text,
-            createdAt: message.createdAt,
-            status: message.status,
-            isMine,
-            senderName: message.from?.name ?? ''
-        },
-        countUnreadMessages: isMine ? 0 : 1
+      _id: message.chat._id,
+      user: isGroup
+        ? {
+            _id: message.chat._id,
+            name: message.chat.name,
+            isGroup: true,
+            users: message.chat.users,
+            groupAdmins: message.chat.groupAdmins,
+            createdAt: message.chat.createdAt,
+            createdBy: message.chat.createdBy,
+          }
+        : message.chat.users.find((user) => user._id !== userId.value),
+      lastMessage: {
+        _id: message._id,
+        text,
+        createdAt: message.createdAt,
+        status: message.status,
+        isMine,
+        senderName: message.from?.name ?? '',
+      },
+      countUnreadMessages: isMine ? 0 : 1,
     }
     chats.value.push(chat)
     sortChats()
-}
+  }
 
-function handleChatEvent(event) {
-    const chat = chats.value.find(c => c._id === event.chat._id)
+  function handleChatEvent(event) {
+    const chat = chats.value.find((c) => c._id === event.chat._id)
     if (!chat) return
 
     if (event.isNameChanged && chat.user?.isGroup) {
-        chat.user.name = event.newName
+      chat.user.name = event.newName
     }
-}
+  }
 
-function sortChats() {
+  function sortChats() {
     chats.value.sort((a, b) => {
-        if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
-            return -1
-        }
-        if (a.lastMessage?.createdAt < b.lastMessage?.createdAt) {
-            return 1
-        }
-        return 0
+      if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
+        return -1
+      }
+      if (a.lastMessage?.createdAt < b.lastMessage?.createdAt) {
+        return 1
+      }
+      return 0
     })
-}
+  }
 
-function clearChatState(chatIdToClear) {
-    const matchedChat = chats.value.find(chat => chat._id === chatIdToClear)
+  function clearChatState(chatIdToClear) {
+    const matchedChat = chats.value.find((chat) => chat._id === chatIdToClear)
     if (!matchedChat) {
-        return
+      return
     }
 
     matchedChat.lastMessage = emptyLastMessage()
     matchedChat.countUnreadMessages = 0
-}
+  }
 
-function removeChat(chatIdToDelete) {
-    chats.value = chats.value.filter(chat => chat._id !== chatIdToDelete)
-}
+  function removeChat(chatIdToDelete) {
+    chats.value = chats.value.filter((chat) => chat._id !== chatIdToDelete)
+  }
 
-watchEffect(() => {
-    const selectedChat = chats.value.find(chat => chat._id === chatId.value)
+  watchEffect(() => {
+    const selectedChat = chats.value.find((chat) => chat._id === chatId.value)
     selectedChatHasMessages.value = Boolean(selectedChat?.lastMessage?._id)
-})
+  })
 
-watch(chats, (newChats) => {
-    setUnreadCounts(newChats)
-}, { deep: true })
+  watch(
+    chats,
+    (newChats) => {
+      setUnreadCounts(newChats)
+    },
+    { deep: true },
+  )
 
-watch(() => clearedChatState.value.nonce, () => {
-    if (!clearedChatState.value.chatId) {
+  watch(
+    () => clearedChatState.value.nonce,
+    () => {
+      if (!clearedChatState.value.chatId) {
         return
-    }
+      }
 
-    clearChatState(clearedChatState.value.chatId)
-})
+      clearChatState(clearedChatState.value.chatId)
+    },
+  )
 
-watch(() => deletedChatState.value.nonce, () => {
-    if (!deletedChatState.value.chatId) {
+  watch(
+    () => deletedChatState.value.nonce,
+    () => {
+      if (!deletedChatState.value.chatId) {
         return
-    }
+      }
 
-    removeChat(deletedChatState.value.chatId)
-})
+      removeChat(deletedChatState.value.chatId)
+    },
+  )
 
-const { membersUpdatedState } = useAddMemberModal()
-watch(() => membersUpdatedState.value.nonce, () => {
-    if (!membersUpdatedState.value.chatId) {
+  const { membersUpdatedState } = useAddMemberModal()
+  watch(
+    () => membersUpdatedState.value.nonce,
+    () => {
+      if (!membersUpdatedState.value.chatId) {
         return
-    }
+      }
 
-    const chat = chats.value.find(c => c._id === membersUpdatedState.value.chatId)
-    if (chat?.user?.isGroup) {
+      const chat = chats.value.find((c) => c._id === membersUpdatedState.value.chatId)
+      if (chat?.user?.isGroup) {
         chat.user.users = membersUpdatedState.value.users
         chat.user.groupAdmins = membersUpdatedState.value.groupAdmins
-    }
-})
+      }
+    },
+  )
 
-onMounted(async () => {
+  onMounted(async () => {
     await getChats()
 
     conn.value?.removeEventListener('message', handleEvent)
     conn.value?.addEventListener('message', handleEvent)
     window.addEventListener('pointerdown', handleWindowPointerDown)
-})
+  })
 
-onBeforeUnmount(() => {
+  onBeforeUnmount(() => {
     conn.value?.removeEventListener('message', handleEvent)
     window.removeEventListener('pointerdown', handleWindowPointerDown)
-})
+  })
 </script>
 
-<style>
-
-</style>
+<style></style>
