@@ -61,8 +61,27 @@ export class User {
   @Prop({ type: Date, default: () => Date.now() })
   lastSeenAt: Date
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String })
   publicKey?: string
+
+  @Prop({ type: String })
+  encryptedPrivateKey?: string
+
+  @Prop({ type: String })
+  iv?: string
+
+  @Prop({
+    type: [
+      {
+        encryptedPrivateKey: String,
+        iv: String,
+      },
+    ],
+  })
+  recoveryCodes?: {
+    encryptedPrivateKey: string
+    iv: string
+  }[]
 
   createdAt: Date
   updatedAt: Date

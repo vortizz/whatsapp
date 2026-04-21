@@ -5,7 +5,21 @@ import {
   IsString,
   IsStrongPassword,
   MaxLength,
+  IsArray,
+  ValidateNested,
 } from 'class-validator'
+
+import { Type } from 'class-transformer'
+
+class RecoveryDto {
+  @IsString()
+  @IsNotEmpty()
+  encryptedPrivateKey: string
+
+  @IsString()
+  @IsNotEmpty()
+  iv: string
+}
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -32,4 +46,21 @@ export class CreateUserDto {
   //     minUppercase: 1
   // })
   readonly password: string
+
+  @IsNotEmpty()
+  @IsString()
+  readonly publicKey: string
+
+  @IsNotEmpty()
+  @IsString()
+  readonly encryptedPrivateKey: string
+
+  @IsNotEmpty()
+  @IsString()
+  readonly iv: string
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecoveryDto)
+  readonly recoveryCodes: RecoveryDto[]
 }
