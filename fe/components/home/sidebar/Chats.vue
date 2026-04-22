@@ -3,7 +3,7 @@
     <HomeSidebarChat
       v-for="(chat, i) in displayedChats"
       :key="i"
-      :name="getFirstUser(chat)?.name"
+      :name="chat.isGroup ? chat.name : getFirstUser(chat)?.name"
       :is-group="chat.isGroup"
       :active="chatId === chat._id"
       :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"

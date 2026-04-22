@@ -8,7 +8,7 @@
       <AvatarPlaceholder v-else :size="40" :name="chatFirstUser?.name" />
       <div class="flex-1 min-w-0">
         <div class="text-base font-semibold text-black dark:text-white leading-tight">
-          {{ chatFirstUser?.name }}
+          {{ isChatGroup ? groupName : chatFirstUser?.name }}
         </div>
         <div
           v-if="isChatGroup"
@@ -80,7 +80,12 @@
   const { conn } = useWs()
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const { users: chatUsers, _id: chatId, isGroup: isChatGroup } = storeToRefs(chatStore)
+  const {
+    users: chatUsers,
+    _id: chatId,
+    isGroup: isChatGroup,
+    name: groupName,
+  } = storeToRefs(chatStore)
   const { _id: userId } = storeToRefs(userStore)
   const isMenuButton = ref(false)
 
