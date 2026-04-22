@@ -22,7 +22,7 @@ export class CreateChatDto {
   @IsMongoId()
   user_id: string
 
-  @IsArray({ minItems: 1 })
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => EncryptedKeyDto)
   @ArrayMinSize(2)

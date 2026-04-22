@@ -68,10 +68,9 @@ export class ChatController {
   async addGroupMembers(
     @AuthUser() user: User,
     @Param('id') id: string,
-    // @Body('user_ids') userIds: string[],
     @Body() dto: AddMemberGroupChatDto,
   ): Promise<Chat> {
-    return await this.chatService.addGroupMembers(id, userIds, user)
+    return await this.chatService.addGroupMembers(id, dto, user)
   }
 
   @Auth()

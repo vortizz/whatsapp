@@ -251,6 +251,19 @@ export class ChatService {
         },
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'lastMessage.from',
+          foreignField: '_id',
+          as: 'lastMessageSender',
+        },
+      },
+      {
+        $addFields: {
+          'lastMessage.from': { $arrayElemAt: ['$lastMessageSender', 0] },
+        },
+      },
+      {
         $project: {
           usersData: 0,
           messageVisibility: 0,
@@ -258,6 +271,7 @@ export class ChatService {
           visibleMessagesCount: 0,
           lastMessageData: 0,
           unreadMessagesData: 0,
+          lastMessageSender: 0,
         },
       },
       { $sort: { 'lastMessage.createdAt': -1, updatedAt: -1 } },
