@@ -1,5 +1,7 @@
 <template>
-  <aside class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
+  <aside
+    class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 dark:border-black/80 flex flex-col"
+  >
     <header class="sticky top-0">
       <HomeNewChatHeader @close="emit('close')" />
       <HomeNewChatSubHeader @settext="(e) => (text = e)" />

@@ -55,14 +55,13 @@
   function onCreated(chat) {
     chatStore.setChat({
       _id: chat._id,
-      user: {
-        _id: chat._id,
-        name: chat.name,
-        isGroup: true,
-        users: chat.users,
-        createdAt: chat.createdAt,
-        createdBy: chat.createdBy,
-      },
+      users: chat.users,
+      name: chat.name,
+      isGroup: true,
+      createdAt: chat.createdAt,
+      createdBy: chat.createdBy,
+      encryptedKeys: chat.encryptedKeys,
+      description: chat.description,
     })
     emit('close')
   }

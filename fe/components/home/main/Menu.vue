@@ -14,7 +14,7 @@
       :style="menuPositionStyle"
     >
       <HomeMainMenuGroup
-        v-if="chatUser.isGroup"
+        v-if="isChatGroup"
         @close="emit('close')"
         @show-contact-info="emit('showContactInfo')"
       />
@@ -50,7 +50,7 @@
   const emit = defineEmits(['showContactInfo', 'close'])
 
   const chatStore = useChatStore()
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { isGroup: isChatGroup } = storeToRefs(chatStore)
 
   const isMounted = ref(false)
 

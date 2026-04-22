@@ -12,9 +12,10 @@ export function useBlockUserModal() {
 
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { users: chatUsers } = storeToRefs(chatStore)
 
-  const targetUser = computed(() => userOverride.value ?? chatUser.value)
+  const chatFirstUser = computed(() => chatUsers.value?.find((user) => user._id !== userStore._id))
+  const targetUser = computed(() => userOverride.value ?? chatFirstUser.value)
   const chatUserId = computed(() => targetUser.value?._id || '')
   const isBlockingUser = computed(() => blockingUserId.value === chatUserId.value)
   const isBlockUserDisabled = computed(() => !chatUserId.value || isBlockingUser.value)

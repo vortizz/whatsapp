@@ -97,7 +97,7 @@
 
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
+  const { _id: chatId, users: chatUsers, groupAdmins: chatGroupAdmins } = storeToRefs(chatStore)
   const { _id: userId } = storeToRefs(userStore)
 
   const { openModal: openSearchMembersModal } = useSearchMembersModal()
@@ -109,7 +109,7 @@
   const isMenuOpen = ref(null)
 
   const members = computed(() => {
-    const users = chatUser.value?.users ?? []
+    const users = chatUsers.value ?? []
     return [...users].sort((a, b) => {
       if (a._id?.toString() === userId.value) return -1
       if (b._id?.toString() === userId.value) return 1
@@ -119,7 +119,7 @@
   const groupAdminIds = computed(
     () =>
       new Set(
-        (chatUser.value?.groupAdmins ?? []).map((a) =>
+        (chatGroupAdmins.value ?? []).map((a) =>
           typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString(),
         ),
       ),

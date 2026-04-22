@@ -103,9 +103,11 @@
 
 <script setup>
   import { useChatStore } from '../../store/chat'
+  import { useUserStore } from '../../store/user'
 
   const { isOpen, messages, closeModal } = useForwardMessageModal()
   const chatStore = useChatStore()
+  const userStore = useUserStore()
 
   const search = ref('')
   const loading = ref(false)
@@ -135,7 +137,9 @@
         name: u.name,
         about: u.about,
         email: u.email,
-        chatId: u.chat?._id ?? null,
+        isConnected: u.isConnected,
+        lastSeenAt: u.lastSeenAt,
+        chat: u.chat,
       }))
     } catch (error) {
       const data = error?.data || {}
@@ -159,30 +163,42 @@
       let lastChat = null
       let lastUser = null
       for (const user of targets) {
-        let chatId = user.chatId
-        if (!chatId) {
-          const chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: user._id } })
-          chatId = chat._id
+        let chat = user.chat
+        if (!chat) {
+          chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: user._id } })
         }
         for (const msg of messages.value) {
           await useMyAuthFetch('message', {
             method: 'POST',
-            body: { chat: chatId, to: user._id, text: msg.text, forwarded: true },
+            body: { chat: chat._id, to: user._id, text: msg.text, forwarded: true },
           })
         }
-        lastChat = chatId
+        lastChat = chat
         lastUser = user
       }
       closeModal()
       if (lastChat && lastUser) {
         chatStore.setChat({
-          _id: lastChat,
-          user: {
-            _id: lastUser._id,
-            name: lastUser.name,
-            email: lastUser.email,
-            about: lastUser.about,
-          },
+          _id: lastChat._id,
+          users: [
+            {
+              _id: userStore._id,
+              name: userStore.name,
+              email: userStore.email,
+              about: userStore.about,
+              isConnected: userStore.isConnected,
+              lastSeenAt: userStore.lastSeenAt,
+            },
+            {
+              _id: lastUser._id,
+              name: lastUser.name,
+              email: lastUser.email,
+              about: lastUser.about,
+              isConnected: lastUser.isConnected,
+              lastSeenAt: lastUser.lastSeenAt,
+            },
+          ],
+          encryptedKeys: lastChat.encryptedKeys,
         })
       }
     } catch (error) {

@@ -54,7 +54,7 @@
   const chatStore = useChatStore()
   const userStore = useUserStore()
 
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { groupAdmins: chatGroupAdmins } = storeToRefs(chatStore)
   const { _id: userId } = storeToRefs(userStore)
   const { openModal, isClearChatDisabled } = useClearChatModal()
   const { openModal: openAddMemberModal } = useAddMemberModal()
@@ -63,7 +63,7 @@
   const groupAdminIds = computed(
     () =>
       new Set(
-        (chatUser.value?.groupAdmins ?? []).map((a) =>
+        (chatGroupAdmins.value ?? []).map((a) =>
           typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString(),
         ),
       ),
@@ -75,7 +75,7 @@
 
   function closeChat() {
     emit('close')
-    chatStore.setChat({ _id: '', user: {} })
+    chatStore.clearChat()
   }
 
   function clearMessages() {

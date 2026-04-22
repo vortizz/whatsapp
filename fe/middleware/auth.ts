@@ -1,5 +1,5 @@
 import { useUserStore } from '../store/user'
-import { useWsStore } from '../store/websocket'
+import { useChatStore } from '../store/chat'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const { $pinia } = useNuxtApp()
@@ -15,22 +15,26 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
     if (!isAuth && to?.name && !toAuth.includes(to?.name?.toString())) {
       const userStore = useUserStore($pinia)
-      const wsStore = useWsStore($pinia)
+      const chatStore = useChatStore($pinia)
+      const indexedDB = useIndexedDB()
+      const ws = useWs()
+      indexedDB.deleteDB(userStore._id)
+      chatStore.clearChat()
       userStore.logout()
-      wsStore.disconnectWs()
+      ws.disconnectWs()
       return navigateTo('/auth/login')
     }
 
     // Initialize E2E keys before the page renders so every component
     // that mounts can decrypt immediately. Client-only: IndexedDB is not
     // available on the server.
-    if (import.meta.client && isAuth && to?.name && !toAuth.includes(to?.name?.toString())) {
-      const userStore = useUserStore($pinia)
-      if (userStore._id) {
-        const { initKeys } = useCrypto()
-        await initKeys(userStore._id)
-      }
-    }
+    // if (import.meta.client && isAuth && to?.name && !toAuth.includes(to?.name?.toString())) {
+    //   const userStore = useUserStore($pinia)
+    //   if (userStore._id) {
+    //     const { initKeys } = useCrypto()
+    //     await initKeys(userStore._id)
+    //   }
+    // }
   }
 
   if (!token.value && to?.name && !toAuth.includes(to?.name?.toString())) {

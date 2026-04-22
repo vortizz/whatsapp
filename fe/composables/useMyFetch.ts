@@ -1,5 +1,5 @@
 import { useUserStore } from '../store/user'
-import { useWsStore } from '../store/websocket'
+import { useChatStore } from '../store/chat'
 
 export const useMyFetch = (request: string, opts?: any) => {
   const config = useRuntimeConfig()
@@ -17,9 +17,13 @@ export const useMyAuthFetch = async (request: string, opts?: any) => {
     if (error?.status === 401) {
       const { $pinia } = useNuxtApp()
       const userStore = useUserStore($pinia)
-      const wsStore = useWsStore($pinia)
+      const chatStore = useChatStore($pinia)
+      const indexedDB = useIndexedDB()
+      const ws = useWs()
+      indexedDB.deleteDB(userStore._id)
+      chatStore.clearChat()
       userStore.logout()
-      wsStore.disconnectWs()
+      ws.disconnectWs()
       if (import.meta.client) {
         setTimeout(() => {
           useNuxtApp().$toast.error('Token has expired. Please login again!')

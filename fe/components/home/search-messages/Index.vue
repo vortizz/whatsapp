@@ -72,7 +72,6 @@
 </template>
 
 <script setup>
-  import { ref, computed, watch, nextTick, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useChatStore } from '../../../store/chat'
   import { useUserStore } from '../../../store/user'
@@ -83,17 +82,15 @@
   const chatStore = useChatStore()
   const userStore = useUserStore()
 
-  const { _id: storeChatId, user: chatUser } = storeToRefs(chatStore)
+  const { _id: storeChatId, users: chatUsers } = storeToRefs(chatStore)
   const { _id: userId } = storeToRefs(userStore)
 
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
   const effectiveChatId = computed(() => props.chatIdOverride || storeChatId.value)
-  const effectiveChatName = computed(() => props.chatNameOverride || chatUser.value?.name)
+  const effectiveChatName = computed(() => props.chatNameOverride || chatFirstUser.value?.name)
 
-  // When chatIdOverride is provided the component is opened from contact-info (always 1:1).
-  // Otherwise use the current chat's isGroup flag.
-  const isGroupChat = computed(() => !props.chatIdOverride && (chatUser.value?.isGroup ?? false))
-
-  const { decryptMessage, decryptGroupMessage } = useCrypto()
+  const { decryptMessage } = useCrypto()
+  const { getKey: getPrivateKey } = useIndexedDB()
 
   const query = ref('')
   const messages = ref([])
@@ -122,12 +119,11 @@
   async function decryptText(msg) {
     if (!msg.iv) return msg.text ?? ''
     try {
-      if (isGroupChat.value) {
-        return await decryptGroupMessage(msg.text, msg.iv, effectiveChatId.value)
-      }
-      const peerId = msg.from._id === userId.value ? msg.to?._id : msg.from._id
-      if (!peerId) return msg.text ?? ''
-      return await decryptMessage(msg.text, msg.iv, peerId)
+      const privateKey = await getPrivateKey(userId.value, 'privateKey')
+      const encryptedAESKey = msg.chat?.encryptedKeys?.find(
+        (k) => k.userId === userId.value,
+      )?.encryptedKey
+      return await decryptMessage(msg.text, msg.iv, encryptedAESKey, privateKey)
     } catch {
       return '[encrypted]'
     }

@@ -33,7 +33,7 @@
       />
       <!--****************-->
       <HomeGroupInfo
-        v-if="isDisplayingContactInfo && chatUser.isGroup && !viewingGroupMember"
+        v-if="isDisplayingContactInfo && isChatGroup && !viewingGroupMember"
         @close="isDisplayingContactInfo = false"
         @view-member="viewGroupMember"
         @search="showSearchMessages"
@@ -72,7 +72,6 @@
 <script setup>
   import { storeToRefs } from 'pinia'
   import { useChatStore } from '../store/chat'
-  import { useWsStore } from '../store/websocket'
   import { useUserStore } from '../store/user'
   import { Pages, usePageStore } from '~/store/page'
 
@@ -109,7 +108,20 @@
     isDisplayingSearchMessages.value = false
     if (overrideChatId && overrideChatId !== chatId.value) {
       homeMainRef.value?.scheduleScrollToMessage(id)
-      chatStore.setChat({ _id: overrideChatId, user: viewingGroupMember.value })
+      chatStore.setChat({
+        _id: overrideChatId,
+        users: [
+          {
+            _id: userId.value,
+            name: userName.value,
+            about: userAbout.value,
+            email: userEmail.value,
+            blockedUsers: userBlockedUsers.value,
+            publicKey: userPublicKey.value,
+          },
+          viewingGroupMember.value,
+        ],
+      })
       isDisplayingContactInfo.value = false
       viewingGroupMember.value = null
     } else {
@@ -119,14 +131,41 @@
 
   async function goToChat(id) {
     if (id) {
-      chatStore.setChat({ _id: id, user: viewingGroupMember.value })
+      chatStore.setChat({
+        _id: id,
+        users: [
+          {
+            _id: userId.value,
+            name: userName.value,
+            about: userAbout.value,
+            email: userEmail.value,
+            blockedUsers: userBlockedUsers.value,
+            publicKey: userPublicKey.value,
+          },
+          viewingGroupMember.value,
+        ],
+      })
       isDisplayingContactInfo.value = false
       viewingGroupMember.value = null
     } else if (viewingGroupMember.value) {
       try {
         const member = viewingGroupMember.value
         const chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: member._id } })
-        chatStore.setChat({ _id: chat._id, user: member })
+        chatStore.setChat({
+          _id: chat._id,
+          users: [
+            {
+              _id: userId.value,
+              name: userName.value,
+              about: userAbout.value,
+              email: userEmail.value,
+              blockedUsers: userBlockedUsers.value,
+              publicKey: userPublicKey.value,
+            },
+            member,
+          ],
+          encryptedKeys: chat.encryptedKeys,
+        })
         isDisplayingContactInfo.value = false
         viewingGroupMember.value = null
       } catch (error) {
@@ -144,17 +183,22 @@
   }
 
   const chatStore = useChatStore()
-  const wsStore = useWsStore()
   const pageStore = usePageStore()
   const userStore = useUserStore()
 
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
-  const { _id: userId } = storeToRefs(userStore)
-  const { conn } = storeToRefs(wsStore)
+  const { _id: chatId, isGroup: isChatGroup } = storeToRefs(chatStore)
+  const {
+    _id: userId,
+    name: userName,
+    about: userAbout,
+    email: userEmail,
+    blockedUsers: userBlockedUsers,
+    publicKey: userPublicKey,
+  } = storeToRefs(userStore)
+  const { conn, connectWs, disconnectWs } = useWs()
   const { currentPage } = storeToRefs(pageStore)
 
   const { clearChat } = chatStore
-  const { connectWs, disconnectWs } = wsStore
 
   const { pendingViewMember, pendingMessageMember } = useSearchMembersModal()
 
@@ -170,10 +214,38 @@
     const direct = chats.find((c) => !c.isGroup && c.users.some((u) => (u._id ?? u) === val._id))
     if (direct) {
       const otherUser = direct.users.find((u) => (u._id ?? u) !== userId.value)
-      chatStore.setChat({ _id: direct._id, user: otherUser })
+      chatStore.setChat({
+        _id: direct._id,
+        users: [
+          {
+            _id: userId.value,
+            name: userName.value,
+            about: userAbout.value,
+            email: userEmail.value,
+            blockedUsers: userBlockedUsers.value,
+            publicKey: userPublicKey.value,
+          },
+          otherUser,
+        ],
+        encryptedKeys: direct.encryptedKeys,
+      })
     } else {
       const chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: val._id } })
-      chatStore.setChat({ _id: chat._id, user: val })
+      chatStore.setChat({
+        _id: chat._id,
+        users: [
+          {
+            _id: userId.value,
+            name: userName.value,
+            about: userAbout.value,
+            email: userEmail.value,
+            blockedUsers: userBlockedUsers.value,
+            publicKey: userPublicKey.value,
+          },
+          val,
+        ],
+        encryptedKeys: chat.encryptedKeys,
+      })
     }
     isDisplayingContactInfo.value = false
     viewingGroupMember.value = null

@@ -76,19 +76,22 @@
 
 <script setup>
   import { useUserStore } from '../../../store/user'
+  import { useChatStore } from '../../../store/chat'
   import { usePageStore } from '../../../store/page'
-  import { useWsStore } from '../../../store/websocket'
   const emit = defineEmits(['opennewchat', 'opennewgroup'])
 
   const router = useRouter()
   const userStore = useUserStore()
-  const wsStore = useWsStore()
+  const chatStore = useChatStore()
   const pageStore = usePageStore()
+  const indexedDB = useIndexedDB()
 
   const isMenuButton = ref(false)
 
+  const { _id: userId } = storeToRefs(userStore)
   const { logout } = userStore
-  const { disconnectWs } = wsStore
+  const { clearChat } = chatStore
+  const { disconnectWs } = useWs()
   const { resetPage } = pageStore
 
   function openNewGroup() {
@@ -97,6 +100,8 @@
   }
 
   function signout() {
+    indexedDB.deleteDB(userId.value)
+    clearChat()
     logout()
     disconnectWs()
     router.push('/auth/login').then(() => resetPage())

@@ -34,6 +34,47 @@ export function useCrypto() {
     return { publicKey, privateKey }
   }
 
+  // Generates a shared AES-GCM key and encrypts it for each member using their public keys.
+  async function generateSharedKeys(
+    memberPublicKeys: { userId: string; publicKeyBase64: string }[],
+  ) {
+    const sharedKey = await window.crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt'],
+    )
+
+    // const rawAESKey = await exportKey('raw', sharedKeys)
+    const rawAESKey = await window.crypto.subtle.exportKey('raw', sharedKey)
+
+    return Promise.all(
+      memberPublicKeys.map(async (publicKeyData) => {
+        return {
+          userId: publicKeyData.userId,
+          encryptedKey: await encryptWithPublicKey(rawAESKey, publicKeyData.publicKeyBase64),
+        }
+      }),
+    )
+  }
+
+  // Encrypts data using the recipient's public key with RSA-OAEP.
+  async function encryptWithPublicKey(data: string | ArrayBuffer, publicKeyBase64: string) {
+    const publicKey = await window.crypto.subtle.importKey(
+      'spki',
+      fromBase64(publicKeyBase64),
+      { name: 'RSA-OAEP', hash: 'SHA-256' },
+      false,
+      ['encrypt'],
+    )
+
+    const encrypted = await window.crypto.subtle.encrypt(
+      { name: 'RSA-OAEP' },
+      publicKey,
+      data instanceof ArrayBuffer ? data : encode(data),
+    )
+    return toBase64(encrypted)
+  }
+
   // Encrypts the private key using AES-GCM with a key derived from the passphrase.
   async function encryptPrivateKey(privateKey: string, passphrase: string) {
     const iv = window.crypto.getRandomValues(new Uint8Array(12))
@@ -90,8 +131,81 @@ export function useCrypto() {
     )
   }
 
+  // Decrypts data using the recipient's private key with RSA-OAEP.
+  async function decryptWithPrivateKey(encryptedData: string, privateKeyBase64: string) {
+    const privateKey = await window.crypto.subtle.importKey(
+      'pkcs8',
+      fromBase64(privateKeyBase64),
+      { name: 'RSA-OAEP', hash: 'SHA-256' },
+      false,
+      ['decrypt'],
+    )
+
+    return await window.crypto.subtle.decrypt(
+      { name: 'RSA-OAEP' },
+      privateKey,
+      fromBase64(encryptedData),
+    )
+  }
+
+  // Encrypts a plaintext message using AES-GCM with a shared key encrypted for the recipient.
+  async function encryptMessage(
+    plaintext: string,
+    encryptedAESKey: string,
+    privateKeyBase64: string,
+  ) {
+    const rawAESKey = await decryptWithPrivateKey(encryptedAESKey, privateKeyBase64)
+
+    const cryptoKey = await window.crypto.subtle.importKey(
+      'raw',
+      rawAESKey,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt'],
+    )
+
+    const iv = window.crypto.getRandomValues(new Uint8Array(12))
+
+    const ciphertext = await window.crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      cryptoKey,
+      encode(plaintext),
+    )
+
+    return {
+      ciphertext: toBase64(ciphertext),
+      iv: toBase64(iv),
+    }
+  }
+
+  // Decrypts a ciphertext message using AES-GCM with a shared key encrypted for the recipient.
+  async function decryptMessage(
+    ciphertext: string,
+    iv: string,
+    encryptedAESKey: string,
+    privateKeyBase64: string,
+  ) {
+    const rawAESKey = await decryptWithPrivateKey(encryptedAESKey, privateKeyBase64)
+
+    const cryptoKey = await window.crypto.subtle.importKey(
+      'raw',
+      rawAESKey,
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt'],
+    )
+
+    const decrypted = await window.crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: fromBase64(iv) },
+      cryptoKey,
+      fromBase64(ciphertext),
+    )
+
+    return decode(decrypted)
+  }
+
   // Exports a CryptoKey to a base64 string in the specified format.
-  async function exportKey(format: 'spki' | 'pkcs8', key: CryptoKey) {
+  async function exportKey(format: 'spki' | 'pkcs8' | 'raw', key: CryptoKey) {
     const exported = await window.crypto.subtle.exportKey(format, key)
     return toBase64(exported)
   }
@@ -106,5 +220,13 @@ export function useCrypto() {
     })
   }
 
-  return { generateKeyPair, encryptPrivateKey, decryptPrivateKey, generateRecoveryCodes }
+  return {
+    generateKeyPair,
+    encryptPrivateKey,
+    decryptPrivateKey,
+    generateRecoveryCodes,
+    encryptMessage,
+    decryptMessage,
+    generateSharedKeys,
+  }
 }

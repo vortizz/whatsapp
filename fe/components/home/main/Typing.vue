@@ -82,153 +82,157 @@
   </form>
 </template>
 
-<script>
-  import { mapActions, mapState } from 'pinia'
+<script setup>
   import { useChatStore } from '../../../store/chat'
   import { useMessageReplyStore } from '../../../store/messageReply'
-  import { useWsStore } from '../../../store/websocket'
+  import { useUserStore } from '../../../store/user'
 
-  export default {
-    setup() {
-      const replyStore = useMessageReplyStore()
-      const wsStore = useWsStore()
-      const crypto = useCrypto()
-      return { replyStore, wsStore, crypto }
-    },
-    data() {
-      return {
-        message: '',
-        isLoading: false,
-        typingThrottleTimer: null,
+  const replyStore = useMessageReplyStore()
+  const crypto = useCrypto()
+  const indexedDB = useIndexedDB()
+  const chatStore = useChatStore()
+  const userStore = useUserStore()
+  const { conn } = useWs()
+
+  const message = ref('')
+  const isLoading = ref(false)
+  const typingThrottleTimer = ref(null)
+  const rInput = ref(null)
+
+  const { _id: chatId, users: chatUsers, isGroup: isGroupChat } = storeToRefs(chatStore)
+  const { _id: userId, publicKey } = storeToRefs(userStore)
+
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
+  const replyTo = computed(() => replyStore.replyTo)
+
+  watch(chatId, (newValue, oldValue) => {
+    if (newValue && newValue !== oldValue) {
+      message.value = ''
+      isLoading.value = false
+      replyStore.clearReply()
+      nextTick(() => {
+        rInput.value.focus()
+        rInput.value.style.height = 'auto'
+      })
+    }
+  })
+
+  function onInput() {
+    autoResize()
+    if (chatId.value === 'new-chat') return
+    if (!typingThrottleTimer.value) {
+      sendTypingEvent()
+      typingThrottleTimer.value = setTimeout(() => {
+        typingThrottleTimer.value = null
+      }, 2000)
+    }
+  }
+
+  function sendTypingEvent() {
+    if (!conn.value || conn.value.readyState !== WebSocket.OPEN) return
+    conn.value.send(
+      JSON.stringify({
+        event: 'typing',
+        data: { chatId: chatId.value },
+      }),
+    )
+  }
+
+  function autoResize() {
+    const el = rInput.value
+    el.style.height = 'auto'
+    const style = window.getComputedStyle(el)
+    const lineHeight = parseFloat(style.lineHeight)
+    const paddingTop = parseFloat(style.paddingTop)
+    const paddingBottom = parseFloat(style.paddingBottom)
+    const maxHeight = lineHeight * 8 + paddingTop + paddingBottom
+    if (el.scrollHeight <= maxHeight) {
+      el.style.height = el.scrollHeight + 'px'
+      el.style.overflowY = 'hidden'
+    } else {
+      el.style.height = maxHeight + 'px'
+      el.style.overflowY = 'auto'
+    }
+  }
+
+  function clearReply() {
+    replyStore.clearReply()
+  }
+
+  async function send() {
+    if (!message.value.trim()) return
+    try {
+      isLoading.value = true
+      let newChat
+
+      if (chatId.value === 'new-chat') {
+        newChat = await createChat()
       }
-    },
-    computed: {
-      replyTo() {
-        return this.replyStore.replyTo
-      },
-      ...mapState(useChatStore, {
-        chatId: '_id',
-        chatUser: 'user',
-      }),
-    },
-    watch: {
-      chatId(newValue, oldValue) {
-        if (newValue && newValue !== oldValue) {
-          this.message = ''
-          this.isLoading = false
-          this.replyStore.clearReply()
-          this.$nextTick(() => {
-            this.$refs.rInput.focus()
-            this.$refs.rInput.style.height = 'auto'
-          })
-        }
-      },
-    },
-    methods: {
-      ...mapActions(useChatStore, {
-        setChatAction: 'setChat',
-      }),
-      onInput() {
-        this.autoResize()
-        if (this.chatId === 'new-chat') return
-        if (!this.typingThrottleTimer) {
-          this.sendTypingEvent()
-          this.typingThrottleTimer = setTimeout(() => {
-            this.typingThrottleTimer = null
-          }, 2000)
-        }
-      },
-      sendTypingEvent() {
-        const conn = this.wsStore.conn
-        if (!conn || conn.readyState !== WebSocket.OPEN) return
-        conn.send(
-          JSON.stringify({
-            event: 'typing',
-            data: { chatId: this.chatId },
-          }),
-        )
-      },
-      autoResize() {
-        const el = this.$refs.rInput
-        el.style.height = 'auto'
-        const style = window.getComputedStyle(el)
-        const lineHeight = parseFloat(style.lineHeight)
-        const paddingTop = parseFloat(style.paddingTop)
-        const paddingBottom = parseFloat(style.paddingBottom)
-        const maxHeight = lineHeight * 8 + paddingTop + paddingBottom
-        if (el.scrollHeight <= maxHeight) {
-          el.style.height = el.scrollHeight + 'px'
-          el.style.overflowY = 'hidden'
-        } else {
-          el.style.height = maxHeight + 'px'
-          el.style.overflowY = 'auto'
-        }
-      },
-      clearReply() {
-        this.replyStore.clearReply()
-      },
-      async send() {
-        if (!this.message.trim()) return
-        try {
-          this.isLoading = true
-          let chatId
 
-          if (this.chatId === 'new-chat') {
-            const chat = await this.createChat()
-            chatId = chat._id
-          }
+      const privateKey = await indexedDB.getKey(userId.value, 'privateKey')
 
-          const actualChatId = chatId || this.chatId
-          let encryptedText = this.message
-          let iv
+      const encryptedAESKey = (newChat || chatStore).encryptedKeys.find(
+        (k) => k.userId === userId.value,
+      )?.encryptedKey
 
-          if (!this.chatUser.isGroup) {
-            const result = await this.crypto.encryptMessage(this.message, this.chatUser._id)
-            encryptedText = result.ciphertext
-            iv = result.iv
-          } else {
-            const result = await this.crypto.encryptGroupMessage(this.message, actualChatId)
-            encryptedText = result.ciphertext
-            iv = result.iv
-          }
+      const result = await crypto.encryptMessage(message.value, encryptedAESKey, privateKey)
 
-          const body = {
-            chat: actualChatId,
-            ...(!this.chatUser.isGroup ? { to: this.chatUser._id } : {}),
-            text: encryptedText,
-            iv,
-            ...(this.replyTo ? { replyTo: this.replyTo._id } : {}),
-          }
-          await useMyAuthFetch('message', { method: 'POST', body })
-          this.message = ''
-          this.$refs.rInput.style.height = 'auto'
-          this.replyStore.clearReply()
+      const body = {
+        chat: newChat?._id || chatId.value,
+        text: result.ciphertext,
+        iv: result.iv,
+        ...(!isGroupChat.value ? { to: chatFirstUser.value._id } : {}),
+        ...(replyTo.value ? { replyTo: replyTo.value._id } : {}),
+      }
+      await useMyAuthFetch('message', { method: 'POST', body })
+      message.value = ''
+      rInput.value.style.height = 'auto'
+      replyStore.clearReply()
 
-          if (this.chatId === 'new-chat' && chatId) {
-            this.setChatAction({
-              _id: chatId,
-              user: this.chatUser,
-            })
-          }
-        } catch (error) {
-          const data = error?.data || {}
-          const message = Array.isArray(data.message) ? data.message[0] : data.message
-          useNuxtApp().$toast.error(message)
-        } finally {
-          this.isLoading = false
-        }
-      },
-      async onFocusInput() {
-        if (this.chatId === 'new-chat') return
-        await useMyAuthFetch(`message/${this.chatId}/read`, { method: 'PUT' })
-      },
-      async createChat() {
-        const body = {
-          user_id: this.chatUser._id,
-        }
-        return await useMyAuthFetch('chat', { method: 'POST', body })
-      },
-    },
+      if (chatId.value === 'new-chat' && newChat) {
+        chatStore.setChat({
+          _id: newChat._id,
+          users: newChat.users,
+          createdAt: newChat.createdAt,
+          encryptedKeys: newChat.encryptedKeys,
+        })
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      const data = error?.data || {}
+      const msg = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(msg)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function onFocusInput() {
+    if (chatId.value === 'new-chat') return
+    await useMyAuthFetch(`message/${chatId.value}/read`, { method: 'PUT' })
+  }
+
+  async function createChat() {
+    try {
+      const encryptedKeys = await crypto.generateSharedKeys([
+        {
+          userId: userId.value,
+          publicKeyBase64: publicKey.value,
+        },
+        {
+          userId: chatFirstUser.value._id,
+          publicKeyBase64: chatFirstUser.value.publicKey,
+        },
+      ])
+      return await useMyAuthFetch('chat', {
+        method: 'POST',
+        body: { user_id: chatFirstUser.value._id, encryptedKeys },
+      })
+    } catch (error) {
+      const data = error?.data || {}
+      const msg = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(msg)
+    }
   }
 </script>
 

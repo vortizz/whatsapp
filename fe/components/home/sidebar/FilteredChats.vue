@@ -15,9 +15,9 @@
       <HomeSidebarChat
         v-for="chat in chatsSection"
         :key="chat._id"
-        :name="chat.user.name"
-        :is-group="chat.user.isGroup"
-        :users="chat.user.users"
+        :name="getFirstUser(chat)?.name"
+        :is-group="chat.isGroup"
+        :users="chat.users"
         :active="chatId === chat._id"
         :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"
         :last-message="chat.lastMessage"
@@ -30,9 +30,9 @@
       <HomeSidebarChat
         v-for="chat in groupsInCommon"
         :key="chat._id"
-        :name="chat.user.name"
-        :is-group="chat.user.isGroup"
-        :users="chat.user.users"
+        :name="chat.name"
+        :is-group="chat.isGroup"
+        :users="chat.users"
         :active="chatId === chat._id"
         :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"
         :last-message="chat.lastMessage"
@@ -57,7 +57,6 @@
   import { storeToRefs } from 'pinia'
   import { useUserStore } from '../../../store/user'
   import { useChatStore } from '../../../store/chat'
-  import { useWsStore } from '../../../store/websocket'
   import { StatusMessage } from '../../../utils/status-message'
 
   const props = defineProps(['text', 'unreadChats', 'groupChats'])
@@ -71,25 +70,36 @@
 
   const userStore = useUserStore()
   const chatStore = useChatStore()
-  const wsStore = useWsStore()
 
-  const { _id: userId } = storeToRefs(userStore)
+  const {
+    _id: userId,
+    name: userName,
+    about: userAbout,
+    email: userEmail,
+    blockedUsers: userBlockedUsers,
+    publicKey: userPublicKey,
+  } = storeToRefs(userStore)
   const { _id: chatId } = storeToRefs(chatStore)
-  const { conn } = storeToRefs(wsStore)
+  const { conn } = useWs()
   const { setChat: setChatAction } = chatStore
 
-  const { decryptMessage, decryptGroupMessage } = useCrypto()
+  const { decryptMessage } = useCrypto()
+  const { getKey: getPrivateKey } = useIndexedDB()
+
+  function getFirstUser(chat) {
+    return chat.users.find((u) => u._id !== userId.value)
+  }
 
   async function decryptLastMessage(lm, chatEntry) {
     if (!lm?.iv) return lm?.text ?? ''
     try {
-      if (chatEntry.user?.isGroup) {
-        return await decryptGroupMessage(lm.text, lm.iv, chatEntry._id)
-      }
-      const peer = chatEntry.user
-      if (!peer?._id) return lm.text
-      return await decryptMessage(lm.text, lm.iv, peer._id)
-    } catch {
+      const privateKey = await getPrivateKey(userId.value, 'privateKey')
+      const encryptedAESKey = chatEntry?.encryptedKeys?.find(
+        (k) => k.userId === userId.value,
+      )?.encryptedKey
+      return await decryptMessage(lm.text, lm.iv, encryptedAESKey, privateKey)
+    } catch (error) {
+      console.trace('[FilteredChats] decryptLastMessage failed:', error?.message ?? error)
       return '[encrypted]'
     }
   }
@@ -102,8 +112,9 @@
   const chatsSection = computed(() => {
     const q = props.text?.toLowerCase() ?? ''
     let result = chats.value.filter((chat) => {
-      if (chat.user?.isGroup) {
-        return chat.user.name?.toLowerCase().includes(q)
+      if (chat?.isGroup) {
+        const u = getFirstUser(chat)
+        return u?.name?.toLowerCase().includes(q)
       }
       return !props.groupChats
     })
@@ -117,7 +128,7 @@
   const groupsInCommon = computed(() => {
     const q = props.text?.toLowerCase() ?? ''
     let result = chats.value.filter(
-      (chat) => chat.user?.isGroup && !chat.user.name?.toLowerCase().includes(q),
+      (chat) => chat?.isGroup && !chat.name?.toLowerCase().includes(q),
     )
     if (props.unreadChats) {
       result = result.filter((chat) => chat.countUnreadMessages || chat._id === chatId.value)
@@ -172,17 +183,14 @@
       })
       const mapped = response.map((chat) => ({
         _id: chat._id,
-        user: chat.isGroup
-          ? {
-              _id: chat._id,
-              name: chat.name,
-              isGroup: true,
-              users: chat.users,
-              groupAdmins: chat.groupAdmins,
-              createdAt: chat.createdAt,
-              createdBy: chat.createdBy,
-            }
-          : chat.users.find((user) => user._id !== userId.value),
+        name: chat.name,
+        description: chat.description,
+        isGroup: chat.isGroup,
+        users: chat.users,
+        groupAdmins: chat.groupAdmins,
+        createdAt: chat.createdAt,
+        createdBy: chat.createdBy,
+        encryptedKeys: chat.encryptedKeys,
         lastMessage: chat.lastMessage
           ? (() => {
               const fromId = getUserId(chat.lastMessage.from)
@@ -236,7 +244,14 @@
     const clonedChat = JSON.parse(JSON.stringify(chat))
     setChatAction({
       _id: clonedChat._id,
-      user: clonedChat.user,
+      users: clonedChat.users,
+      encryptedKeys: clonedChat.encryptedKeys,
+      name: clonedChat.name,
+      description: clonedChat.description,
+      isGroup: clonedChat.isGroup,
+      groupAdmins: clonedChat.groupAdmins,
+      createdAt: clonedChat.createdAt,
+      createdBy: clonedChat.createdBy,
     })
   }
 
@@ -244,7 +259,17 @@
     const clonedUser = JSON.parse(JSON.stringify(user))
     setChatAction({
       _id: 'new-chat',
-      user: clonedUser,
+      users: [
+        {
+          _id: userId.value,
+          name: userName.value,
+          about: userAbout.value,
+          email: userEmail.value,
+          blockedUsers: userBlockedUsers.value,
+          publicKey: userPublicKey.value,
+        },
+        clonedUser,
+      ],
     })
   }
 

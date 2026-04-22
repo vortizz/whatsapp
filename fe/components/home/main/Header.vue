@@ -4,14 +4,14 @@
       class="flex flex-row items-center gap-3 flex-1 min-w-0 cursor-pointer"
       @click="emit('showContactInfo')"
     >
-      <GroupAvatarPlaceholder v-if="chatUser.isGroup" :size="40" :users="chatUser.users" />
-      <AvatarPlaceholder v-else :size="40" :name="chatUser.name" />
+      <GroupAvatarPlaceholder v-if="isChatGroup" :size="40" :users="chatUsers" />
+      <AvatarPlaceholder v-else :size="40" :name="chatFirstUser?.name" />
       <div class="flex-1 min-w-0">
         <div class="text-base font-semibold text-black dark:text-white leading-tight">
-          {{ chatUser.name }}
+          {{ chatFirstUser?.name }}
         </div>
         <div
-          v-if="chatUser.isGroup"
+          v-if="isChatGroup"
           class="text-xs truncate"
           :class="isTypingInChat(chatId) ? 'text-emerald-500' : 'text-black/50 dark:text-white/50'"
         >
@@ -24,16 +24,16 @@
           }}
         </div>
         <div
-          v-else
+          v-else-if="chatFirstUser"
           class="text-xs truncate"
           :class="isTypingInChat(chatId) ? 'text-emerald-500' : 'text-black/50 dark:text-white/50'"
         >
           {{
             isTypingInChat(chatId)
               ? 'Typing...'
-              : chatUser.isConnected
+              : chatFirstUser.isConnected
                 ? 'online'
-                : lastSeen(chatUser.lastSeenAt)
+                : lastSeen(chatFirstUser.lastSeenAt)
           }}
         </div>
       </div>
@@ -69,23 +69,22 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useChatStore } from '../../../store/chat'
   import { useUserStore } from '../../../store/user'
-  import { useWsStore } from '../../../store/websocket'
 
   const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
 
   const { setTyping, isTypingInChat, getTypingUsers } = useTypingState()
 
+  const { conn } = useWs()
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const wsStore = useWsStore()
-  const { user: chatUser, _id: chatId } = storeToRefs(chatStore)
+  const { users: chatUsers, _id: chatId, isGroup: isChatGroup } = storeToRefs(chatStore)
   const { _id: userId } = storeToRefs(userStore)
-  const { conn } = storeToRefs(wsStore)
   const isMenuButton = ref(false)
+
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
 
   function handleEvent(event) {
     const { name, data } = JSON.parse(event.data)
@@ -109,8 +108,8 @@
   })
 
   const groupMembers = computed(() => {
-    if (!chatUser.value?.isGroup) return ''
-    return (chatUser.value.users ?? [])
+    if (!isChatGroup.value) return ''
+    return (chatUsers.value ?? [])
       .map((u) => (u._id?.toString() === userId.value ? 'You' : u.name))
       .join(', ')
   })

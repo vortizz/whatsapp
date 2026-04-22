@@ -39,9 +39,13 @@
 <script setup>
   import { storeToRefs } from 'pinia'
   import { useChatStore } from '../../store/chat'
+  import { useUserStore } from '../../store/user'
 
   const chatStore = useChatStore()
-  const { user: chatUser } = storeToRefs(chatStore)
+  const userStore = useUserStore()
+
+  const { users: chatUsers, name: chatName } = storeToRefs(chatStore)
+  const { _id: userId } = storeToRefs(userStore)
 
   const {
     isOpen,
@@ -52,7 +56,10 @@
     confirmDeleteChat,
   } = useDeleteChatModal()
 
-  const displayName = computed(() => targetNameOverride.value || chatUser.value?.name)
+  const chatFirstUser = computed(() => chatUsers.value.find((u) => u._id !== userId.value))
+  const displayName = computed(
+    () => targetNameOverride.value || chatName.value || chatFirstUser.value?.name,
+  )
 </script>
 
 <style></style>

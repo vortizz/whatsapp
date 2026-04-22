@@ -58,53 +58,46 @@
   </div>
 </template>
 
-<script>
-  import { mapActions, mapState } from 'pinia'
+<script setup>
+  import { storeToRefs } from 'pinia'
   import { useUserStore } from '../../../store/user'
 
-  export default {
-    data() {
-      return {
-        isEditing: false,
-        text: '',
-        loading: false,
-      }
-    },
-    computed: {
-      ...mapState(useUserStore, ['_id', 'about']),
-      disabledSubmit() {
-        return this.isEditing && this.text === ''
-      },
-    },
-    methods: {
-      ...mapActions(useUserStore, ['setAbout']),
-      startEditing() {
-        this.text = this.about.slice()
-        this.isEditing = true
-      },
-      stopEditing() {
-        this.text = ''
-        this.isEditing = false
-      },
-      async submit() {
-        try {
-          this.loading = true
-          const about = this.text.slice()
-          await useMyAuthFetch('user', {
-            method: 'PUT',
-            body: { _id: this._id, about },
-          })
-          this.setAbout(about)
-          this.stopEditing()
-        } catch (error) {
-          const data = error?.data || {}
-          const message = Array.isArray(data.message) ? data.message[0] : data.message
-          useNuxtApp().$toast.error(message)
-        } finally {
-          this.loading = false
-        }
-      },
-    },
+  const userStore = useUserStore()
+  const { _id, about } = storeToRefs(userStore)
+
+  const isEditing = ref(false)
+  const text = ref('')
+  const loading = ref(false)
+
+  const disabledSubmit = computed(() => isEditing.value && text.value === '')
+
+  function startEditing() {
+    text.value = about.value.slice()
+    isEditing.value = true
+  }
+
+  function stopEditing() {
+    text.value = ''
+    isEditing.value = false
+  }
+
+  async function submit() {
+    try {
+      loading.value = true
+      const about = text.value.slice()
+      await useMyAuthFetch('user', {
+        method: 'PUT',
+        body: { _id: _id.value, about },
+      })
+      userStore.setAbout(about)
+      stopEditing()
+    } catch (error) {
+      const data = error?.data || {}
+      const message = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(message)
+    } finally {
+      loading.value = false
+    }
   }
 </script>
 

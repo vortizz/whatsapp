@@ -52,14 +52,18 @@
 
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { _id: userId } = storeToRefs(userStore)
+  const { users: chatUsers } = storeToRefs(chatStore)
 
   const { openModal, isClearChatDisabled } = useClearChatModal()
   const { openModal: openUnblockModal, isUnblockUserDisabled } = useUnblockUserModal()
   const { openModal: openBlockModal, isBlockUserDisabled } = useBlockUserModal()
   const { openModal: openDeleteModal, isDeleteChatDisabled } = useDeleteChatModal()
 
-  const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
+  const isBlockedUser = computed(
+    () => chatFirstUser.value && userStore.hasBlockedUser(chatFirstUser.value._id),
+  )
 
   function showContactInfo() {
     emit('close')
@@ -68,7 +72,7 @@
 
   function closeChat() {
     emit('close')
-    chatStore.setChat({ _id: '', user: {} })
+    chatStore.clearChat()
   }
 
   function clearMessages() {

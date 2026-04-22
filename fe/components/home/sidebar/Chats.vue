@@ -3,13 +3,13 @@
     <HomeSidebarChat
       v-for="(chat, i) in displayedChats"
       :key="i"
-      :name="chat.user.name"
-      :is-group="chat.user.isGroup"
+      :name="getFirstUser(chat)?.name"
+      :is-group="chat.isGroup"
       :active="chatId === chat._id"
       :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"
       :last-message="chat.lastMessage"
       :count-unread-messages="chat.countUnreadMessages"
-      :users="chat.user.users"
+      :users="chat.users"
       :typing-users="getTypingUsers(chat._id)"
       @click="setChat(chat)"
       @open-menu="openMenu(chat, $event)"
@@ -32,14 +32,14 @@
   import { storeToRefs } from 'pinia'
   import { useUserStore } from '../../../store/user'
   import { useChatStore } from '../../../store/chat'
-  import { useWsStore } from '../../../store/websocket'
   import { StatusMessage } from '../../../utils/status-message'
 
   const props = defineProps({ groupChats: { type: Boolean, default: false } })
   const emit = defineEmits(['showContactInfo'])
 
   const { setTyping, getTypingUsers } = useTypingState()
-  const { decryptMessage, decryptGroupMessage } = useCrypto()
+  const { decryptMessage } = useCrypto()
+  const { getKey: getPrivateKey } = useIndexedDB()
 
   const chats = ref([])
   const displayedChats = ref([])
@@ -47,7 +47,7 @@
   watch(
     [chats, () => props.groupChats],
     ([newChats, isGroups]) => {
-      displayedChats.value = isGroups ? newChats.filter((chat) => chat.user?.isGroup) : newChats
+      displayedChats.value = isGroups ? newChats.filter((chat) => chat?.isGroup) : newChats
     },
     { immediate: true, deep: true },
   )
@@ -59,12 +59,15 @@
 
   const userStore = useUserStore()
   const chatStore = useChatStore()
-  const wsStore = useWsStore()
 
   const { _id: userId } = storeToRefs(userStore)
   const { _id: chatId } = storeToRefs(chatStore)
-  const { conn } = storeToRefs(wsStore)
+  const { conn } = useWs()
   const { setChat: setChatAction, setUnreadCounts } = chatStore
+
+  function getFirstUser(chat) {
+    return chat.users?.find((u) => u._id !== userId.value)
+  }
 
   function getUserId(user) {
     return user?._id || user
@@ -97,10 +100,13 @@
     } else if (name === 'chat-event') {
       handleChatEvent(msg)
     } else if (name === 'user-status') {
-      const chat = chats.value.find((c) => !c.user?.isGroup && c.user?._id === msg.userId)
-      if (chat) {
-        chat.user.isConnected = msg.isConnected
-        chat.user.lastSeenAt = msg.lastSeenAt
+      const user = chats.value
+        .map((c) => c.users)
+        .flat()
+        .find((u) => u._id === msg.userId)
+      if (user) {
+        user.isConnected = msg.isConnected
+        user.lastSeenAt = msg.lastSeenAt
       }
     }
   }
@@ -109,12 +115,11 @@
     const lm = chat.lastMessage
     if (!lm?.iv) return lm?.text ?? ''
     try {
-      if (chat.isGroup) {
-        return await decryptGroupMessage(lm.text, lm.iv, chat._id)
-      }
-      const peer = chat.users.find((u) => u._id !== userId.value)
-      if (!peer) return lm.text
-      return await decryptMessage(lm.text, lm.iv, peer._id)
+      const privateKey = await getPrivateKey(userId.value, 'privateKey')
+      const encryptedAESKey = chat?.encryptedKeys?.find(
+        (k) => k.userId === userId.value,
+      )?.encryptedKey
+      return await decryptMessage(lm.text, lm.iv, encryptedAESKey, privateKey)
     } catch (e) {
       console.error('[Chats] decryptLastMessage failed:', e?.message ?? e)
       return '[encrypted]'
@@ -124,53 +129,41 @@
   async function getChats() {
     try {
       const response = await useMyAuthFetch('chat', { method: 'GET' })
-      chats.value = await Promise.all(
-        response.map(async (chat) => ({
-          _id: chat._id,
-          user: chat.isGroup
-            ? {
-                _id: chat._id,
-                name: chat.name,
-                isGroup: true,
-                users: chat.users,
-                groupAdmins: chat.groupAdmins,
-                createdAt: chat.createdAt,
-                createdBy: chat.createdBy,
+      chats.value = response.map((chat) => ({
+        _id: chat._id,
+        name: chat.name,
+        description: chat.description,
+        isGroup: chat.isGroup,
+        users: chat.users,
+        encryptedKeys: chat.encryptedKeys,
+        createdAt: chat.createdAt,
+        createdBy: chat.createdBy,
+        groupAdmins: chat.groupAdmins,
+        lastMessage: chat.lastMessage
+          ? (() => {
+              const fromId = getUserId(chat.lastMessage.from)
+              const isMine = fromId === userId.value
+              const senderName =
+                chat.lastMessage.from?.name ?? chat.users?.find((u) => u._id === fromId)?.name ?? ''
+              return {
+                _id: chat.lastMessage._id,
+                text: chat.lastMessage.text,
+                iv: chat.lastMessage.iv,
+                createdAt: chat.lastMessage.createdAt,
+                status: chat.lastMessage.status,
+                isMine,
+                senderName,
               }
-            : chat.users.find((user) => user._id !== userId.value),
-          lastMessage: chat.lastMessage
-            ? (() => {
-                const fromId = getUserId(chat.lastMessage.from)
-                const isMine = fromId === userId.value
-                const senderName =
-                  chat.lastMessage.from?.name ??
-                  chat.users?.find((u) => u._id === fromId)?.name ??
-                  ''
-                return {
-                  _id: chat.lastMessage._id,
-                  text: chat.lastMessage.text,
-                  iv: chat.lastMessage.iv,
-                  createdAt: chat.lastMessage.createdAt,
-                  status: chat.lastMessage.status,
-                  isMine,
-                  senderName,
-                }
-              })()
-            : emptyLastMessage(),
-          countUnreadMessages: chat.countUnreadMessages || 0,
-        })),
-      )
+            })()
+          : emptyLastMessage(),
+        countUnreadMessages: chat.countUnreadMessages || 0,
+      }))
 
       // Decrypt last message previews after the full list is built
       await Promise.all(
         chats.value.map(async (chat) => {
           if (chat.lastMessage?._id) {
-            chat.lastMessage.text = await decryptLastMessage({
-              ...chat,
-              isGroup: chat.user?.isGroup,
-              lastMessage: chat.lastMessage,
-              users: response.find((r) => r._id === chat._id)?.users ?? [],
-            })
+            chat.lastMessage.text = await decryptLastMessage(chat)
           }
         }),
       )
@@ -186,7 +179,14 @@
     const clonedChat = JSON.parse(JSON.stringify(chat))
     setChatAction({
       _id: clonedChat._id,
-      user: clonedChat.user,
+      users: clonedChat.users,
+      encryptedKeys: clonedChat.encryptedKeys,
+      isGroup: clonedChat.isGroup,
+      name: clonedChat.name,
+      description: clonedChat.description,
+      createdAt: clonedChat.createdAt,
+      createdBy: clonedChat.createdBy,
+      groupAdmins: clonedChat.groupAdmins,
     })
   }
 
@@ -242,12 +242,11 @@
     let text = message.text
     if (message.iv) {
       try {
-        if (chat.user?.isGroup) {
-          text = await decryptGroupMessage(message.text, message.iv, chat._id)
-        } else {
-          const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
-          if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
-        }
+        const privateKey = await getPrivateKey(userId.value, 'privateKey')
+        const encryptedAESKey = chat?.encryptedKeys?.find(
+          (k) => k.userId === userId.value,
+        )?.encryptedKey
+        text = await decryptMessage(message.text, message.iv, encryptedAESKey, privateKey)
       } catch (e) {
         console.error('[Chats] newMessage decrypt failed:', e?.message ?? e)
         text = '[encrypted]'
@@ -293,17 +292,16 @@
 
   async function newChat(message) {
     const isMine = getUserId(message.from) === userId.value
-    const isGroup = message.chat.isGroup
+    const isGroup = message.isGroup
 
     let text = message.text
     if (message.iv) {
       try {
-        if (isGroup) {
-          text = await decryptGroupMessage(message.text, message.iv, message.chat._id)
-        } else {
-          const peerId = message.from._id === userId.value ? message.to?._id : message.from._id
-          if (peerId) text = await decryptMessage(message.text, message.iv, peerId)
-        }
+        const privateKey = await getPrivateKey(userId.value, 'privateKey')
+        const encryptedAESKey = message?.chat?.encryptedKeys?.find(
+          (k) => k.userId === userId.value,
+        )?.encryptedKey
+        text = await decryptMessage(message.text, message.iv, encryptedAESKey, privateKey)
       } catch (e) {
         console.error('[Chats] newChat decrypt failed:', e?.message ?? e)
         text = '[encrypted]'
@@ -312,17 +310,14 @@
 
     const chat = {
       _id: message.chat._id,
-      user: isGroup
-        ? {
-            _id: message.chat._id,
-            name: message.chat.name,
-            isGroup: true,
-            users: message.chat.users,
-            groupAdmins: message.chat.groupAdmins,
-            createdAt: message.chat.createdAt,
-            createdBy: message.chat.createdBy,
-          }
-        : message.chat.users.find((user) => user._id !== userId.value),
+      isGroup: isGroup,
+      name: message.chat.name,
+      description: message.chat.description,
+      users: message.chat.users,
+      encryptedKeys: message.chat.encryptedKeys,
+      createdAt: message.chat.createdAt,
+      createdBy: message.chat.createdBy,
+      groupAdmins: message.chat.groupAdmins,
       lastMessage: {
         _id: message._id,
         text,
@@ -341,8 +336,8 @@
     const chat = chats.value.find((c) => c._id === event.chat._id)
     if (!chat) return
 
-    if (event.isNameChanged && chat.user?.isGroup) {
-      chat.user.name = event.newName
+    if (event.isNameChanged && chat?.isGroup) {
+      chat.name = event.newName
     }
   }
 
@@ -416,9 +411,9 @@
       }
 
       const chat = chats.value.find((c) => c._id === membersUpdatedState.value.chatId)
-      if (chat?.user?.isGroup) {
-        chat.user.users = membersUpdatedState.value.users
-        chat.user.groupAdmins = membersUpdatedState.value.groupAdmins
+      if (chat?.isGroup) {
+        chat.users = membersUpdatedState.value.users
+        chat.groupAdmins = membersUpdatedState.value.groupAdmins
       }
     },
   )

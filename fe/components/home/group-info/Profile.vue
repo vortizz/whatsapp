@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center px-8 pt-8 pb-4 gap-4">
     <!-- Avatar -->
-    <GroupAvatarPlaceholder :size="128" :users="chatUser.users" />
+    <GroupAvatarPlaceholder :size="128" :users="chatUsers" />
 
     <!-- Name + edit -->
     <div class="flex items-center gap-2 w-full">
@@ -24,7 +24,7 @@
       <template v-else>
         <span
           class="text-2xl font-semibold text-neutral-950 dark:text-white text-center flex-1 flex justify-center"
-          >{{ chatUser.name }}</span
+          >{{ chatName }}</span
         >
         <button
           v-if="isGroupAdmin(userId)"
@@ -46,7 +46,7 @@
 
     <!-- Subtitle -->
     <div class="text-base text-black/60 dark:text-white/50">
-      <span>Group</span> · {{ chatUser.users?.length ?? 0 }} members
+      <span>Group</span> · {{ chatUsers?.length ?? 0 }} members
     </div>
 
     <!-- Action buttons -->
@@ -89,16 +89,16 @@
         <span
           class="flex-1"
           :class="
-            chatUser.description || !isGroupAdmin(userId)
+            chatDescription || !isGroupAdmin(userId)
               ? 'text-neutral-950 dark:text-white'
               : 'text-emerald-500 cursor-pointer'
           "
-          @click="chatUser.description || !isGroupAdmin(userId) ? null : startDescriptionEdit()"
+          @click="chatDescription || !isGroupAdmin(userId) ? null : startDescriptionEdit()"
         >
           {{
             isGroupAdmin(userId)
-              ? chatUser.description || 'Add group description'
-              : (chatUser.description ?? 'No description')
+              ? chatDescription || 'Add group description'
+              : (chatDescription ?? 'No description')
           }}
         </span>
         <button
@@ -136,12 +136,20 @@
 
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const { user: chatUser, _id: chatId } = storeToRefs(chatStore)
+  const {
+    users: chatUsers,
+    _id: chatId,
+    createdAt: chatCreatedAt,
+    createdBy: chatCreatedBy,
+    groupAdmins: chatGroupAdmins,
+    name: chatName,
+    description: chatDescription,
+  } = storeToRefs(chatStore)
   const { _id: userId } = storeToRefs(userStore)
 
   const createdAtLabel = computed(() => {
-    const createdAt = chatUser.value.createdAt
-    const createdBy = chatUser.value.createdBy
+    const createdAt = chatCreatedAt.value
+    const createdBy = chatCreatedBy.value
     if (!createdAt) return null
 
     const date = new Date(createdAt)
@@ -173,7 +181,7 @@
     const creatorName =
       creatorId === userId.value
         ? 'you'
-        : (chatUser.value.users?.find((u) => (u._id || u) === creatorId)?.name ?? 'unknown')
+        : (chatUsers.value?.find((u) => (u._id || u) === creatorId)?.name ?? 'unknown')
 
     return `Group created by ${creatorName}, on ${dayPart} at ${timePart}`
   })
@@ -185,7 +193,7 @@
   const groupAdminIds = computed(
     () =>
       new Set(
-        (chatUser.value?.groupAdmins ?? []).map((a) =>
+        (chatGroupAdmins.value ?? []).map((a) =>
           typeof a === 'object' && a !== null ? a._id?.toString() : a?.toString(),
         ),
       ),
@@ -196,7 +204,7 @@
   }
 
   function startEdit() {
-    editedName.value = chatUser.value.name
+    editedName.value = chatName.value || ''
     editing.value = true
     nextTick(() => nameInput.value?.focus())
   }
@@ -207,7 +215,7 @@
 
   async function saveName() {
     const trimmed = editedName.value.trim()
-    if (!trimmed || trimmed === chatUser.value.name) {
+    if (!trimmed || trimmed === chatName.value) {
       cancelEdit()
       return
     }
@@ -215,7 +223,7 @@
       method: 'PATCH',
       body: { name: trimmed },
     })
-    chatUser.value.name = trimmed
+    chatName.value = trimmed
     editing.value = false
   }
 
@@ -224,7 +232,7 @@
   const descriptionInput = ref(null)
 
   function startDescriptionEdit() {
-    editedDescription.value = chatUser.value.description || ''
+    editedDescription.value = chatDescription.value || ''
     editingDescription.value = true
     nextTick(() => descriptionInput.value?.focus())
   }
@@ -235,7 +243,7 @@
 
   async function saveDescription() {
     const trimmed = editedDescription.value.trim()
-    if (trimmed === (chatUser.value.description || '')) {
+    if (trimmed === (chatDescription.value || '')) {
       cancelDescriptionEdit()
       return
     }
@@ -243,7 +251,7 @@
       method: 'PATCH',
       body: { description: trimmed },
     })
-    chatUser.value.description = trimmed
+    chatDescription.value = trimmed
     editingDescription.value = false
   }
 </script>

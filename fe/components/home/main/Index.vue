@@ -95,7 +95,8 @@
   const selectionStore = useMessageSelectionStore()
   const replyStore = useMessageReplyStore()
 
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { _id: userId } = storeToRefs(userStore)
+  const { users: chatUsers } = storeToRefs(chatStore)
   const { isSelecting, selectedIds, mode: selectionMode } = storeToRefs(selectionStore)
   const { cancelSelection } = selectionStore
 
@@ -116,7 +117,10 @@
   })
   const { openModal: openDeleteMessageModal } = useDeleteMessageModal()
 
-  const isBlockedUser = computed(() => userStore.hasBlockedUser(chatUser.value?._id))
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
+  const isBlockedUser = computed(
+    () => chatFirstUser.value && userStore.hasBlockedUser(chatFirstUser.value._id),
+  )
   const messagesPane = ref(null)
   const messagesRef = ref(null)
   const footerEl = ref(null)

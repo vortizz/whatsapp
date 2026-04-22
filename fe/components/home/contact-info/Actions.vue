@@ -43,8 +43,11 @@
   const { isUnblockUserDisabled, openModal: openUnblockModal } = useUnblockUserModal()
   const { isDeleteChatDisabled, openModal: openDeleteModal } = useDeleteChatModal()
 
-  const { user: chatUser } = storeToRefs(chatStore)
-  const displayUser = computed(() => props.member ?? chatUser.value)
+  const { users: chatUsers } = storeToRefs(chatStore)
+  const { _id: userId } = storeToRefs(userStore)
+
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
+  const displayUser = computed(() => props.member ?? chatFirstUser.value)
   const isBlockedUser = computed(() => userStore.hasBlockedUser(displayUser.value?._id))
 
   const directChatId = ref('')

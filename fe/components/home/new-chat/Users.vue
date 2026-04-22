@@ -1,7 +1,10 @@
 <template>
   <div>
     <div v-if="loading" class="text-center py-[72px] text-sm text-black/60">Looking for users</div>
-    <div v-else-if="!users.length" class="text-center py-[72px] text-sm text-black/60">
+    <div
+      v-else-if="!users.length"
+      class="text-center py-[72px] text-sm text-black/60 dark:text-white/60"
+    >
       No results found for '{{ text }}'
     </div>
     <div v-else>
@@ -23,11 +26,14 @@
 
 <script setup>
   import { useChatStore } from '../../../store/chat'
+  import { useUserStore } from '../../../store/user'
 
   const props = defineProps(['text'])
   const emit = defineEmits(['close'])
 
   const chatStore = useChatStore()
+  const userStore = useUserStore()
+
   const users = ref([])
   const loading = ref(false)
 
@@ -55,17 +61,21 @@
           email: user.email,
           isConnected: user.isConnected,
           lastSeenAt: user.lastSeenAt,
+          publicKey: user.publicKey,
           chat: user.chat?._id
             ? {
                 _id: user.chat._id,
-                user: {
-                  _id: user._id,
-                  name: user.name,
-                  email: user.email,
-                  about: user.about,
-                  isConnected: user.isConnected,
-                  lastSeenAt: user.lastSeenAt,
-                },
+                // user: {
+                //   _id: user._id,
+                //   name: user.name,
+                //   email: user.email,
+                //   about: user.about,
+                //   isConnected: user.isConnected,
+                //   lastSeenAt: user.lastSeenAt,
+                //   publicKey: user.publicKey,
+                // },
+                createdAt: user.chat.createdAt,
+                encryptedKey: user.chat.encryptedKey,
               }
             : null,
         })),
@@ -103,11 +113,22 @@
     return result
   }
 
-  function setUser(user) {
-    const clonedUser = JSON.parse(JSON.stringify(user))
+  function setUser({ chat, ...user }) {
     chatStore.setChat({
-      _id: clonedUser.chat?._id || 'new-chat',
-      user: clonedUser,
+      _id: chat?._id || 'new-chat',
+      users: [
+        {
+          _id: userStore._id,
+          name: userStore.name,
+          about: userStore.about,
+          email: userStore.email,
+          isConnected: userStore.isConnected,
+          lastSeenAt: userStore.lastSeenAt,
+        },
+        user,
+      ],
+      createdAt: chat?.createdAt,
+      encryptedKey: chat?.encryptedKey,
     })
     emit('close')
   }

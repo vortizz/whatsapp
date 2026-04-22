@@ -63,7 +63,7 @@
 
   const userStore = useUserStore()
   const { _id: myUserId } = storeToRefs(userStore)
-  const { generateGroupKey, wrapGroupKeyForMember, getPeerPublicKey } = useCrypto()
+  // const { generateGroupKey, wrapGroupKeyForMember, getPeerPublicKey } = useCrypto()
 
   onMounted(() => nextTick(() => nameInput.value?.focus()))
 
@@ -79,17 +79,17 @@
         },
       })
 
-      // Generate a shared group key and wrap it for every member (including self)
-      const groupKey = await generateGroupKey()
-      const allMemberIds = [...props.selectedUsers.map((u) => u._id), myUserId.value]
-      const keys = await Promise.all(
-        allMemberIds.map(async (memberId) => {
-          const memberPubKey = await getPeerPublicKey(memberId)
-          const wrapped = await wrapGroupKeyForMember(groupKey, memberPubKey)
-          return { userId: memberId, ...wrapped }
-        }),
-      )
-      await useMyAuthFetch(`chat/${chat._id}/group-key`, { method: 'POST', body: { keys } })
+      // // Generate a shared group key and wrap it for every member (including self)
+      // const groupKey = await generateGroupKey()
+      // const allMemberIds = [...props.selectedUsers.map((u) => u._id), myUserId.value]
+      // const keys = await Promise.all(
+      //   allMemberIds.map(async (memberId) => {
+      //     const memberPubKey = await getPeerPublicKey(memberId)
+      //     const wrapped = await wrapGroupKeyForMember(groupKey, memberPubKey)
+      //     return { userId: memberId, ...wrapped }
+      //   }),
+      // )
+      // await useMyAuthFetch(`chat/${chat._id}/group-key`, { method: 'POST', body: { keys } })
 
       emit('created', chat)
     } catch (error) {

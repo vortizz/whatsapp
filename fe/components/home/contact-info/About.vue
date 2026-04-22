@@ -7,21 +7,18 @@
   </div>
 </template>
 
-<script>
-  import { mapState } from 'pinia'
+<script setup>
+  import { storeToRefs } from 'pinia'
   import { useChatStore } from '../../../store/chat'
+  import { useUserStore } from '../../../store/user'
 
-  export default {
-    props: ['member'],
-    computed: {
-      ...mapState(useChatStore, {
-        chatUser: 'user',
-      }),
-      displayUser() {
-        return this.member ?? this.chatUser
-      },
-    },
-  }
+  const props = defineProps(['member'])
+
+  const { users: chatUsers } = storeToRefs(useChatStore())
+  const { _id: userId } = storeToRefs(useUserStore())
+
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
+  const displayUser = computed(() => props.member ?? chatFirstUser.value)
 </script>
 
 <style></style>

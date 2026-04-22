@@ -24,7 +24,7 @@
               :data-message-id="item._id"
               class="flex items-center gap-3 transition-colors"
               :class="[
-                isSelecting ? 'px-4 cursor-pointer' : chatUser.isGroup ? 'pl-9 pr-16' : 'px-16',
+                isSelecting ? 'px-4 cursor-pointer' : isChatGroup ? 'pl-9 pr-16' : 'px-16',
                 isFirst(item._id) ? 'mt-3' : 'm-0.5',
                 isLast(item._id) ? 'mb-4' : '',
                 isSelecting && selectedIds.includes(item._id)
@@ -60,7 +60,7 @@
                 :reply-to="item.replyTo"
                 :forwarded="item.forwarded"
                 :from="item.from"
-                :is-group="chatUser?.isGroup"
+                :is-group="isChatGroup"
                 @toggle-menu="toggleMenu(item._id)"
                 @delete="deleteMessage"
                 @enter-select="enterSelectionMode(item._id)"
@@ -98,9 +98,9 @@
     <div
       v-if="isTypingInChat(chatId)"
       class="flex items-end gap-2 mb-2"
-      :class="chatUser?.isGroup ? 'pl-9 pr-16' : 'px-16'"
+      :class="isChatGroup ? 'pl-9 pr-16' : 'px-16'"
     >
-      <div v-if="chatUser?.isGroup" class="flex -space-x-2 flex-shrink-0">
+      <div v-if="isChatGroup" class="flex -space-x-2 flex-shrink-0">
         <AvatarPlaceholder
           v-for="u in getTypingUsers(chatId)"
           :key="u._id"
@@ -134,13 +134,14 @@
   import { storeToRefs } from 'pinia'
   import { useUserStore } from '../../../store/user'
   import { useChatStore } from '../../../store/chat'
-  import { useWsStore } from '../../../store/websocket'
   import { useMessageSelectionStore } from '../../../store/messageSelection'
   import { useMessageReplyStore } from '../../../store/messageReply'
   import { StatusMessage } from '../../../utils/status-message'
 
   const { typingChats, setTyping, isTypingInChat, getTypingUsers } = useTypingState()
   const crypto = useCrypto()
+  const indexedDB = useIndexedDB()
+  const { conn } = useWs()
 
   const messages = ref([])
   const bottomEl = ref(null)
@@ -163,19 +164,36 @@
   }
 
   async function openDmWith(user) {
+    const userStoreInfo = {
+      _id: userStore._id,
+      name: userStore.name,
+      about: userStore.about,
+      email: userStore.email,
+      isConnected: userStore.isConnected,
+      lastSeenAt: userStore.lastSeenAt,
+    }
     try {
       const chats = await useMyAuthFetch('chat', { method: 'GET' })
       const existing = chats.find(
         (c) => !c.isGroup && c.users.some((u) => (u._id || u) === user._id),
       )
       if (existing) {
-        const chatUser = existing.users.find((u) => u._id !== userId.value) ?? user
-        chatStore.setChat({ _id: existing._id, user: JSON.parse(JSON.stringify(chatUser)) })
+        chatStore.setChat({
+          _id: existing._id,
+          users: existing.users,
+          encryptedKeys: existing.encryptedKeys,
+        })
       } else {
-        chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
+        chatStore.setChat({
+          _id: 'new-chat',
+          users: [userStoreInfo, user],
+        })
       }
     } catch {
-      chatStore.setChat({ _id: 'new-chat', user: JSON.parse(JSON.stringify(user)) })
+      chatStore.setChat({
+        _id: 'new-chat',
+        users: [userStoreInfo, user],
+      })
     }
   }
 
@@ -222,27 +240,24 @@
 
     if (!sourceChatId || sourceChatId === chatId.value) return
 
-    try {
-      const chats = await useMyAuthFetch('chat', { method: 'GET' })
-      const sourceChat = chats.find((c) => c._id === sourceChatId)
-      if (!sourceChat) return
+    const chats = await useMyAuthFetch('chat', { method: 'GET' })
+    const sourceChat = chats.find((c) => c._id === sourceChatId)
+    if (!sourceChat) return
 
-      pendingScrollId = replyId
-      const chatUser = sourceChat.isGroup
-        ? {
-            _id: sourceChat._id,
-            name: sourceChat.name,
-            isGroup: true,
-            users: sourceChat.users,
-            groupAdmins: sourceChat.groupAdmins,
-            createdAt: sourceChat.createdAt,
-            createdBy: sourceChat.createdBy,
-          }
-        : sourceChat.users.find((u) => u._id !== userId.value)
-      chatStore.setChat({ _id: sourceChat._id, user: chatUser })
-    } catch {
-      /* ignore */
-    }
+    pendingScrollId = replyId
+
+    chatStore.setChat({
+      _id: sourceChat._id,
+      users: sourceChat.users,
+      encryptedKeys: sourceChat.encryptedKeys,
+      name: sourceChat.name,
+      isGroup: true,
+      users: sourceChat.users,
+      groupAdmins: sourceChat.groupAdmins,
+      createdAt: sourceChat.createdAt,
+      createdBy: sourceChat.createdBy,
+      description: sourceChat.description,
+    })
   }
 
   function getSelectedMessages() {
@@ -281,11 +296,9 @@
 
   const userStore = useUserStore()
   const chatStore = useChatStore()
-  const wsStore = useWsStore()
 
   const { _id: userId } = storeToRefs(userStore)
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
-  const { conn } = storeToRefs(wsStore)
+  const { _id: chatId, isGroup: isChatGroup } = storeToRefs(chatStore)
 
   async function resolveReplyTo(replyTo) {
     if (!replyTo) return null
@@ -295,16 +308,11 @@
     let text = replyTo.text ?? ''
     if (replyTo.iv) {
       try {
-        // Use the replied message's own chat context, not the current chat.
-        // Group messages have no 'to' field; 1:1 messages do.
-        const sourceChatId = replyTo.chat?._id ?? replyTo.chat ?? chatId.value
-        const replyIsGroup = !replyTo.to
-        if (replyIsGroup) {
-          text = await crypto.decryptGroupMessage(replyTo.text, replyTo.iv, sourceChatId)
-        } else {
-          const peerId = fromId === userId.value ? (replyTo.to?._id ?? replyTo.to) : fromId
-          if (peerId) text = await crypto.decryptMessage(replyTo.text, replyTo.iv, peerId)
-        }
+        const privateKey = await indexedDB.getKey(userId.value, 'privateKey')
+        const encryptedAESKey = replyTo.chat?.encryptedKeys?.find(
+          (k) => k.userId === userId.value,
+        )?.encryptedKey
+        text = await crypto.decryptMessage(replyTo.text, replyTo.iv, encryptedAESKey, privateKey)
       } catch {
         text = '[encrypted]'
       }
@@ -341,7 +349,7 @@
 
   function isUnreadByMe(msg) {
     if (msg.isMine) return false
-    if (chatUser.value?.isGroup) {
+    if (isChatGroup.value) {
       return !(msg.readBy ?? []).some((r) => (r.user?._id ?? r.user) === userId.value)
     }
     return msg.status === StatusMessage.RECEIVED
@@ -400,18 +408,11 @@
   async function decryptText(msg) {
     if (!msg.iv) return msg.text
     try {
-      if (chatUser.value?.isGroup) {
-        console.log(
-          '[Messages] Decrypting group message for chat',
-          chatId.value,
-          'with text length',
-          msg,
-        )
-        return await crypto.decryptGroupMessage(msg.text, msg.iv, chatId.value)
-      }
-      const peerId = msg.from._id === userId.value ? msg.to?._id : msg.from._id
-      if (!peerId) return msg.text
-      return await crypto.decryptMessage(msg.text, msg.iv, peerId)
+      const privateKey = await indexedDB.getKey(userId.value, 'privateKey')
+      const encryptedAESKey = msg.chat?.encryptedKeys?.find(
+        (k) => k.userId === userId.value,
+      )?.encryptedKey
+      return await crypto.decryptMessage(msg.text, msg.iv, encryptedAESKey, privateKey)
     } catch (e) {
       console.error('[Messages] decryptText failed:', e?.message ?? e)
       return '[encrypted]'
@@ -422,7 +423,7 @@
     try {
       const [response, events] = await Promise.all([
         useMyAuthFetch(`message/${chatId.value}`, { method: 'GET' }),
-        chatUser.value?.isGroup
+        isChatGroup.value
           ? useMyAuthFetch(`chat/${chatId.value}/events`, { method: 'GET' })
           : Promise.resolve([]),
       ])

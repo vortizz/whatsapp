@@ -31,18 +31,23 @@
 
 <script setup>
   import { useUserStore } from '../../../store/user'
-  import { useWsStore } from '../../../store/websocket'
+  import { useChatStore } from '../../../store/chat'
 
   const emit = defineEmits(['openProfile'])
 
   const router = useRouter()
   const userStore = useUserStore()
-  const wsStore = useWsStore()
+  const chatStore = useChatStore()
+  const indexedDB = useIndexedDB()
 
+  const { _id: userId } = storeToRefs(userStore)
   const { logout } = userStore
-  const { disconnectWs } = wsStore
+  const { clearChat } = chatStore
+  const { disconnectWs } = useWs()
 
   function signout() {
+    indexedDB.deleteDB(userId.value)
+    clearChat()
     logout()
     disconnectWs()
     router.push('/auth/login')
