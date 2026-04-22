@@ -32,12 +32,13 @@
         class="flex items-end w-full bg-white dark:bg-neutral-800 shadow-md"
         :class="replyTo ? 'rounded-b-3xl' : 'rounded-3xl'"
       >
+        <HomeMainEmojiPicker class="ml-2" @select="onEmojiSelect" />
         <textarea
           ref="rInput"
           v-model="message"
           placeholder="Type a message"
           rows="1"
-          class="flex-1 w-full text-sm text-neutral-950 dark:placeholder:text-white/60 dark:text-white rounded-3xl py-3.5 px-5 focus:outline-none placeholder:text-gray-600 caret-emerald-500 dark:bg-neutral-800 resize-none overflow-hidden leading-normal"
+          class="flex-1 w-full text-sm text-neutral-950 dark:placeholder:text-white/60 dark:text-white rounded-3xl py-3.5 pr-5 pl-2 focus:outline-none placeholder:text-gray-600 caret-emerald-500 dark:bg-neutral-800 resize-none overflow-hidden leading-normal"
           @focus="onFocusInput"
           @input="onInput"
           @keydown.enter.exact.prevent="send"
@@ -96,6 +97,19 @@
 
   const message = ref('')
   const isLoading = ref(false)
+
+  function onEmojiSelect(emoji) {
+    const el = rInput.value
+    const start = el.selectionStart ?? message.value.length
+    const end = el.selectionEnd ?? message.value.length
+    message.value = message.value.slice(0, start) + emoji + message.value.slice(end)
+    nextTick(() => {
+      const pos = start + emoji.length
+      el.setSelectionRange(pos, pos)
+      el.focus()
+      autoResize()
+    })
+  }
   const typingThrottleTimer = ref(null)
   const rInput = ref(null)
 
