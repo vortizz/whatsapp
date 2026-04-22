@@ -228,5 +228,7 @@ export function useCrypto() {
     encryptMessage,
     decryptMessage,
     generateSharedKeys,
+    decryptWithPrivateKey,
+    encryptWithPublicKey,
   }
 }

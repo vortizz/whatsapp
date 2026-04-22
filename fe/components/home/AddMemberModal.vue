@@ -119,10 +119,16 @@
 <script setup>
   import { storeToRefs } from 'pinia'
   import { useChatStore } from '../../store/chat'
+  import { useUserStore } from '../../store/user'
 
   const { isOpen, closeModal, onMembersAdded } = useAddMemberModal()
+  const { decryptWithPrivateKey, encryptWithPublicKey } = useCrypto()
+  const { getKey: getPrivateKey } = useIndexedDB()
   const chatStore = useChatStore()
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
+  const userStore = useUserStore()
+
+  const { _id: chatId, users: chatUsers, encryptedKeys: chatEncryptedKeys } = storeToRefs(chatStore)
+  const { _id: userId } = storeToRefs(userStore)
 
   const search = ref('')
   const allUsers = ref([])
@@ -139,11 +145,11 @@
       const query = search.value ? { query: { username: search.value } } : {}
       const result = await useMyAuthFetch('user/new-chat', { method: 'GET', ...query })
       const existingIds = new Set(
-        (chatUser.value.users ?? []).map((u) => u._id?.toString() ?? u.toString()),
+        (chatUsers.value ?? []).map((u) => u._id?.toString() ?? u.toString()),
       )
       allUsers.value = result
         .filter((u) => !existingIds.has(u._id))
-        .map((u) => ({ _id: u._id, name: u.name, about: u.about }))
+        .map((u) => ({ _id: u._id, name: u.name, about: u.about, publicKey: u.publicKey }))
     } catch (error) {
       const data = error?.data || {}
       const message = Array.isArray(data.message) ? data.message[0] : data.message
@@ -188,13 +194,32 @@
   async function confirm() {
     try {
       saving.value = true
+
+      const myEncryptedKey = chatEncryptedKeys.value?.find(
+        (ek) => ek.userId === userId.value,
+      )?.encryptedKey
+
+      const privateKey = await getPrivateKey(userId.value, 'privateKey')
+      const rawAESKey = await decryptWithPrivateKey(myEncryptedKey, privateKey)
+
+      const encryptedKeys = await Promise.all(
+        selected.value.map(async (u) => {
+          const encryptedKey = await encryptWithPublicKey(rawAESKey, u.publicKey)
+          return { userId: u._id, encryptedKey }
+        }),
+      )
+
       const updatedChat = await useMyAuthFetch(`/chat/${chatId.value}/members`, {
         method: 'PATCH',
-        body: { user_ids: selected.value.map((u) => u._id) },
+        body: {
+          user_ids: selected.value.map((u) => u._id),
+          encryptedKeys: encryptedKeys,
+        },
       })
       onMembersAdded(updatedChat)
       closeModal()
     } catch (error) {
+      console.error(error)
       const data = error?.data || {}
       const message = Array.isArray(data.message) ? data.message[0] : data.message
       useNuxtApp().$toast.error(message)
