@@ -63,7 +63,7 @@
   const { _id: userId } = storeToRefs(userStore)
   const { _id: chatId } = storeToRefs(chatStore)
   const { conn } = useWs()
-  const { setChat: setChatAction, setUnreadCounts } = chatStore
+  const { setChat: setChatAction, clearChat, setUnreadCounts } = chatStore
 
   function getFirstUser(chat) {
     return chat.users?.find((u) => u._id !== userId.value)
@@ -335,6 +335,14 @@
   function handleChatEvent(event) {
     const chat = chats.value.find((c) => c._id === event.chat._id)
     if (!chat) return
+
+    if (event.isUserRemoved && event.userRemoved?._id === userId.value) {
+      removeChat(event.chat._id)
+      if (chatId.value === event.chat._id) {
+        clearChat()
+      }
+      return
+    }
 
     if (event.isNameChanged && chat?.isGroup) {
       chat.name = event.newName
