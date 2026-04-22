@@ -12,9 +12,10 @@ export function useUnblockUserModal() {
 
   const chatStore = useChatStore()
   const userStore = useUserStore()
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { users: chatUsers } = storeToRefs(chatStore)
 
-  const targetUser = computed(() => userOverride.value ?? chatUser.value)
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userStore._id))
+  const targetUser = computed(() => userOverride.value ?? chatFirstUser.value)
   const chatUserId = computed(() => targetUser.value?._id || '')
   const isUnblockingUser = computed(() => unblockingUserId.value === chatUserId.value)
   const isUnblockUserDisabled = computed(() => !chatUserId.value || isUnblockingUser.value)

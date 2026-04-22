@@ -7,10 +7,8 @@ export function useExitGroupModal() {
   const isSubmitting = useState('exit-group-submitting', () => false)
 
   const chatStore = useChatStore()
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
+  const { _id: chatId, name: groupName } = storeToRefs(chatStore)
   const { deletedChatState } = useDeleteChatState()
-
-  const groupName = computed(() => (chatUser.value as any)?.name ?? '')
 
   function openModal() {
     isOpen.value = true

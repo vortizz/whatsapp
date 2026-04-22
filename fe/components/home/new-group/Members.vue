@@ -112,6 +112,7 @@
           _id: u._id,
           name: u.name,
           about: u.about,
+          publicKey: u.publicKey,
         })),
       )
     } catch (error) {

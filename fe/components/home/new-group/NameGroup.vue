@@ -62,8 +62,8 @@
   const nameInput = ref(null)
 
   const userStore = useUserStore()
-  const { _id: myUserId } = storeToRefs(userStore)
-  // const { generateGroupKey, wrapGroupKeyForMember, getPeerPublicKey } = useCrypto()
+  const { _id: userId, publicKey: userPublicKey } = storeToRefs(userStore)
+  const { generateSharedKeys } = useCrypto()
 
   onMounted(() => nextTick(() => nameInput.value?.focus()))
 
@@ -71,28 +71,29 @@
     if (loading.value) return
     try {
       loading.value = true
+
+      const users = [
+        {
+          userId: userId.value,
+          publicKeyBase64: userPublicKey.value,
+        },
+        ...props.selectedUsers.map((u) => ({ userId: u._id, publicKeyBase64: u.publicKey })),
+      ]
+
+      const encryptedKeys = await generateSharedKeys(users)
+
       const chat = await useMyAuthFetch('chat/group', {
         method: 'POST',
         body: {
           user_ids: props.selectedUsers.map((u) => u._id),
           name: groupName.value || 'Group',
+          encryptedKeys,
         },
       })
 
-      // // Generate a shared group key and wrap it for every member (including self)
-      // const groupKey = await generateGroupKey()
-      // const allMemberIds = [...props.selectedUsers.map((u) => u._id), myUserId.value]
-      // const keys = await Promise.all(
-      //   allMemberIds.map(async (memberId) => {
-      //     const memberPubKey = await getPeerPublicKey(memberId)
-      //     const wrapped = await wrapGroupKeyForMember(groupKey, memberPubKey)
-      //     return { userId: memberId, ...wrapped }
-      //   }),
-      // )
-      // await useMyAuthFetch(`chat/${chat._id}/group-key`, { method: 'POST', body: { keys } })
-
       emit('created', chat)
     } catch (error) {
+      console.error('Error creating group chat:', error)
       const data = error?.data || {}
       const message = Array.isArray(data.message) ? data.message[0] : data.message
       useNuxtApp().$toast.error(message)

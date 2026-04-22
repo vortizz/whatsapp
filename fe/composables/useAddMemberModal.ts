@@ -10,7 +10,7 @@ export function useAddMemberModal() {
     nonce: 0,
   }))
   const chatStore = useChatStore()
-  const { user: chatUser } = storeToRefs(chatStore)
+  const { users: chatUsers, groupAdmins: chatGroupAdmins } = storeToRefs(chatStore)
 
   function openModal() {
     isOpen.value = true
@@ -21,8 +21,8 @@ export function useAddMemberModal() {
   }
 
   function onMembersAdded(updatedChat: any) {
-    ;(chatUser.value as any).users = updatedChat.users
-    ;(chatUser.value as any).groupAdmins = updatedChat.groupAdmins
+    chatUsers.value = updatedChat.users
+    chatGroupAdmins.value = updatedChat.groupAdmins
     membersUpdatedState.value = {
       chatId: updatedChat._id,
       users: updatedChat.users,

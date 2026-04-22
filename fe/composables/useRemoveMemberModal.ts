@@ -17,9 +17,12 @@ export function useRemoveMemberModal() {
   }))
 
   const chatStore = useChatStore()
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
-
-  const groupName = computed(() => (chatUser.value as any)?.name ?? '')
+  const {
+    _id: chatId,
+    name: groupName,
+    users: chatUsers,
+    groupAdmins: chatGroupAdmins,
+  } = storeToRefs(chatStore)
 
   function openModal(member: { _id: string; name: string }) {
     targetMember.value = member
@@ -41,10 +44,8 @@ export function useRemoveMemberModal() {
           method: 'PATCH',
         },
       )) as any
-      chatStore.$patch((state) => {
-        ;(state.user as any).users = updated.users
-        ;(state.user as any).groupAdmins = updated.groupAdmins
-      })
+      chatUsers.value = updated.users
+      chatGroupAdmins.value = updated.groupAdmins
       membersUpdatedState.value = {
         chatId: updated._id,
         users: updated.users,

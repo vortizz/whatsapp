@@ -11,9 +11,7 @@ export function useMakeGroupAdminModal() {
   const isSubmitting = useState('make-group-admin-submitting', () => false)
 
   const chatStore = useChatStore()
-  const { _id: chatId, user: chatUser } = storeToRefs(chatStore)
-
-  const groupName = computed(() => (chatUser.value as any)?.name ?? '')
+  const { _id: chatId, name: groupName, groupAdmins: chatGroupAdmins } = storeToRefs(chatStore)
 
   function openModal(member: { _id: string; name: string }, dismiss = false) {
     targetMember.value = member
@@ -38,9 +36,7 @@ export function useMakeGroupAdminModal() {
           body: { is_admin: true },
         },
       )) as any
-      chatStore.$patch((state) => {
-        ;(state.user as any).groupAdmins = updated.groupAdmins
-      })
+      chatGroupAdmins.value = updated.groupAdmins
       closeModal()
     } catch (error: any) {
       const data = error?.data || {}
