@@ -7,6 +7,7 @@ import { Status } from 'src/message/entities/status.enum'
 import { ChatEvent } from './entities/chat-event.schema'
 import { WsClientManager } from 'src/websocket/ws-client-manager.service'
 import { EncryptedKeyDto } from './dtos/create-group-chat.dto'
+import { AddMemberGroupChatDto } from './dtos/add-member-group-chat.dto'
 
 @Injectable()
 export class ChatService {
@@ -328,22 +329,26 @@ export class ChatService {
     return await this.chatModel.findByIdAndUpdate(_id, { description }, { new: true })
   }
 
-  async addGroupMembers(_id: string, userIds: string[], user: User): Promise<Chat> {
+  async addGroupMembers(_id: string, dto: AddMemberGroupChatDto, user: User): Promise<Chat> {
     const chatFound = await this.findById(_id)
 
     if (!chatFound) {
       throw new BadRequestException('Chat not found')
     }
 
-    if (chatFound.users.some((u) => userIds.some((ui) => ui === u._id?.toString()))) {
+    if (chatFound.users.some((u) => dto.user_ids.some((ui) => ui === u._id?.toString()))) {
       throw new BadRequestException('User does belong to the chat')
+    }
+
+    if (dto.user_ids.every((ui) => dto.encryptedKeys.every((ek) => ek.userId !== ui))) {
+      throw new BadRequestException('Encrypted keys must be provided for all new members')
     }
 
     if (!chatFound.groupAdmins?.some((u) => u._id?.toString() === user._id)) {
       throw new BadRequestException('User must be admin to add members')
     }
 
-    const newUsers = userIds.map((id) => {
+    const newUsers = dto.user_ids.map((id) => {
       const u = new User()
       u._id = id
       return u
@@ -360,12 +365,17 @@ export class ChatService {
       return newEvent
     })
 
-    const allMemberIds = [...chatFound.users.map((u) => u._id.toString()), ...userIds]
+    const allMemberIds = [...chatFound.users.map((u) => u._id.toString()), ...dto.user_ids]
     await Promise.all(newEvents.map((ne) => this.createChatEvent(ne, allMemberIds)))
 
     return await this.chatModel.findByIdAndUpdate(
       _id,
-      { $addToSet: { users: { $each: newUsers } } },
+      {
+        $addToSet: {
+          users: { $each: newUsers },
+          encryptedKeys: { $each: dto.encryptedKeys },
+        },
+      },
       { new: true },
     )
   }

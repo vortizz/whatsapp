@@ -6,6 +6,7 @@ import { AuthUser } from 'src/common/decorator/user.decorator'
 import { User } from 'src/user/entities/user.schema'
 import { CreateChatDto } from './dtos/create-chat.dto'
 import { CreateGroupChatDto } from './dtos/create-group-chat.dto'
+import { AddMemberGroupChatDto } from './dtos/add-member-group-chat.dto'
 
 @Controller('chat')
 export class ChatController {
@@ -67,7 +68,8 @@ export class ChatController {
   async addGroupMembers(
     @AuthUser() user: User,
     @Param('id') id: string,
-    @Body('user_ids') userIds: string[],
+    // @Body('user_ids') userIds: string[],
+    @Body() dto: AddMemberGroupChatDto,
   ): Promise<Chat> {
     return await this.chatService.addGroupMembers(id, userIds, user)
   }
