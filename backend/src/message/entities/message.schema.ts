@@ -57,7 +57,7 @@ export class Message {
   })
   replyTo?: Message
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({ type: Boolean })
   forwarded?: boolean
 
   @Prop({ type: Date })

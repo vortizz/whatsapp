@@ -46,19 +46,15 @@ export class Chat {
   @Prop({
     type: [
       {
-        userId: { type: String, required: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: User.name, required: true },
         encryptedKey: { type: String, required: true },
-        iv: { type: String, required: true },
-        ephemeralPublicKey: { type: String, required: true },
       },
     ],
     default: [],
   })
   encryptedKeys?: {
-    userId: string
+    userId: User
     encryptedKey: string
-    iv: string
-    ephemeralPublicKey: string
   }[]
 
   createdAt: Date
