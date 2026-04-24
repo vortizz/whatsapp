@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { APP_GUARD } from '@nestjs/core'
 import { UserModule } from './user/user.module'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ConfigModule, ConfigService } from '@nestjs/config'
@@ -7,6 +8,7 @@ import { AuthModule } from './auth/auth.module'
 import { ChatModule } from './chat/chat.module'
 import { MessageModule } from './message/message.module'
 import { WebsocketModule } from './websocket/websocket.module'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 
 @Module({
   imports: [
@@ -23,11 +25,24 @@ import { WebsocketModule } from './websocket/websocket.module'
       }),
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
     UserModule,
     AuthModule,
     ChatModule,
     MessageModule,
     WebsocketModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

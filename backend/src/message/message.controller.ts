@@ -5,11 +5,13 @@ import { CreateMessageDto } from './dtos/create-message.dto'
 import { AuthUser } from 'src/common/decorator/user.decorator'
 import { User } from 'src/user/entities/user.schema'
 import { MessageService } from './message.service'
+import { Throttle } from '@nestjs/throttler'
 
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Auth()
   @Post()
   async create(
