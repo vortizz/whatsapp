@@ -3,9 +3,11 @@ import { AppModule } from './app.module'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { WsAdapter } from '@nestjs/platform-ws'
+import helmet from 'helmet'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true })
+  app.use(helmet())
   app.useGlobalPipes(new ValidationPipe())
 
   app.useWebSocketAdapter(new WsAdapter(app))
