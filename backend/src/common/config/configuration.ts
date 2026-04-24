@@ -3,6 +3,7 @@ export default () => ({
     port: parseInt(process.env.APP_PORT) || 3000,
     saltRound: Number(process.env.APP_SALT_ROUND),
     jwtSecretKey: process.env.JWT_SECRET_KEY,
+    corsOrigin: process.env.APP_CORS_ORIGIN || 'http://localhost:3001',
   },
   mongo: {
     uri: `${process.env.APP_MONGO_PREFIX}://${process.env.APP_MONGO_HOST}/`,
