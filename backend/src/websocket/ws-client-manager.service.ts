@@ -35,6 +35,7 @@ export class WsClientManager {
     const connectedClient = this.connectedClients.get(decodedAuthToken.id)
 
     if (connectedClient) {
+      connectedClient.send(JSON.stringify({ name: 'force-logout' }))
       connectedClient.close()
     }
 
