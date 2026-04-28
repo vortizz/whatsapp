@@ -255,8 +255,7 @@
     clearChat()
 
     if (conn.value?.readyState !== WebSocket.OPEN) {
-      const token = useCookie('token').value
-      connectWs({ token })
+      connectWs()
     }
   })
 

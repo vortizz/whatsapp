@@ -3,7 +3,7 @@ const WS_ENTRYPOINT_PATH = '/entrypoint'
 const conn = ref<WebSocket | null>(null)
 
 export function useWs() {
-  function connectWs({ token }: { token: string }) {
+  function connectWs() {
     const config = useRuntimeConfig()
     const baseUrlWs = String(config.public.baseUrlWs || '').trim()
     const wsUrl = baseUrlWs.endsWith(WS_ENTRYPOINT_PATH)
@@ -14,7 +14,7 @@ export function useWs() {
       return
     }
 
-    conn.value = new WebSocket(wsUrl, token)
+    conn.value = new WebSocket(wsUrl)
 
     conn.value.onopen = () => {
       console.log('WebSocket connection established')

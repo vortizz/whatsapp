@@ -5,7 +5,6 @@ interface IUser {
   name: string
   email: string
   about: string
-  token: string
   blockedUsers?: string[]
   publicKey: string
 }
@@ -35,7 +34,6 @@ export const useUserStore = defineStore(
       name: userName,
       email: userEmail,
       about: userAbout,
-      token,
       blockedUsers: userBlockedUsers = [],
       publicKey: userPublicKey,
     }: IUser) {
@@ -45,8 +43,6 @@ export const useUserStore = defineStore(
       about.value = userAbout
       blockedUsers.value = normalizeBlockedUsers(userBlockedUsers)
       publicKey.value = userPublicKey
-      const tokenCookie = useCookie('token')
-      tokenCookie.value = token
     }
 
     function setBlockedUsers(newBlockedUsers: string[]) {
@@ -70,15 +66,14 @@ export const useUserStore = defineStore(
       about.value = newAbout
     }
 
-    function logout() {
+    async function logout() {
       _id.value = ''
       name.value = ''
       email.value = ''
       about.value = ''
       blockedUsers.value = []
       publicKey.value = ''
-      const tokenCookie = useCookie('token')
-      tokenCookie.value = null
+      useMyAuthFetch('auth/logout', { method: 'POST' }).catch(() => {})
     }
 
     return {

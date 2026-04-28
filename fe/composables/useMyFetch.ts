@@ -11,8 +11,8 @@ export const useMyAuthFetch = async (request: string, opts?: any) => {
   try {
     const config = useRuntimeConfig()
     const baseURL = import.meta.server ? config.baseUrlApiInternal : config.public.baseUrlApi
-    const headers = { Authorization: `Bearer ${useCookie('token').value}` }
-    return await $fetch(request, { baseURL, ...{ headers }, ...opts })
+    const cookieHeader = useRequestHeaders(['cookie'])
+    return await $fetch(request, { baseURL, credentials: 'include', headers: cookieHeader, ...opts })
   } catch (error: any) {
     if (error?.status === 401) {
       const { $pinia } = useNuxtApp()

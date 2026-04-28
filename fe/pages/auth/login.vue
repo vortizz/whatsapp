@@ -47,9 +47,10 @@
   })
 
   const userStore = useUserStore()
+  const { _id: userId } = storeToRefs(userStore)
   const { connectWs } = useWs()
   const { decryptPrivateKey } = useCrypto()
-  const { saveKey } = useIndexedDB()
+  const { saveKey, deleteDB } = useIndexedDB()
 
   const STEPS = {
     CREDENTIALS: 1,
@@ -69,6 +70,18 @@
         },
   )
 
+  watch(
+    step,
+    () => {
+      if (step.value === STEPS.CREDENTIALS) {
+        // Clear logged in user data when going back to credentials step
+        if (userId.value) deleteDB(userId.value)
+        userStore.logout()
+      }
+    },
+    { immediate: true },
+  )
+
   async function onConfirm({ passphrase: input }) {
     try {
       isLoading.value = true
@@ -85,12 +98,11 @@
         name: loggedInUser.value.name,
         email: loggedInUser.value.email,
         about: loggedInUser.value.about,
-        token: loggedInUser.value.token,
         blockedUsers: loggedInUser.value.blockedUsers || [],
         publicKey: loggedInUser.value.publicKey,
       })
 
-      connectWs({ token: loggedInUser.value.token })
+      connectWs()
 
       await saveKey(loggedInUser.value._id, 'privateKey', privateKey)
 
@@ -138,12 +150,12 @@
     try {
       isLoading.value = true
 
-      const data = await useMyFetch('auth/login', {
+      const data = await useMyAuthFetch('auth/login', {
         method: 'POST',
         body: { email, password },
       })
 
-      if (!data.token) {
+      if (!data._id) {
         throw new Error('Error')
       }
 
