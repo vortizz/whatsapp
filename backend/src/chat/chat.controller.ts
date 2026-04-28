@@ -42,8 +42,8 @@ export class ChatController {
 
   @Auth()
   @Get(':id/events')
-  async findEventsByChatId(@Param('id') id: string) {
-    return await this.chatService.findEventsByChatId(id)
+  async findEventsByChatId(@AuthUser() user: User, @Param('id') id: string) {
+    return await this.chatService.findEventsByChatId(user._id, id)
   }
 
   @Auth()

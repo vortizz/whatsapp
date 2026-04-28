@@ -64,8 +64,17 @@ export class ChatService {
     return saved
   }
 
-  async findEventsByChatId(chatId: string): Promise<ChatEvent[]> {
-    return await this.chatEventModel.find({ chat: chatId }).sort({ createdAt: 1 })
+  async findEventsByChatId(userId: string, chatId: string): Promise<ChatEvent[]> {
+    return await this.chatEventModel
+      .find({ chat: chatId, clearedBy: { $ne: new mongoose.Types.ObjectId(userId) } })
+      .sort({ createdAt: 1 })
+  }
+
+  async clearEvents(userId: string, chatId: string): Promise<void> {
+    await this.chatEventModel.updateMany(
+      { chat: chatId },
+      { $addToSet: { clearedBy: new mongoose.Types.ObjectId(userId) } },
+    )
   }
 
   async findByUser(user: User, username?: string): Promise<Chat[]> {
@@ -75,6 +84,21 @@ export class ChatService {
       ? new RegExp(this.escapeRegex(trimmedUsername), 'i')
       : null
 
+    const userProjection = {
+      pipeline: [
+        {
+          $project: {
+            password: 0,
+            token: 0,
+            encryptedPrivateKey: 0,
+            iv: 0,
+            publicKey: 0,
+            recoveryCodes: 0,
+          },
+        },
+      ],
+    }
+
     return await this.chatModel.aggregate([
       { $match: { users: userId } },
       {
@@ -83,6 +107,7 @@ export class ChatService {
           localField: 'users',
           foreignField: '_id',
           as: 'usersData',
+          ...userProjection,
         },
       },
       ...(usernameRegex
@@ -256,6 +281,7 @@ export class ChatService {
           localField: 'lastMessage.from',
           foreignField: '_id',
           as: 'lastMessageSender',
+          ...userProjection,
         },
       },
       {

@@ -4,17 +4,7 @@ import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
 import { BlockUserDto } from './dtos/block-user.dto'
 import { Auth } from 'src/common/decorator/auth.decorator'
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { AuthUser } from 'src/common/decorator/user.decorator'
 import { Throttle } from '@nestjs/throttler'
 

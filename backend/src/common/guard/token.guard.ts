@@ -9,8 +9,8 @@ export class TokenGuard implements CanActivate {
     const { user, cookies } = context.switchToHttp().getRequest()
 
     const token = cookies?.token
-    const userDb = await this.userService.findById(user._id)
+    const tokenDb = await this.userService.getSensitivePropsByIds<string>(user._id, 'token')
 
-    return token === userDb.token
+    return token === tokenDb
   }
 }

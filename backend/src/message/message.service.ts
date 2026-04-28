@@ -204,7 +204,6 @@ export class MessageService {
       await this.messageModel.updateMany(
         {
           chat: chatObjectId,
-          status: { $in: [Status.SENT, Status.RECEIVED] },
           from: { $ne: userObjectId },
           readBy: { $not: { $elemMatch: { user: userObjectId } } },
         },
@@ -303,10 +302,10 @@ export class MessageService {
   }
 
   async clearMessages(user: User, chat: string) {
-    await this.messageModel.updateMany(
-      { chat, $or: [{ from: user._id }, { to: user._id }] },
-      { $addToSet: { clearedBy: user } },
-    )
+    await Promise.all([
+      this.messageModel.updateMany({ chat }, { $addToSet: { clearedBy: user } }),
+      this.chatService.clearEvents(user._id, chat),
+    ])
   }
 
   async deleteMessages(user: User, chat: string) {

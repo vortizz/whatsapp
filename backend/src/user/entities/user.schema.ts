@@ -3,7 +3,10 @@ import * as mongoose from 'mongoose'
 
 export type UserDocument = mongoose.HydratedDocument<User>
 
-@Schema({ timestamps: true, versionKey: false })
+@Schema({
+  timestamps: true,
+  versionKey: false,
+})
 export class User {
   _id: string
 
@@ -32,11 +35,13 @@ export class User {
 
   @Prop({
     type: String,
+    select: false,
   })
   password?: string
 
   @Prop({
     type: String,
+    select: false,
   })
   token?: string
 
@@ -44,7 +49,7 @@ export class User {
     type: Boolean,
     default: false,
   })
-  isConnected: Boolean
+  isConnected: boolean
 
   @Prop({
     type: [
@@ -64,10 +69,10 @@ export class User {
   @Prop({ type: String })
   publicKey?: string
 
-  @Prop({ type: String })
+  @Prop({ type: String, select: false })
   encryptedPrivateKey?: string
 
-  @Prop({ type: String })
+  @Prop({ type: String, select: false })
   iv?: string
 
   @Prop({
@@ -77,6 +82,7 @@ export class User {
         iv: String,
       },
     ],
+    select: false,
   })
   recoveryCodes?: {
     encryptedPrivateKey: string

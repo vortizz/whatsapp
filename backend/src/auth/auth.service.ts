@@ -23,7 +23,9 @@ export class AuthService {
       return null
     }
 
-    const isPasswordValid = compareSync(password, user.password)
+    const passwordDb = await this.userService.getSensitivePropsByIds<string>(user._id, 'password')
+
+    const isPasswordValid = compareSync(password, passwordDb)
 
     if (!isPasswordValid) {
       return null

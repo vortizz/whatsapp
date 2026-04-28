@@ -44,6 +44,25 @@ export class UserService {
     return await this.userModel.findById(_id)
   }
 
+  async getSensitivePropsByIds<T>(id: string, propNames: string): Promise<T>
+  async getSensitivePropsByIds<T extends Record<string, unknown>>(
+    id: string,
+    propNames: string[],
+  ): Promise<T>
+  async getSensitivePropsByIds<T>(id: string, propNames: string | string[]): Promise<T> {
+    const isArray = Array.isArray(propNames)
+    const fields = isArray ? propNames : [propNames]
+    const selectFields = fields.map((p) => `+${p}`).join(' ')
+    const user = await this.userModel.findById(id).select(selectFields).lean()
+
+    if (!isArray) return user?.[propNames] as T
+
+    return fields.reduce((acc, prop) => {
+      acc[prop] = user?.[prop]
+      return acc
+    }, {} as any) as T
+  }
+
   async delete(_id: string): Promise<User> {
     return await this.userModel.findByIdAndDelete(_id)
   }
@@ -75,7 +94,9 @@ export class UserService {
   }
 
   async updateToken(_id: string, token: string): Promise<User> {
-    return await this.userModel.findByIdAndUpdate(_id, { $set: { token } }, { new: true })
+    return await this.userModel
+      .findByIdAndUpdate(_id, { $set: { token } }, { new: true })
+      .lean({ getters: false })
   }
 
   async findByEmail(email: string): Promise<User> {

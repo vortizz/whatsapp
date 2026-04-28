@@ -46,6 +46,12 @@ export class ChatEvent {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name, autopopulate: true })
   userRemoved?: User
 
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: User.name }],
+    default: [],
+  })
+  clearedBy?: mongoose.Types.ObjectId[]
+
   createdAt: Date
   updatedAt: Date
 }

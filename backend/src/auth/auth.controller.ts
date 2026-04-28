@@ -5,22 +5,38 @@ import { AuthGuard } from '@nestjs/passport'
 import { Auth } from 'src/common/decorator/auth.decorator'
 import { Throttle } from '@nestjs/throttler'
 import { Response } from 'express'
+import { UserService } from 'src/user/user.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Req() req: any, @Res({ passthrough: true }) res: Response): Promise<User> {
     const user = await this.authService.login(req.user)
-    res.cookie('token', user.token, {
+    const sensitiveProps = await this.userService.getSensitivePropsByIds<{
+      token: string
+      recoveryCodes: {
+        encryptedPrivateKey: string
+        iv: string
+      }[]
+      encryptedPrivateKey: string
+      iv: string
+    }>(user._id, ['token', 'recoveryCodes', 'encryptedPrivateKey', 'iv'])
+    res.cookie('token', sensitiveProps.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
     })
-    return user
+    return {
+      ...user,
+      ...sensitiveProps,
+    }
   }
 
   @Auth()
