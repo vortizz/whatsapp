@@ -332,9 +332,15 @@
     sortChats()
   }
 
-  function handleChatEvent(event) {
+  async function handleChatEvent(event) {
     const chat = chats.value.find((c) => c._id === event.chat._id)
-    if (!chat) return
+
+    if (!chat) {
+      if (event.isUserAdded && event.userAdded?._id === userId.value) {
+        await getChats()
+      }
+      return
+    }
 
     if (event.isUserRemoved && event.userRemoved?._id === userId.value) {
       removeChat(event.chat._id)

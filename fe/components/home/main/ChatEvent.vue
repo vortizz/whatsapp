@@ -42,7 +42,8 @@
       if (props.doneBy._id === props.userRemoved?._id) {
         return `${doneByName.value} left`
       }
-      return `${doneByName.value} removed ${props.userRemoved?.name}`
+      const removedName = props.userRemoved?._id === userId.value ? 'you' : props.userRemoved?.name
+      return `${doneByName.value} removed ${removedName}`
     }
     return ''
   })

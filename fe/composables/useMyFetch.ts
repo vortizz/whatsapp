@@ -7,14 +7,19 @@ export const useMyFetch = (request: string, opts?: any) => {
   return $fetch(request, { baseURL, ...opts })
 }
 
-export const useMyAuthFetch = async (request: string, opts?: any) => {
+export const useMyAuthFetch = async (request: string, opts?: any, isLogin?: boolean) => {
   try {
     const config = useRuntimeConfig()
     const baseURL = import.meta.server ? config.baseUrlApiInternal : config.public.baseUrlApi
     const cookieHeader = useRequestHeaders(['cookie'])
-    return await $fetch(request, { baseURL, credentials: 'include', headers: cookieHeader, ...opts })
+    return await $fetch(request, {
+      baseURL,
+      credentials: 'include',
+      headers: cookieHeader,
+      ...opts,
+    })
   } catch (error: any) {
-    if (error?.status === 401) {
+    if (error?.status === 401 && !isLogin) {
       const { $pinia } = useNuxtApp()
       const userStore = useUserStore($pinia)
       const chatStore = useChatStore($pinia)

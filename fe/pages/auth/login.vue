@@ -150,10 +150,14 @@
     try {
       isLoading.value = true
 
-      const data = await useMyAuthFetch('auth/login', {
-        method: 'POST',
-        body: { email, password },
-      })
+      const data = await useMyAuthFetch(
+        'auth/login',
+        {
+          method: 'POST',
+          body: { email, password },
+        },
+        true,
+      )
 
       if (!data._id) {
         throw new Error('Error')
