@@ -32,7 +32,7 @@ export class LifecycleGateway
   }
 
   async handleConnection(client: any, ...args: any[]) {
-    const decodedAuthToken = this.getDecodedAuthToken(client)
+    const decodedAuthToken = this.getDecodedAuthToken(args)
 
     if (!decodedAuthToken) {
       client.close()
@@ -47,12 +47,15 @@ export class LifecycleGateway
     this.wsClientManager.removeConnection(client)
   }
 
-  getDecodedAuthToken(client: any): DecodedAuthToken {
+  getDecodedAuthToken(args: any[]): DecodedAuthToken {
     let decodedJwt: DecodedAuthToken = null
 
     try {
-      if (client.protocol) {
-        decodedJwt = this.jwtService.verify(client.protocol, {
+      const cookieHeader: string = args[0]?.headers?.cookie ?? ''
+      const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/)
+      const token = match ? decodeURIComponent(match[1]) : null
+      if (token) {
+        decodedJwt = this.jwtService.verify(token, {
           secret: this.configService.get<string>('app.jwtSecretKey'),
         })
       }
