@@ -31,9 +31,12 @@
 
     <div class="flex flex-col mt-6 gap-5">
       <div class="flex flex-col gap-1">
-        <label class="uppercase text-xs font-semibold dark:text-zinc-300">Set Passphrase</label>
+        <label for="set-passphrase" class="uppercase text-xs font-semibold dark:text-zinc-300"
+          >Set Passphrase</label
+        >
         <div class="relative">
           <input
+            id="set-passphrase"
             v-model="passphrase"
             :type="showPassphrase ? 'text' : 'password'"
             class="w-full text-lg border rounded-2xl py-3 pl-4 pr-12 font-medium bg-zinc-50 focus:bg-white focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:focus:bg-zinc-700"
@@ -57,9 +60,12 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="uppercase text-xs font-semibold dark:text-zinc-300">Confirm Passphrase</label>
+        <label for="confirm-passphrase" class="uppercase text-xs font-semibold dark:text-zinc-300"
+          >Confirm Passphrase</label
+        >
         <div class="relative">
           <input
+            id="confirm-passphrase"
             v-model="confirmPassphrase"
             :type="showConfirmPassphrase ? 'text' : 'password'"
             class="w-full text-lg border rounded-2xl py-3 pl-4 pr-12 font-medium bg-zinc-50 focus:bg-white focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:focus:bg-zinc-700"

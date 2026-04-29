@@ -1,11 +1,12 @@
 <template>
   <div class="mt-6">
     <div class="flex flex-col gap-1">
-      <label class="uppercase text-xs font-semibold dark:text-zinc-300"
+      <label for="passphrase" class="uppercase text-xs font-semibold dark:text-zinc-300"
         >Passphrase or Recovery Code</label
       >
       <div class="relative">
         <input
+          id="passphrase"
           v-model="passphrase"
           :type="showPassphrase ? 'text' : 'password'"
           class="w-full text-lg border border-zinc-300 rounded-2xl py-3 pl-4 pr-10 font-medium bg-zinc-50 focus:bg-white focus:outline-none focus:border-teal-600 dark:bg-zinc-800 dark:border-zinc-600 dark:text-zinc-100 dark:focus:bg-zinc-700 dark:placeholder-zinc-500"

@@ -1,8 +1,9 @@
 <template>
   <form @submit.prevent="submit">
     <div class="flex flex-col gap-1 mt-6">
-      <label class="uppercase text-xs font-semibold dark:text-zinc-300">E-mail</label>
+      <label for="email" class="uppercase text-xs font-semibold dark:text-zinc-300">E-mail</label>
       <input
+        id="email"
         v-model="form.email"
         type="email"
         class="text-lg border rounded-2xl py-3 px-4 font-medium bg-slate-50 focus:bg-white focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:focus:bg-zinc-700 dark:placeholder-zinc-500"
@@ -16,9 +17,12 @@
     </div>
 
     <div class="flex flex-col gap-1 mt-6">
-      <label class="uppercase text-xs font-semibold dark:text-zinc-300">Password</label>
+      <label for="password" class="uppercase text-xs font-semibold dark:text-zinc-300"
+        >Password</label
+      >
       <div class="relative">
         <input
+          id="password"
           v-model="form.password"
           :type="showPassword ? 'text' : 'password'"
           class="w-full text-lg border rounded-2xl py-3 pl-4 pr-10 font-medium bg-zinc-50 focus:bg-white focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:focus:bg-zinc-700 dark:placeholder-zinc-500"
