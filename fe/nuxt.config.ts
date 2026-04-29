@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/image',
     '@nuxt/eslint',
+    '@nuxt/test-utils/module',
   ],
   icon: {
     collections: ['ic', 'mdi'],
