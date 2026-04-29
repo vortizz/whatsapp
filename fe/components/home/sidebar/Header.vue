@@ -20,6 +20,7 @@
     <div class="flex flex-row gap-2.5 items-center justify-center">
       <div>
         <button
+          aria-label="New chat"
           class="flex items-center text-2xl p-2 rounded-full hover:bg-stone-100 dark:hover:bg-white/5 text-neutral-950 dark:text-zinc-50"
           @click="$emit('opennewchat')"
         >
@@ -29,6 +30,7 @@
       <div class="relative inline-block">
         <div>
           <button
+            aria-label="overflow-menu-sidebar"
             type="button"
             class="flex items-center text-2xl p-2 rounded-full hover:bg-stone-100 dark:hover:bg-white/5 duration-100 leading-none text-neutral-950 dark:text-zinc-50"
             @click="isMenuButton = !isMenuButton"
@@ -61,6 +63,7 @@
               <button
                 type="button"
                 class="flex items-center gap-2 px-2 py-3 hover:text-rose-700 dark:hover:text-rose-300 w-full hover:bg-rose-600/10 dark:hover:bg-rose-500/10 rounded-xl"
+                aria-label="logout"
                 @click="signout"
               >
                 <Icon name="material-symbols:logout-rounded" class="text-lg" />

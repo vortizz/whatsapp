@@ -36,6 +36,7 @@
         <textarea
           ref="rInput"
           v-model="message"
+          aria-label="new-msg"
           placeholder="Type a message"
           rows="1"
           class="flex-1 w-full text-sm text-neutral-950 dark:placeholder:text-white/60 dark:text-white rounded-3xl py-3.5 pr-5 pl-2 focus:outline-none placeholder:text-gray-600 caret-emerald-500 dark:bg-neutral-800 resize-none overflow-hidden leading-normal"
@@ -47,6 +48,7 @@
         <div v-if="message.trim()" class="p-1 flex-none flex items-center">
           <button
             v-if="!isLoading"
+            aria-label="send-msg"
             type="submit"
             :disabled="!message.trim()"
             class="flex items-center text-2xl p-2 h-full leading-none rounded-full text-white dark:text-neutral-950 bg-emerald-500 hover:bg-emerald-600 transition-colors"

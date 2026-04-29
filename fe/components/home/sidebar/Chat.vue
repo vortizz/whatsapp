@@ -1,5 +1,7 @@
 <template>
   <div
+    role="button"
+    :aria-label="name"
     class="flex flex-row px-3.5 pt-3.5 gap-3.5 group cursor-pointer rounded-xl hover:bg-gray-100 dark:hover:bg-stone-400/15"
     :class="active ? 'bg-gray-100 dark:bg-stone-400/15' : ''"
     @contextmenu.prevent="openMenuAtPointer"

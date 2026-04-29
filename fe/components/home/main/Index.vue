@@ -1,5 +1,8 @@
 <template>
-  <main class="flex-2 bg-[#efeae2] dark:bg-neutral-900/90 flex flex-col relative">
+  <main
+    aria-label="main-panel-chat"
+    class="flex-2 bg-[#efeae2] dark:bg-neutral-900/90 flex flex-col relative"
+  >
     <header>
       <HomeMainHeader
         @show-contact-info="emit('showContactInfo')"

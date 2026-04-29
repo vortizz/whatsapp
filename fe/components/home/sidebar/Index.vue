@@ -1,5 +1,6 @@
 <template>
   <aside
+    aria-label="main-sidebar"
     class="flex-1 min-w-80 bg-white border-r border-gray-200 dark:border-black/80 flex flex-col"
   >
     <header class="sticky top-0 z-10">

@@ -15,6 +15,7 @@
       </div>
       <input
         ref="rtextinput"
+        aria-label="search-name"
         type="text"
         placeholder="Search name"
         class="bg-transparent text-sm flex-1 text-neutral-950 placeholder:text-slate-500 dark:placeholder:text-white/60 h-full outline-none dark:text-zinc-50"

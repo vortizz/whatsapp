@@ -17,7 +17,7 @@
           :key="u._id"
           :name="u.name"
           :about="u.about"
-          @click="setUser(u)"
+          @select-user="setUser(u)"
         />
       </template>
     </div>
@@ -75,7 +75,7 @@
                 //   publicKey: user.publicKey,
                 // },
                 createdAt: user.chat.createdAt,
-                encryptedKey: user.chat.encryptedKey,
+                encryptedKeys: user.chat.encryptedKeys,
               }
             : null,
         })),
@@ -128,7 +128,7 @@
         user,
       ],
       createdAt: chat?.createdAt,
-      encryptedKey: chat?.encryptedKey,
+      encryptedKeys: chat?.encryptedKeys,
     })
     emit('close')
   }

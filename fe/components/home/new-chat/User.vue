@@ -1,6 +1,9 @@
 <template>
   <div
+    :aria-label="name"
+    role="button"
     class="flex flex-row mx-2.5 px-3.5 pt-3.5 gap-3.5 hover:bg-stone-400/15 rounded-xl group cursor-pointer"
+    @click="emit('select-user')"
   >
     <div>
       <AvatarPlaceholder :size="48" :name="name" />
@@ -22,10 +25,9 @@
   </div>
 </template>
 
-<script>
-  export default {
-    props: ['name', 'about'],
-  }
+<script setup>
+  defineProps(['name', 'about'])
+  const emit = defineEmits(['select-user'])
 </script>
 
 <style></style>

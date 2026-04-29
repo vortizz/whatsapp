@@ -1,5 +1,6 @@
 <template>
   <aside
+    aria-label="new-chat-sidebar"
     class="flex-1 min-w-80 bg-gray-100 border-r border-gray-200 dark:border-black/80 flex flex-col"
   >
     <header class="sticky top-0">

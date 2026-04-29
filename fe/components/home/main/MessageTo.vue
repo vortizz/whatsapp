@@ -50,7 +50,10 @@
       </div>
       <div class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{{ replyTo.text }}</div>
     </div>
-    <div class="text-sm text-neutral-950 dark:text-white whitespace-pre-wrap">
+    <div
+      data-testid="message-bubble"
+      class="text-sm text-neutral-950 dark:text-white whitespace-pre-wrap"
+    >
       {{ text
       }}<span class="inline-flex items-end gap-0.5 ml-1.5 float-right translate-y-[2px]">
         <span class="text-[11px] text-black/60 dark:text-white/60 whitespace-nowrap">{{
