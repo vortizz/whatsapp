@@ -25,13 +25,17 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
       }),
       inject: [ConfigService],
     }),
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: 60000,
-        limit: 60,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          name: 'default',
+          ttl: config.get<number>('app.throttle.ttl'),
+          limit: config.get<number>('app.throttle.limit'),
+        },
+      ],
+    }),
     UserModule,
     AuthModule,
     ChatModule,

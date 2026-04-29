@@ -6,13 +6,11 @@ import { BlockUserDto } from './dtos/block-user.dto'
 import { Auth } from 'src/common/decorator/auth.decorator'
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { AuthUser } from 'src/common/decorator/user.decorator'
-import { Throttle } from '@nestjs/throttler'
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
     return await this.userService.create(createUserDto)
@@ -57,7 +55,6 @@ export class UserController {
     return await this.userService.update(updateUserDto._id, updateUserDto)
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Auth()
   @Post('/block')
   async blockUser(@AuthUser() user: User, @Body() blockUserDto: BlockUserDto): Promise<User> {

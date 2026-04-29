@@ -33,7 +33,8 @@ export class UserService {
       ...createUserInput,
       password: hash,
     })
-    return await createdUser.save()
+    await createdUser.save()
+    return this.findById(createdUser._id)
   }
 
   async getAll(): Promise<User[]> {

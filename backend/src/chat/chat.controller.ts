@@ -7,7 +7,6 @@ import { User } from 'src/user/entities/user.schema'
 import { CreateChatDto } from './dtos/create-chat.dto'
 import { CreateGroupChatDto } from './dtos/create-group-chat.dto'
 import { AddMemberGroupChatDto } from './dtos/add-member-group-chat.dto'
-import { Throttle } from '@nestjs/throttler'
 
 @Controller('chat')
 export class ChatController {
@@ -19,7 +18,6 @@ export class ChatController {
     return await this.chatService.findByUser(user, username)
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Auth()
   @Post()
   async create(@AuthUser() user: User, @Body() createChatDto: CreateChatDto): Promise<Chat> {
@@ -28,7 +26,6 @@ export class ChatController {
     return await this.chatService.create([user, userWith], createChatDto.encryptedKeys)
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Auth()
   @Post('group')
   async createGroup(@AuthUser() user: User, @Body() dto: CreateGroupChatDto): Promise<Chat> {
