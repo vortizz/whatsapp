@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center gap-8 px-6 pt-10">
+  <div aria-label="add-group-name" class="flex flex-col items-center gap-8 px-6 pt-10">
     <!-- Group icon placeholder -->
     <div
       class="w-24 h-24 rounded-full bg-stone-300 dark:bg-neutral-600 flex flex-col items-center justify-center gap-1 text-white cursor-default select-none"
@@ -12,6 +12,7 @@
       <input
         ref="nameInput"
         v-model="groupName"
+        aria-label="group-name"
         type="text"
         placeholder="Group subject (optional)"
         maxlength="100"
@@ -23,6 +24,7 @@
 
     <!-- Create button -->
     <button
+      aria-label="create-group"
       class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center text-2xl shadow-md hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       :disabled="loading"
       @click="create"

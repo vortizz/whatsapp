@@ -1,5 +1,6 @@
 <template>
   <aside
+    aria-label="new-group-sidebar"
     class="flex-1 min-w-80 bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-black/80 flex flex-col"
   >
     <header class="sticky top-0 z-10">
@@ -26,6 +27,7 @@
     <!-- Next button (step 1) -->
     <div v-if="step === 1 && selectedUsers.length > 0" class="flex justify-center pb-6 pt-2">
       <button
+        aria-label="selected-users"
         class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center text-2xl shadow-md hover:bg-emerald-600 transition-colors"
         @click="step = 2"
       >

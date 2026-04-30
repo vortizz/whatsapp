@@ -292,7 +292,6 @@
 
   async function newChat(message) {
     const isMine = getUserId(message.from) === userId.value
-    const isGroup = message.isGroup
 
     let text = message.text
     if (message.iv) {
@@ -310,7 +309,7 @@
 
     const chat = {
       _id: message.chat._id,
-      isGroup: isGroup,
+      isGroup: message.chat.isGroup,
       name: message.chat.name,
       description: message.chat.description,
       users: message.chat.users,

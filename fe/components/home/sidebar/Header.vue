@@ -53,6 +53,7 @@
           >
             <div class="p-1">
               <button
+                aria-label="new-group"
                 type="button"
                 class="flex items-center gap-2 px-2 py-3 hover:text-neutral-950 dark:hover:text-white w-full hover:bg-stone-100 dark:hover:bg-white/5 rounded-xl"
                 @mousedown.prevent="openNewGroup"

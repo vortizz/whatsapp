@@ -1,11 +1,12 @@
 <template>
-  <div>
+  <div aria-label="add-group-members">
     <!-- Selected chips + search input -->
     <div class="px-5 pb-3 pt-6 bg-white dark:bg-neutral-900 flex flex-wrap gap-1.5 items-center">
       <div
         v-for="user in selected"
         :key="user._id"
         class="flex items-center gap-2 rounded-full px-2 py-1"
+        :aria-label="`selected-${user.name}`"
       >
         <AvatarPlaceholder :size="26" :name="user.name" />
         <span class="text-base text-neutral-950 dark:text-white">{{ user.name }}</span>
@@ -19,6 +20,7 @@
     </div>
     <div class="w-full px-7 mt-2">
       <input
+        aria-label="group-search"
         type="text"
         :placeholder="selected?.length ? '' : 'Search name or number'"
         class="w-full bg-transparent text-sm border-b border-black/10 dark:border-white/10 placeholder:text-black/60 dark:placeholder:text-white/60 p-0.5 outline-none"
@@ -45,6 +47,7 @@
             :key="u._id"
             class="flex flex-row mx-2.5 px-3.5 pt-3.5 gap-3.5 hover:bg-stone-400/15 rounded-xl group cursor-pointer"
             :class="isSelected(u) ? 'bg-stone-400/10' : ''"
+            :aria-label="u.name"
             @click="toggle(u)"
           >
             <div class="relative">
