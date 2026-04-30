@@ -141,4 +141,56 @@ describe('ChatService', () => {
       expect(result.name).toBe('New Name')
     })
   })
+
+  describe('removeGroupMember', () => {
+    it('should throw BadRequestException when chat does not exist', async () => {
+      mockChatModel.findById.mockResolvedValue(null)
+
+      await expect(service.removeGroupMember('chat-id', 'user-2', mockUser1)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
+
+    it('should throw BadRequestException when user does not belong to the chat', async () => {
+      mockChatModel.findById.mockResolvedValue({
+        _id: 'chat-id',
+        users: [{ _id: { toString: () => 'user-1' } }],
+        groupAdmins: [{ _id: { toString: () => 'user-1' } }],
+      })
+
+      await expect(service.removeGroupMember('chat-id', 'user-2', mockUser1)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
+
+    it('should throw BadRequestException when caller is not admin', async () => {
+      mockChatModel.findById.mockResolvedValue({
+        _id: 'chat-id',
+        users: [{ _id: { toString: () => 'user-1' } }, { _id: { toString: () => 'user-2' } }],
+        groupAdmins: [{ _id: { toString: () => 'user-2' } }],
+      })
+
+      await expect(service.removeGroupMember('chat-id', 'user-2', mockUser1)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
+
+    it('should remove the member successfully', async () => {
+      const mockChat = {
+        _id: 'chat-id',
+        users: [{ _id: { toString: () => 'user-1' } }, { _id: { toString: () => 'user-2' } }],
+        groupAdmins: [{ _id: { toString: () => 'user-1' } }],
+      }
+      mockChatModel.findById.mockResolvedValue(mockChat)
+      mockChatEventSave.mockResolvedValue({ _id: 'event-id' })
+      mockChatEventModel.findById.mockResolvedValue({ _id: 'event-id' })
+      const updatedChat = { ...mockChat, users: [{ _id: { toString: () => 'user-1' } }] }
+      mockChatModel.findByIdAndUpdate.mockResolvedValue(updatedChat)
+
+      const result = await service.removeGroupMember('chat-id', 'user-2', mockUser1)
+
+      expect(mockChatModel.findByIdAndUpdate).toHaveBeenCalled()
+      expect(result).toEqual(updatedChat)
+    })
+  })
 })
