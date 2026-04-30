@@ -9,6 +9,7 @@ jest.mock('bcrypt')
 const mockUserService = {
   findByEmail: jest.fn(),
   getSensitivePropsByIds: jest.fn(),
+  updateToken: jest.fn(),
 }
 
 const mockJwtService = {
@@ -64,6 +65,21 @@ describe('AuthService', () => {
       const result = await service.validateUser('test@email.com', 'correctpassword')
 
       expect(result).toEqual(mockUser)
+    })
+  })
+
+  describe('login', () => {
+    it('should sign a JWT token and update the user token', async () => {
+      const mockUser = { _id: 'user-id-1', email: 'test@email.com' }
+      const mockToken = 'signed-jwt-token'
+      mockJwtService.sign.mockReturnValue(mockToken)
+      mockUserService.updateToken.mockResolvedValue({ ...mockUser, token: mockToken })
+
+      const result = await service.login({ id: 'user-id-1', email: 'test@email.com' })
+
+      expect(mockJwtService.sign).toHaveBeenCalledWith({ id: 'user-id-1', email: 'test@email.com' })
+      expect(mockUserService.updateToken).toHaveBeenCalledWith('user-id-1', mockToken)
+      expect(result.token).toBe(mockToken)
     })
   })
 })
