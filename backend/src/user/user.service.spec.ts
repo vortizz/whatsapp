@@ -11,10 +11,14 @@ jest.mock('bcrypt')
 
 const mockSave = jest.fn()
 
-const mockUserModel: any = jest.fn().mockImplementation(() => ({ save: mockSave }))
-mockUserModel.findOne = jest.fn()
-mockUserModel.findById = jest.fn()
-mockUserModel.findByIdAndUpdate = jest.fn()
+const mockUserModel: any = Object.assign(
+  jest.fn().mockImplementation(() => ({ save: mockSave })),
+  {
+    findOne: jest.fn(),
+    findById: jest.fn(),
+    findByIdAndUpdate: jest.fn(),
+  },
+)
 
 const mockConfigService = {
   get: jest.fn().mockReturnValue(10),
@@ -39,6 +43,9 @@ describe('UserService', () => {
   let service: UserService
 
   beforeEach(async () => {
+    mockUserModel.mockImplementation(() => ({ save: mockSave }))
+    jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never)
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
@@ -65,18 +72,17 @@ describe('UserService', () => {
     })
 
     it('should hash the password and create the user', async () => {
+      const savedUser = { ...baseCreateUserDto, _id: 'new-user', password: 'hashed-password' }
+
       mockUserModel.findOne.mockResolvedValue(null)
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never)
-      mockSave.mockResolvedValue({
-        ...baseCreateUserDto,
-        _id: 'new-user',
-        password: 'hashed-password',
-      })
+      mockSave.mockResolvedValue(savedUser)
+      mockUserModel.findById.mockResolvedValue(savedUser)
 
       const result = await service.create(baseCreateUserDto)
 
       expect(bcrypt.hash).toHaveBeenCalled()
-      expect(result.password).toBe('hashed-password')
+      expect(result).toBeDefined()
+      expect(result._id).toBe('new-user')
     })
   })
 
@@ -121,6 +127,50 @@ describe('UserService', () => {
     })
   })
 
+  describe('unblockUser', () => {
+    it('should throw BadRequestException when user tries to unblock themselves', async () => {
+      await expect(service.unblockUser('same-id', 'same-id')).rejects.toThrow(BadRequestException)
+    })
+
+    it('should throw NotFoundException when the unblocking user does not exist', async () => {
+      mockUserModel.findById.mockResolvedValueOnce(null).mockResolvedValueOnce({ _id: 'user-2' })
+
+      await expect(service.unblockUser('missing-id', 'user-2')).rejects.toThrow(NotFoundException)
+    })
+
+    it('should throw NotFoundException when user to unblock does not exist', async () => {
+      mockUserModel.findById
+        .mockResolvedValueOnce({ _id: 'user-1', blockedUsers: [] })
+        .mockResolvedValueOnce(null)
+
+      await expect(service.unblockUser('user-1', 'missing-id')).rejects.toThrow(NotFoundException)
+    })
+
+    it('should throw BadRequestException when user is not blocked', async () => {
+      mockUserModel.findById
+        .mockResolvedValueOnce({ _id: 'user-1', blockedUsers: [] })
+        .mockResolvedValueOnce({ _id: 'user-2' })
+
+      await expect(service.unblockUser('user-1', 'user-2')).rejects.toThrow(BadRequestException)
+    })
+
+    it('should unblock the user successfully', async () => {
+      const updatedUser = { _id: 'user-1', blockedUsers: [] }
+      mockUserModel.findById
+        .mockResolvedValueOnce({
+          _id: 'user-1',
+          blockedUsers: [{ toString: () => 'user-2' }],
+        })
+        .mockResolvedValueOnce({ _id: 'user-2' })
+      mockUserModel.findByIdAndUpdate.mockResolvedValue(updatedUser)
+
+      const result = await service.unblockUser('user-1', 'user-2')
+
+      expect(mockUserModel.findByIdAndUpdate).toHaveBeenCalled()
+      expect(result).toEqual(updatedUser)
+    })
+  })
+
   describe('update', () => {
     it('should throw NotFoundException when user does not exist', async () => {
       mockUserModel.findById.mockResolvedValue(null)
@@ -142,7 +192,6 @@ describe('UserService', () => {
     it('should hash the password when updating it', async () => {
       mockUserModel.findById.mockResolvedValue({ _id: 'user-id-1' })
       mockUserModel.findOne.mockResolvedValue({ _id: 'user-id-1' })
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-new-password' as never)
       mockUserModel.findByIdAndUpdate.mockResolvedValue({ _id: 'user-id-1', name: 'Victor' })
 
       await service.update('user-id-1', { _id: 'user-id-1', password: 'newpassword' })
