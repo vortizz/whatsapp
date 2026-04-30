@@ -120,4 +120,45 @@ describe('UserService', () => {
       expect(result).toEqual(updatedUser)
     })
   })
+
+  describe('update', () => {
+    it('should throw NotFoundException when user does not exist', async () => {
+      mockUserModel.findById.mockResolvedValue(null)
+
+      await expect(
+        service.update('user-id-1', { _id: 'user-id-1', name: 'New Name' }),
+      ).rejects.toThrow(NotFoundException)
+    })
+
+    it('should throw BadRequestException when email belongs to a different user', async () => {
+      mockUserModel.findById.mockResolvedValue({ _id: 'user-id-1' })
+      mockUserModel.findOne.mockResolvedValue({ _id: 'user-id-2' })
+
+      await expect(
+        service.update('user-id-1', { _id: 'user-id-1', email: 'taken@email.com' }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('should hash the password when updating it', async () => {
+      mockUserModel.findById.mockResolvedValue({ _id: 'user-id-1' })
+      mockUserModel.findOne.mockResolvedValue({ _id: 'user-id-1' })
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-new-password' as never)
+      mockUserModel.findByIdAndUpdate.mockResolvedValue({ _id: 'user-id-1', name: 'Victor' })
+
+      await service.update('user-id-1', { _id: 'user-id-1', password: 'newpassword' })
+
+      expect(bcrypt.hash).toHaveBeenCalled()
+    })
+
+    it('should update and return the user', async () => {
+      const updatedUser = { _id: 'user-id-1', name: 'New Name' }
+      mockUserModel.findById.mockResolvedValue({ _id: 'user-id-1' })
+      mockUserModel.findOne.mockResolvedValue(null)
+      mockUserModel.findByIdAndUpdate.mockResolvedValue(updatedUser)
+
+      const result = await service.update('user-id-1', { _id: 'user-id-1', name: 'New Name' })
+
+      expect(result).toEqual(updatedUser)
+    })
+  })
 })
