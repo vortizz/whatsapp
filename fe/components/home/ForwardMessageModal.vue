@@ -3,6 +3,7 @@
     <div
       v-if="isOpen"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5"
+      aria-label="forward-message-modal"
       @click.self="closeModal"
     >
       <div
@@ -12,6 +13,7 @@
         <!-- Header -->
         <div class="flex items-center gap-1 px-2.5 pt-3 pb-2">
           <button
+            aria-label="close-forward-modal"
             class="p-2 rounded-full text-neutral-500 hover:bg-stone-400/10 dark:text-white/70 dark:hover:bg-white/5 text-2xl flex items-center"
             @click="closeModal"
           >
@@ -47,6 +49,7 @@
             <button
               v-for="user in filteredUsers"
               :key="user._id"
+              :aria-label="`forward-to-${user.name}`"
               class="w-full rounded-xl flex items-center gap-3 px-4 py-3 transition-colors hover:bg-stone-400/10 dark:hover:bg-white/5"
               @click="toggleUser(user._id)"
             >
@@ -89,6 +92,7 @@
             selectedNames
           }}</span>
           <button
+            aria-label="forward-send-btn"
             :disabled="forwarding"
             class="shrink-0 p-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white dark:text-neutral-950 text-xl flex items-center disabled:opacity-50 transition-colors"
             @click="forward"

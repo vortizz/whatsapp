@@ -55,6 +55,7 @@
           </div>
           <button
             v-if="selectionMode === 'forward'"
+            aria-label="selection-forward-btn"
             :disabled="selectedIds.length === 0"
             class="p-2 rounded-full text-2xl flex items-center enabled:hover:bg-stone-100 dark:enabled:hover:bg-white/5 enabled:text-black dark:enabled:text-white disabled:opacity-40"
             @click="handleForward"

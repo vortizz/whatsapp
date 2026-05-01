@@ -55,6 +55,7 @@
           Copy
         </button>
         <button
+          aria-label="forward-btn"
           class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm"
           @click.stop="enterForward"
         >

@@ -43,6 +43,7 @@
     </span>
     <div
       v-if="forwarded"
+      aria-label="forwarded-tag"
       class="flex items-center gap-1 text-[11px] text-black/40 dark:text-white/40 italic mb-1"
     >
       <Icon name="mdi:share" class="text-sm" />
