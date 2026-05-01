@@ -75,7 +75,7 @@
       class="flex items-center gap-4 px-5 py-5 hover:bg-stone-100 dark:hover:bg-white/5 text-rose-600 dark:text-rose-400 transition-colors mx-2.5 rounded-xl"
       @click="openClearChatModal()"
     >
-      <Icon name="zondicons:minus-outline" class="text-2xl pl-10" />
+      <Icon name="ic:outline-remove-circle-outline" class="text-2xl pl-10" />
       <span class="text-base">Clear chat</span>
     </button>
     <button

@@ -20,7 +20,7 @@
       :disabled="isClearChatDisabled"
       @click="clearMessages"
     >
-      <Icon class="text-base" name="zondicons:minus-outline" />
+      <Icon class="text-base" name="ic:outline-remove-circle-outline" />
       <span class="text-sm">Clear chat</span>
     </button>
     <button

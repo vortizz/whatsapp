@@ -6,6 +6,20 @@ A full-stack WhatsApp Web clone built as a showcase project. Features real-time 
 
 ---
 
+## Screenshots
+
+### Dark Mode
+
+![Group chat](screenshots/group-chat-dark.png)
+![1:1 chat](screenshots/1on1-chat-dark.png.png)
+
+### Light Mode
+
+![Group chat light](screenshots/group-chat-light.png)
+![Group info](screenshots/group-chat-info-light.png)
+
+---
+
 ## Table of Contents
 
 - [About](#about)
@@ -22,7 +36,7 @@ A full-stack WhatsApp Web clone built as a showcase project. Features real-time 
 
 ## About
 
-This project replicates the core experience of WhatsApp Web is a real-time encrypted messaging between users, group chats, message status indicators, and a responsive UI that mirrors the original application. It was built as a technical showcase demonstrating full-stack development, WebSocket communication, cryptography, and professional testing practices.
+This project replicates the core experience of WhatsApp Web - real-time encrypted messaging between users, group chats, message status indicators, and a responsive UI that mirrors the original application. It was built as a technical showcase demonstrating full-stack development, WebSocket communication, cryptography, and professional testing practices.
 
 ---
 
@@ -107,7 +121,6 @@ This project replicates the core experience of WhatsApp Web is a real-time encry
 | Technology              | Purpose          |
 | ----------------------- | ---------------- |
 | Docker + Docker Compose | Containerisation |
-| MongoDB                 | Database         |
 | GitHub Actions          | CI pipeline      |
 
 ### Testing
@@ -127,8 +140,8 @@ This project replicates the core experience of WhatsApp Web is a real-time encry
 graph LR
     subgraph Client["🌐 Client (Browser)"]
         UI["Nuxt 4 + Vue 3 + Pinia"]
-        CRYPTO["Web Crypto API — E2EE"]
-        IDB["IndexedDB — private key storage"]
+        CRYPTO["Web Crypto API - E2EE"]
+        IDB["IndexedDB - private key storage"]
         WS_CLIENT["WebSocket client"]
     end
 

@@ -139,7 +139,7 @@
                     class="text-black/60 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm"
                     @click.stop="handleRemove(member)"
                   >
-                    <Icon name="zondicons:minus-outline" class="text-xl flex-none" />
+                    <Icon name="ic:outline-remove-circle-outline" class="text-xl flex-none" />
                     Remove
                   </button>
                 </template>

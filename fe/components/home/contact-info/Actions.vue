@@ -5,7 +5,7 @@
       :disabled="effectiveClearDisabled"
       @click="handleClearChat"
     >
-      <Icon name="zondicons:minus-outline" class="text-xl" />
+      <Icon name="ic:outline-remove-circle-outline" class="text-xl" />
       <span class="text-base">Clear chat</span>
     </button>
     <button
