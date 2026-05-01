@@ -28,6 +28,7 @@
       </div>
       <div>
         <button
+          aria-label="open-profile"
           class="p-2 rounded-full transition-colors"
           :class="currentPage === Pages.PROFILE ? activeButtonClass : inactiveButtonClass"
           @click="pageStore.setPage(Pages.PROFILE)"

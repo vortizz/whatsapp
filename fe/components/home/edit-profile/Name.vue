@@ -2,10 +2,11 @@
   <div class="px-7 pt-3.5 pb-2.5 flex flex-col gap-5">
     <label class="text-sm text-black/60 dark:text-white/60 font-semibold"> Name </label>
     <div v-if="!isEditing" class="flex flex-row justify-between items-center">
-      <span class="text-neutral-950 dark:text-white">
+      <span aria-label="current-name-user" class="text-neutral-950 dark:text-white">
         {{ name }}
       </span>
       <button
+        aria-label="edit-name"
         class="text-2xl text-neutral-950 dark:text-white/60 dark:hover:bg-neutral-800 rounded-full p-2 flex items-center hover:bg-stone-100 transition-colors"
         @click="startEditing"
       >
@@ -17,6 +18,7 @@
         <input
           ref="rname"
           v-model="text"
+          aria-label="name-input"
           type="text"
           maxlength="25"
           class="w-full py-1.5 pr-14 border-b-2 border-gray-700 dark:border-gray-500 focus:outline-none focus:border-emerald-500 bg-transparent dark:text-white"
@@ -25,10 +27,15 @@
           v-if="!loading"
           class="text-2xl text-gray-400 absolute right-0 inset-y-0 flex flex-row gap-0.5"
         >
-          <button class="text-2xl text-neutral-950 dark:text-white" @click="stopEditing">
+          <button
+            aria-label="cancel-name"
+            class="text-2xl text-neutral-950 dark:text-white"
+            @click="stopEditing"
+          >
             <Icon name="material-symbols:close" />
           </button>
           <button
+            aria-label="submit-name"
             type="submit"
             :disabled="disabledSubmit"
             class="text-2xl text-neutral-950 dark:text-white"

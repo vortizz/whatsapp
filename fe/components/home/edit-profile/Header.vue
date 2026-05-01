@@ -3,6 +3,7 @@
     <div class="flex flex-row items-center gap-4">
       <div>
         <button
+          aria-label="close-edit-profile"
           class="text-neutral-950 dark:text-white text-2xl flex items-center p-2 hover:bg-stone-100 dark:hover:bg-white/5 rounded-full transition-colors"
           @click="emit('close')"
         >

@@ -1,6 +1,8 @@
 <template>
   <div class="flex flex-col px-[18px]">
     <div
+      aria-label="open-edit-profile"
+      role="button"
       class="flex items-center py-3 px-2.5 dark:hover:bg-neutral-800 hover:bg-stone-100 rounded-xl cursor-pointer"
       @click="emit('openProfile')"
     >
@@ -15,6 +17,8 @@
       </div>
     </div>
     <div
+      aria-label="profile-logout"
+      role="button"
       class="flex items-center py-3 px-2.5 dark:hover:bg-[#321622] hover:bg-rose-100 rounded-xl cursor-pointer"
       @click="signout"
     >
