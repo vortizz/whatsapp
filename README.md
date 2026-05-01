@@ -123,28 +123,30 @@ This project replicates the core experience of WhatsApp Web is a real-time encry
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Client (Browser)                  │
-│                                                      │
-│   Nuxt 4 + Vue 3 + Pinia                           │
-│   Web Crypto API (E2EE)                             │
-│   IndexedDB (private key storage)                   │
-│   WebSocket client                                  │
-└─────────────┬───────────────────────────────────────┘
-              │ HTTP / WebSocket
-┌─────────────▼───────────────────────────────────────┐
-│                   NestJS Backend                     │
-│                                                      │
-│   REST API (auth, users, chats, messages)           │
-│   WebSocket Gateway (real-time events)              │
-│   JWT + Cookie authentication                       │
-│   Rate limiting                                     │
-└─────────────┬───────────────────────────────────────┘
-              │ Mongoose
-┌─────────────▼───────────────────────────────────────┐
-│                     MongoDB                          │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Client["Client (Browser)"]
+        UI["Nuxt 4 + Vue 3 + Pinia"]
+        CRYPTO["Web Crypto API (E2EE)"]
+        IDB["IndexedDB (private key storage)"]
+        WS_CLIENT["WebSocket client"]
+    end
+
+    subgraph Backend["NestJS Backend"]
+        REST["REST API\n(auth, users, chats, messages)"]
+        WS_GATEWAY["WebSocket Gateway\n(real-time events)"]
+        AUTH["JWT + Cookie authentication"]
+        RATE["Rate limiting"]
+    end
+
+    subgraph DB["Database"]
+        MONGO["MongoDB"]
+    end
+
+    Client -->|"HTTP"| REST
+    Client -->|"WebSocket"| WS_GATEWAY
+    REST --> MONGO
+    WS_GATEWAY --> MONGO
 ```
 
 ---
