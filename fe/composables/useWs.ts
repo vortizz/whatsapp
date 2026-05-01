@@ -14,21 +14,18 @@ export function useWs() {
       ? baseUrlWs
       : `${baseUrlWs.replace(/\/$/, '')}${WS_ENTRYPOINT_PATH}`
 
-    if (conn.value && ([WebSocket.CONNECTING, WebSocket.OPEN] as number[]).includes(conn.value.readyState)) {
+    if (
+      conn.value &&
+      ([WebSocket.CONNECTING, WebSocket.OPEN] as number[]).includes(conn.value.readyState)
+    ) {
       return
     }
 
     conn.value = new WebSocket(wsUrl)
 
-    conn.value.onopen = () => {
-      console.log('WebSocket connection established')
-    }
-    conn.value.onerror = (event: Event) => {
-      console.error('WebSocket error:', event)
-    }
-    conn.value.onclose = (event: CloseEvent) => {
-      console.log('WebSocket connection closed:', event)
-    }
+    conn.value.onopen = () => {}
+    conn.value.onerror = () => {}
+    conn.value.onclose = () => {}
     conn.value.onmessage = async (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data)
