@@ -45,7 +45,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: fe
-        run: npm ci
+        run: npm install
 
       - name: Run unit tests
         working-directory: fe
@@ -99,7 +99,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: fe
-        run: npm ci
+        run: npm install
 
       - name: Install Playwright browsers
         working-directory: fe
