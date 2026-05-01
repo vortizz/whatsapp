@@ -9,6 +9,7 @@
       <span class="text-base">Clear chat</span>
     </button>
     <button
+      :aria-label="isBlockedUser ? 'unblock-user' : 'block-user'"
       class="enabled:text-rose-700 enabled:dark:text-rose-300 text-left py-4 px-7 p flex flex-row items-center gap-5 enabled:hover:bg-stone-100 transition-colors rounded-xl enabled:dark:hover:bg-neutral-800 disabled:text-neutral-950 disabled:opacity-35 disabled:cursor-not-allowed disabled:dark:text-neutral-400"
       :disabled="isBlockedUser ? isUnblockUserDisabled : isBlockUserDisabled"
       @click="isBlockedUser ? openUnblockModal(props.member ?? undefined) : handleBlockUser()"

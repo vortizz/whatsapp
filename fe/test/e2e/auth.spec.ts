@@ -28,9 +28,11 @@ async function login(page: Page, email: string, password: string) {
   await page.getByRole('button', { name: 'Login' }).click()
 }
 
+const timestamp = Date.now()
+
 // Test data
 const userOne = {
-  name: 'Victor Test',
+  name: `VA ${timestamp}`,
   email: `victor.${Date.now()}@test.com`,
   password: 'Password123',
   passphrase: 'my-secret-passphrase',

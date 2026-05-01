@@ -24,6 +24,7 @@
             Cancel
           </button>
           <button
+            aria-label="confirm-block"
             class="rounded-full bg-rose-600 dark:bg-rose-500 px-6 py-2.5 text-sm font-semibold text-white dark:text-neutral-950 transition-colors hover:bg-rose-700 dark:hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-35"
             :disabled="isBlockUserDisabled"
             @click="confirmBlockUser"

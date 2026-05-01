@@ -20,6 +20,7 @@
             Cancel
           </button>
           <button
+            aria-label="confirm-unblock"
             class="rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-35 dark:text-neutral-950"
             :disabled="isUnblockUserDisabled"
             @click="confirmUnblockUser"

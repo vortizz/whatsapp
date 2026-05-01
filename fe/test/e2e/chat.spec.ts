@@ -39,7 +39,7 @@ async function login(page: Page, user: { email: string; password: string; passph
   await page.getByLabel('Passphrase or Recovery Code').fill(user.passphrase)
   await page.getByRole('button', { name: 'Confirm' }).click()
 
-  await page.waitForURL('/', { timeout: 15000 })
+  await page.waitForURL('/')
 }
 
 async function logout(page: Page) {
@@ -51,14 +51,14 @@ async function logout(page: Page) {
 const timestamp = Date.now()
 
 const userOne = {
-  name: 'Victor E2E',
+  name: `VC ${timestamp}`,
   email: `victor.${timestamp}@test.com`,
   password: 'Password123',
   passphrase: 'passphrase-one',
 }
 
 const userTwo = {
-  name: 'Caren E2E',
+  name: `CC ${timestamp}`,
   email: `caren.${timestamp}@test.com`,
   password: 'Password456',
   passphrase: 'passphrase-two',

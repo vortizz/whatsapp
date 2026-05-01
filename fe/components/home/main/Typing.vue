@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="send">
+  <form aria-label="typing-form" @submit.prevent="send">
     <div v-if="replyTo" class="flex items-center gap-2 px-4 bg-[#efeae2] dark:bg-neutral-900/5">
       <div class="w-full px-2 bg-white dark:bg-neutral-800 pt-2 rounded-t-xl shadow-md">
         <div
