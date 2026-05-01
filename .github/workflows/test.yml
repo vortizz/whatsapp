@@ -40,8 +40,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-          cache-dependency-path: fe/package-lock.json
 
       - name: Install dependencies
         working-directory: fe
@@ -63,8 +61,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-          cache-dependency-path: fe/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: fe
+        run: npm install
+
+      - name: Install Playwright browsers
+        working-directory: fe
+        run: npx playwright install chromium --with-deps
 
       - name: Create .env file
         run: |
@@ -96,14 +100,6 @@ jobs:
             echo "Attempt $i/30..."
             sleep 5
           done
-
-      - name: Install frontend dependencies
-        working-directory: fe
-        run: npm install
-
-      - name: Install Playwright browsers
-        working-directory: fe
-        run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
         working-directory: fe
