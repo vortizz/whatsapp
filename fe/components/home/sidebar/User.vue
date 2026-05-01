@@ -16,10 +16,8 @@
   </div>
 </template>
 
-<script>
-  export default {
-    props: ['name', 'about'],
-  }
+<script setup>
+  defineProps(['name', 'about'])
 </script>
 
 <style></style>

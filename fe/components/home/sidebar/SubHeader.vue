@@ -84,48 +84,28 @@
   </div>
 </template>
 
-<script>
+<script setup>
   import { useChatStore } from '../../../store/chat'
   import { storeToRefs } from 'pinia'
 
-  export default {
-    emits: ['settext', 'setunreadChats', 'setgroupChats'],
-    setup() {
-      const chatStore = useChatStore()
-      const { unreadMessagesCount } = storeToRefs(chatStore)
-      return { unreadMessagesCount }
-    },
-    data() {
-      return {
-        isSearching: false,
-        text: '',
-        debouncedInput: debounce((e) => (this.text = e.target.value), 500),
-        filter: 'all',
-      }
-    },
-    watch: {
-      // isSearching: {
-      //   handler(newValue) {
-      //     if (newValue) {
-      //       return this.$refs.rtextinput.focus()
-      //     }
-      //     this.text = ''
-      //     return this.$refs.rtextinput.blur()
-      //   }
-      // },
-      text: {
-        handler(newValue) {
-          this.$emit('settext', newValue)
-        },
-      },
-    },
-    methods: {
-      setFilter(value) {
-        this.filter = value
-        this.$emit('setunreadChats', value === 'unread')
-        this.$emit('setgroupChats', value === 'groups')
-      },
-    },
+  const emit = defineEmits(['settext', 'setunreadChats', 'setgroupChats'])
+
+  const { unreadMessagesCount } = storeToRefs(useChatStore())
+
+  const isSearching = ref(false)
+  const text = ref('')
+  const filter = ref('all')
+
+  const debouncedInput = debounce((e) => (text.value = e.target.value), 500)
+
+  watch(text, (newValue) => {
+    emit('settext', newValue)
+  })
+
+  function setFilter(value) {
+    filter.value = value
+    emit('setunreadChats', value === 'unread')
+    emit('setgroupChats', value === 'groups')
   }
 </script>
 

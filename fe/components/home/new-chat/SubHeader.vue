@@ -36,33 +36,26 @@
   </div>
 </template>
 
-<script>
-  export default {
-    emits: ['settext'],
-    data() {
-      return {
-        isSearching: false,
-        text: '',
-        debouncedInput: debounce((e) => (this.text = e.target.value), 500),
-      }
-    },
-    watch: {
-      isSearching: {
-        handler(newValue) {
-          if (newValue) {
-            return this.$refs.rtextinput.focus()
-          }
-          this.text = ''
-          return this.$refs.rtextinput.blur()
-        },
-      },
-      text: {
-        handler(newValue) {
-          this.$emit('settext', newValue)
-        },
-      },
-    },
-  }
+<script setup>
+  const emit = defineEmits(['settext'])
+
+  const isSearching = ref(false)
+  const text = ref('')
+  const rtextinput = useTemplateRef('rtextinput')
+
+  const debouncedInput = debounce((e) => (text.value = e.target.value), 500)
+
+  watch(isSearching, (newValue) => {
+    if (newValue) {
+      return rtextinput.value.focus()
+    }
+    text.value = ''
+    return rtextinput.value.blur()
+  })
+
+  watch(text, (newValue) => {
+    emit('settext', newValue)
+  })
 </script>
 
 <style scoped></style>
