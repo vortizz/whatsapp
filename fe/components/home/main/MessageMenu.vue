@@ -2,6 +2,7 @@
   <div class="absolute right-1 top-1 z-10">
     <button
       ref="btnRef"
+      aria-label="message-menu-toggle"
       type="button"
       class="flex items-center rounded-full p-0.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100"
       :class="buttonClass"
@@ -23,6 +24,7 @@
         :class="menuPositionClass"
       >
         <button
+          aria-label="reply-btn"
           class="text-neutral-950 w-full text-left px-4 py-2 hover:bg-stone-400/10 flex items-center gap-3 rounded-xl dark:text-zinc-50 text-sm"
           @click.stop="reply"
         >

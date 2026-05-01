@@ -34,6 +34,7 @@
     </div>
     <div
       v-if="replyTo"
+      aria-label="reply-reference"
       class="mb-1.5 rounded-md overflow-hidden border-l-4 bg-black/5 dark:bg-white/5 px-2 py-2 cursor-pointer"
       :class="replyTo.isMine ? 'border-emerald-600' : 'border-amber-500'"
       @click.stop="$emit('scroll-to', replyTo)"

@@ -1,6 +1,10 @@
 <template>
   <form aria-label="typing-form" @submit.prevent="send">
-    <div v-if="replyTo" class="flex items-center gap-2 px-4 bg-[#efeae2] dark:bg-neutral-900/5">
+    <div
+      v-if="replyTo"
+      aria-label="reply-preview"
+      class="flex items-center gap-2 px-4 bg-[#efeae2] dark:bg-neutral-900/5"
+    >
       <div class="w-full px-2 bg-white dark:bg-neutral-800 pt-2 rounded-t-xl shadow-md">
         <div
           class="flex-1 flex items-center gap-2 rounded-xl bg-neutral-100 dark:bg-neutral-900/50 px-3 py-2 border-l-4 border-emerald-500 min-w-0"
@@ -16,6 +20,7 @@
             </div>
           </div>
           <button
+            aria-label="cancel-reply"
             type="button"
             class="flex items-center p-2 rounded-full text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 flex-none"
             @click="clearReply"
