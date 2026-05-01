@@ -124,27 +124,25 @@ This project replicates the core experience of WhatsApp Web is a real-time encry
 ## Architecture
 
 ```mermaid
-graph TD
-    subgraph Client["Client (Browser)"]
+graph LR
+    subgraph Client["🌐 Client (Browser)"]
         UI["Nuxt 4 + Vue 3 + Pinia"]
-        CRYPTO["Web Crypto API (E2EE)"]
-        IDB["IndexedDB (private key storage)"]
+        CRYPTO["Web Crypto API — E2EE"]
+        IDB["IndexedDB — private key storage"]
         WS_CLIENT["WebSocket client"]
     end
 
-    subgraph Backend["NestJS Backend"]
-        REST["REST API\n(auth, users, chats, messages)"]
-        WS_GATEWAY["WebSocket Gateway\n(real-time events)"]
-        AUTH["JWT + Cookie authentication"]
+    subgraph Backend["⚙️ NestJS Backend"]
+        REST["REST API"]
+        WS_GATEWAY["WebSocket Gateway"]
+        AUTH["JWT + Cookie auth"]
         RATE["Rate limiting"]
     end
 
-    subgraph DB["Database"]
-        MONGO["MongoDB"]
-    end
+    MONGO[("🍃 MongoDB")]
 
-    Client -->|"HTTP"| REST
-    Client -->|"WebSocket"| WS_GATEWAY
+    UI -->|HTTP| REST
+    WS_CLIENT -->|WebSocket| WS_GATEWAY
     REST --> MONGO
     WS_GATEWAY --> MONGO
 ```
