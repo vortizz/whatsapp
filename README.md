@@ -1,12 +1,8 @@
-<div align="center">
-
 # WhatsApp Clone
 
 A full-stack real-time messaging app with end-to-end encryption
 
-![Tests](https://github.com/vortizz/whatsapp/actions/workflows/test.yml/badge.svg?branch=develop)
-
-</div>
+![Tests](https://github.com/vortizz/whatsapp/actions/workflows/test.yml/badge.svg?branch=master)
 
 ---
 
@@ -44,7 +40,7 @@ A full-stack real-time messaging app with end-to-end encryption
 
 ## About
 
-This project replicates the core experience of WhatsApp Web - real-time encrypted messaging between users, group chats, message status indicators, and a responsive UI that mirrors the original application. It was built as a technical showcase demonstrating full-stack development, WebSocket communication, cryptography, and professional testing practices.
+This project replicates the core experience of WhatsApp Web - real-time encrypted messaging between users, group chats, message status indicators, and a UI that mirrors the original application. It was built as a technical showcase demonstrating full-stack development, WebSocket communication, cryptography, and professional testing practices.
 
 ---
 
@@ -89,7 +85,6 @@ This project replicates the core experience of WhatsApp Web - real-time encrypte
 ### UI
 
 - Dark and light mode
-- Responsive layout
 - Emoji picker
 - Message search within chats
 - Typing indicators
@@ -306,10 +301,10 @@ sender generates key pair
 
 ## CI Pipeline
 
-Every push to `main` or `develop` automatically runs all three test suites via GitHub Actions.
+Every push to `master` or `develop` automatically runs all three test suites via GitHub Actions.
 
 ```
-Push to develop/main
+Push to develop/master
         │
         ├── Backend Unit Tests (25s)
         │
