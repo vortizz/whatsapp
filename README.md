@@ -1,22 +1,30 @@
+<div align="center">
+
 # WhatsApp Clone
+
+A full-stack real-time messaging app with end-to-end encryption
 
 ![Tests](https://github.com/vortizz/whatsapp/actions/workflows/test.yml/badge.svg?branch=develop)
 
-A full-stack WhatsApp Web clone built as a showcase project. Features real-time messaging, end-to-end encryption, group chats, and a comprehensive test suite covering unit, integration, and E2E tests.
+</div>
 
 ---
 
 ## Screenshots
 
+<div align="center">
+
 ### Dark Mode
 
-![Group chat](screenshots/group-chat-dark.png)
-![1:1 chat](screenshots/1on1-chat-dark.png.png)
+<img src="screenshots/group-chat-dark.png" width="49%" />
+<img src="screenshots/1on1-chat-dark.png" width="49%" />
 
 ### Light Mode
 
-![Group chat light](screenshots/group-chat-light.png)
-![Group info](screenshots/group-chat-info-light.png)
+<img src="screenshots/group-chat-light.png" width="49%" />
+<img src="screenshots/group-chat-info-light.png" width="49%" />
+
+</div>
 
 ---
 
