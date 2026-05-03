@@ -1,27 +1,41 @@
 import { useUserStore } from '../store/user'
-import { useWsStore } from '../store/websocket'
+import { useChatStore } from '../store/chat'
 
 export const useMyFetch = (request: string, opts?: any) => {
-    const config = useRuntimeConfig()
-    return $fetch(request, { baseURL: config.public.baseUrlApi, ...opts })
+  const config = useRuntimeConfig()
+  const baseURL = import.meta.server ? config.baseUrlApiInternal : config.public.baseUrlApi
+  return $fetch(request, { baseURL, ...opts })
 }
 
-export const useMyAuthFetch = async (request: string, opts?: any) => {
-    try {
-        const config = useRuntimeConfig()
-        const headers = { Authorization: `Bearer ${useCookie('token').value}` }
-        return await $fetch(request, { baseURL: config.public.baseUrlApi, ...{ headers }, ...opts })
-    } catch (error: any) {
-        if (error?.status === 401) {
-            const userStore = useUserStore()
-            const wsStore = useWsStore()
-            userStore.logout()
-            wsStore.disconnectWs()
-            setTimeout(() => {
-                useNuxtApp().$toast.error('Token has expired. Please login again!')
-            }, 100)
-            return useRouter().push('/auth/login')
-        }
-        throw error
+export const useMyAuthFetch = async (request: string, opts?: any, isLogin?: boolean) => {
+  try {
+    const config = useRuntimeConfig()
+    const baseURL = import.meta.server ? config.baseUrlApiInternal : config.public.baseUrlApi
+    const cookieHeader = useRequestHeaders(['cookie'])
+    return await $fetch(request, {
+      baseURL,
+      credentials: 'include',
+      headers: cookieHeader,
+      ...opts,
+    })
+  } catch (error: any) {
+    if (error?.status === 401 && !isLogin) {
+      const { $pinia } = useNuxtApp()
+      const userStore = useUserStore($pinia)
+      const chatStore = useChatStore($pinia)
+      const indexedDB = useIndexedDB()
+      const ws = useWs()
+      indexedDB.deleteDB(userStore._id)
+      chatStore.clearChat()
+      userStore.logout()
+      ws.disconnectWs()
+      if (import.meta.client) {
+        setTimeout(() => {
+          useNuxtApp().$toast.error('Token has expired. Please login again!')
+        }, 100)
+      }
+      return navigateTo('/auth/login')
     }
+    throw error
+  }
 }

@@ -1,72 +1,115 @@
 <template>
-    <div class="px-4 py-2.5 bg-gray-100 flex items-center justify-between">
-        <button class="size-10 rounded-full" @click="$emit('openprofile')">
-            <img src="~/assets/img/default_profile.png" width="40" height="40" />
-        </button>
-        <div class="flex flex-row gap-2.5 items-center justify-center">
-            <div>
-                <button class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100' @click="$emit('opennewchat')">
-                    <Icon name="ci:chat-add" />
-                </button>
-            </div>
-            <div class="relative inline-block">
-                <div>
-                    <button
-                        type="button"
-                        class='text-2xl px-1.5 py-0.5 rounded-full active:bg-gray-300 focus:bg-gray-300 duration-100'
-                        @click="isMenuButton = !isMenuButton"
-                        @blur="isMenuButton = false"
-                    >
-                        <Icon name="carbon:overflow-menu-vertical" />
-                    </button>
-                </div>
-                <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                    <div v-show="isMenuButton" class="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                        <div class="py-1">
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                New group
-                            </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Settings
-                            </button>
-                            <button
-                                type="button"
-                                @click="signout"
-                                class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100"
-                            >
-                                Log out
-                            </button>
-                        </div>
-                    </div>
-                </transition>
-            </div>
-        </div>
+  <div class="px-4 py-2.5 flex items-center justify-between dark:bg-neutral-900">
+    <div class="text-emerald-500 dark:text-zinc-50">
+      <svg
+        viewBox="0 0 104 28"
+        height="28"
+        width="104"
+        preserveAspectRatio="xMidYMid meet"
+        class=""
+        fill="none"
+      >
+        <title>wa-wordmark-refreshed</title>
+        <path
+          d="m13.07 21.343-2.681-10.767h-.045L7.708 21.343H4.186L0 5.523h2.981L5.84 17.621h.05L8.973 5.523h2.828l2.997 12.098h.019L17.86 5.523h2.915l-4.252 15.82h-3.456zm21.602-9.771q.486-.732 1.24-1.173a5.4 5.4 0 0 1 1.696-.632c.626-.125 1.079-.188 1.713-.188q.863 0 1.749.122c.59.081.965.24 1.453.476q.729.356 1.194.987.466.63.466 1.672v5.96q0 .778.09 1.484.086.71.31 1.063H41.56a4 4 0 0 1-.144-.543 5 5 0 0 1-.078-.565 4.1 4.1 0 0 1-1.773 1.088 7.1 7.1 0 0 1-2.08.309c-.547 0-.891-.066-1.364-.2a3.5 3.5 0 0 1-1.24-.622 2.9 2.9 0 0 1-.83-1.064q-.3-.642-.3-1.529 0-.975.342-1.606.344-.632.886-1.01.544-.377 1.241-.563c.465-.126.769-.225 1.241-.3q.71-.108 1.395-.178c.458-.043 1.03-.109 1.384-.198q.532-.132.84-.389.31-.254.288-.742 0-.507-.167-.808-.165-.3-.443-.466c-.185-.11-.565-.183-.808-.221a5 5 0 0 0-.786-.055c-.622 0-1.246.132-1.6.398q-.532.4-.622 1.33h-2.827q.066-1.107.553-1.839zm6.034 4.442a5 5 0 0 1-.643.167q-.342.065-.72.111t-.752.11c-.236.045-.635.105-.863.178a2.1 2.1 0 0 0-.598.299q-.256.19-.41.476-.154.287-.155.732c0 .296.053.515.155.707a1.2 1.2 0 0 0 .422.455q.264.166.62.23.355.069.73.069c.621 0 1.43-.104 1.77-.311q.508-.31.753-.742.244-.43.3-.876.056-.44.056-.709v-1.173c-.134.119-.465.21-.663.276zm32.818-.899L71.26 8.523h-.076l-2.337 6.587 4.679.005zm-.816-9.592 5.913 15.82h-2.955l-1.43-4.215h-6.098l-1.482 4.215h-2.909l5.98-15.82zM86.179 18.97q.522-.308.842-.807.32-.498.455-1.164.13-.665.13-1.35.001-.686-.143-1.353a3.6 3.6 0 0 0-.476-1.185 2.64 2.64 0 0 0-.853-.841q-.52-.323-1.275-.323c-.502 0-.948.11-1.293.323q-.523.32-.843.83a3.5 3.5 0 0 0-.455 1.174q-.133.664-.132 1.374c0 .474.046.907.144 1.35q.144.664.464 1.163.323.5.853.808.532.31 1.284.311c.502 0 .949-.104 1.294-.31zm-4.074-9.082v1.463h.044q.575-.93 1.461-1.352c.59-.281 1.075-.42 1.784-.42.9 0 1.508.169 2.16.509q.975.509 1.616 1.352t.953 1.96q.309 1.12.31 2.338-.001 1.152-.31 2.217a5.7 5.7 0 0 1-.942 1.882 4.65 4.65 0 0 1-1.573 1.307c-.628.324-1.197.488-2.038.488-.709 0-1.198-.146-1.794-.433a3.7 3.7 0 0 1-1.475-1.273h-.043v5.43h-2.827V9.89h2.67zm16.278 9.082a2.5 2.5 0 0 0 .843-.807q.32-.498.454-1.164.131-.665.131-1.35a6.3 6.3 0 0 0-.144-1.353 3.6 3.6 0 0 0-.475-1.185 2.64 2.64 0 0 0-.853-.841q-.52-.323-1.275-.323c-.502 0-.948.11-1.293.323q-.524.32-.844.83a3.5 3.5 0 0 0-.454 1.174q-.133.664-.132 1.374c0 .474.046.907.144 1.35q.144.664.464 1.163.323.5.853.808.531.31 1.284.311c.502 0 .948-.104 1.294-.31zM94.31 9.889v1.463h.044q.575-.93 1.461-1.352c.59-.281 1.074-.42 1.783-.42.901 0 1.509.169 2.16.509q.976.509 1.616 1.352.642.843.954 1.96.308 1.12.309 2.338 0 1.152-.309 2.217a5.7 5.7 0 0 1-.942 1.882 4.64 4.64 0 0 1-1.573 1.307c-.628.324-1.197.488-2.038.488-.709 0-1.198-.146-1.795-.433a3.7 3.7 0 0 1-1.474-1.273h-.043v5.43h-2.828V9.89h2.671zm-38.355 8.705q.21.367.544.598.33.233.765.344c.287.074.874.11 1.185.11.221 0 .495-.026.74-.077.243-.051.587-.132.788-.243q.3-.165.498-.443c.133-.185.198-.444.198-.725 0-.428-.436-.898-1.064-1.134q-.94-.356-2.626-.709a15 15 0 0 1-1.339-.367 4.5 4.5 0 0 1-1.163-.553 2.7 2.7 0 0 1-.819-.865q-.31-.52-.31-1.274 0-1.107.433-1.816a3.2 3.2 0 0 1 1.142-1.119 5 5 0 0 1 1.595-.577 8.2 8.2 0 0 1 1.65-.165c.622 0 1.055.058 1.639.177a4.8 4.8 0 0 1 1.561.598q.687.421 1.14 1.117.456.699.542 1.762h-2.659c-.043-.605-.272-1.08-.686-1.292-.414-.215-1.046-.344-1.608-.344-.176 0-.664.04-.862.068s-.43.086-.6.158q-.255.112-.433.322c-.119.141-.177.392-.177.629q-.001.42.31.685.309.268.807.433.499.166 1.142.3c.428.089 1.167.295 1.608.4.458.104.739.227 1.175.375q.652.223 1.164.588.509.367.82.909.309.541.309 1.34 0 1.13-.453 1.896-.455.765-1.185 1.23c-.488.31-.88.39-1.508.515a10 10 0 0 1-1.917.188 8 8 0 0 1-1.781-.2 5.2 5.2 0 0 1-1.696-.664q-.742-.465-1.218-1.23c-.319-.509-.49-1.148-.522-1.917h2.66c0 .34.07.73.21.974zm-3.751-8.698v1.939H49.9v6.002q0 .799.264 1.064.266.266 1.064.267.266-.001.51-.023t.465-.067v2.273a7 7 0 0 1-.885.089q-.488.02-.954.021c-.486 0-.95-.033-1.383-.099a2.07 2.07 0 0 1-.998-.396 1.9 1.9 0 0 1-.635-.82 3.5 3.5 0 0 1-.274-1.396v-6.923H45.17V9.888h1.904V6.454l2.828.008v3.434zM24.65 5.523v5.902h.065c.398-.664 1.03-1.17 1.65-1.472.621-.305 1.27-.376 1.86-.376.841 0 1.202.114 1.74.342q.81.344 1.273.954.466.61.654 1.484.189.877.189 1.939v7.045h-2.815v-6.47q.001-1.419-.442-2.116c-.296-.466-.822-.81-1.572-.864-.967-.07-1.643.324-2.026.833-.385.51-.577 1.444-.577 2.611v6.004h-2.828V5.523z"
+          fill="currentColor"
+          class="xd25hor"
+        />
+      </svg>
     </div>
+    <div class="flex flex-row gap-2.5 items-center justify-center">
+      <div>
+        <button
+          aria-label="New chat"
+          class="flex items-center text-2xl p-2 rounded-full hover:bg-stone-100 dark:hover:bg-white/5 text-neutral-950 dark:text-zinc-50"
+          @click="$emit('opennewchat')"
+        >
+          <Icon name="ci:chat-add" />
+        </button>
+      </div>
+      <div class="relative inline-block">
+        <div>
+          <button
+            aria-label="overflow-menu-sidebar"
+            type="button"
+            class="flex items-center text-2xl p-2 rounded-full hover:bg-stone-100 dark:hover:bg-white/5 duration-100 leading-none text-neutral-950 dark:text-zinc-50"
+            @click="isMenuButton = !isMenuButton"
+            @blur="isMenuButton = false"
+          >
+            <Icon name="carbon:overflow-menu-vertical" />
+          </button>
+        </div>
+        <transition
+          enter-active-class="transition ease-out duration-100"
+          enter-from-class="transform opacity-0 scale-95"
+          enter-to-class="transform opacity-100 scale-100"
+          leave-active-class="transition ease-in duration-75"
+          leave-from-class="transform opacity-100 scale-100"
+          leave-to-class="transform opacity-0 scale-95"
+        >
+          <div
+            v-show="isMenuButton"
+            class="absolute left-0 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 dark:ring-white/10 ring-black ring-opacity-5 focus:outline-none z-50 dark:bg-neutral-900 dark:text-zinc-50"
+          >
+            <div class="p-1">
+              <button
+                aria-label="new-group"
+                type="button"
+                class="flex items-center gap-2 px-2 py-3 hover:text-neutral-950 dark:hover:text-white w-full hover:bg-stone-100 dark:hover:bg-white/5 rounded-xl"
+                @mousedown.prevent="openNewGroup"
+              >
+                <Icon name="material-symbols:group-add-outline-rounded" class="text-lg" />
+                <span class="text-sm">New group</span>
+              </button>
+              <button
+                type="button"
+                class="flex items-center gap-2 px-2 py-3 hover:text-rose-700 dark:hover:text-rose-300 w-full hover:bg-rose-600/10 dark:hover:bg-rose-500/10 rounded-xl"
+                aria-label="logout"
+                @click="signout"
+              >
+                <Icon name="material-symbols:logout-rounded" class="text-lg" />
+                <span class="text-sm">Log out</span>
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapActions } from 'pinia'
-import { useUserStore } from '../../../store/user'
-import { useWsStore } from '../../../store/websocket'
+<script setup>
+  import { useUserStore } from '../../../store/user'
+  import { useChatStore } from '../../../store/chat'
+  import { usePageStore } from '../../../store/page'
+  const emit = defineEmits(['opennewchat', 'opennewgroup'])
 
-export default {
-    data() {
-        return {
-            isMenuButton: false
-        }
-    },
-    methods: {
-        ...mapActions(useUserStore, ['logout']),
-        ...mapActions(useWsStore, ['disconnectWs']),
-        signout() {
-            this.logout()
-            this.disconnectWs()
-            this.$router.push('/auth/login')
-        }
-    }
-}
+  const router = useRouter()
+  const userStore = useUserStore()
+  const chatStore = useChatStore()
+  const pageStore = usePageStore()
+  const indexedDB = useIndexedDB()
+
+  const isMenuButton = ref(false)
+
+  const { _id: userId } = storeToRefs(userStore)
+  const { logout } = userStore
+  const { clearChat } = chatStore
+  const { disconnectWs } = useWs()
+  const { resetPage } = pageStore
+
+  function openNewGroup() {
+    isMenuButton.value = false
+    emit('opennewgroup')
+  }
+
+  function signout() {
+    indexedDB.deleteDB(userId.value)
+    clearChat()
+    logout()
+    disconnectWs()
+    router.push('/auth/login').then(() => resetPage())
+  }
 </script>
 
-<style>
-
-</style>
+<style></style>

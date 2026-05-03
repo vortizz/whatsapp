@@ -1,0 +1,77 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${APP_MONGO_DATABASE:-whatsapp}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - db.adminCommand('ping').ok
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      APP_PORT: 3000
+      APP_SALT_ROUND: ${APP_SALT_ROUND:-10}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      APP_MONGO_PREFIX: mongodb
+      APP_MONGO_HOST: mongo:27017
+      APP_MONGO_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      APP_MONGO_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      APP_MONGO_DATABASE: ${APP_MONGO_DATABASE:-whatsapp}
+      APP_CORS_ORIGIN: ${APP_CORS_ORIGIN:-http://localhost:3001}
+      THROTTLE_TTL: ${THROTTLE_TTL}
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT}
+    ports:
+      - "3000:3000"
+    command: npm run start:dev
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules
+
+  frontend:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      NUXT_BASE_URL_API_INTERNAL: http://backend:3000
+      NUXT_PUBLIC_BASE_URL_API: ${NUXT_PUBLIC_BASE_URL_API:-http://localhost:3000}
+      NUXT_PUBLIC_BASE_URL_WS: ${NUXT_PUBLIC_BASE_URL_WS:-ws://localhost:3000/entrypoint}
+    ports:
+      - "3001:3000"
+    command: npm run dev
+    volumes:
+      - ./fe:/app
+      - frontend-node-modules:/app/node_modules
+      - frontend-nuxt:/app/.nuxt
+
+volumes:
+  mongo-data:
+  backend-node-modules:
+  frontend-node-modules:
+  frontend-nuxt:

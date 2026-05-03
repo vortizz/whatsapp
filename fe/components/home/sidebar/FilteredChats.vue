@@ -1,195 +1,381 @@
 <template>
-    <div>
-        <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
-            Looking for chats or users
-        </div>
-        <div v-else-if="!filteredChats.length && !users.length" class="text-center py-[72px] text-sm text-gray-400">
-            No chats or users found
-        </div>
-        <div v-if="filteredChats.length">
-            <div class="p-7 text-teal-600">
-                {{ unreadChats && !text ? 'FILTERED BY UNREAD' : 'CHATS' }}
-            </div>
-            <HomeSidebarChat
-                v-for="(chat) in filteredChats"
-                :key="chat._id"
-                :name="chat.user.name"
-                :active="chatId === chat._id"
-                :lastMessage="chat.lastMessage"
-                :countUnreadMessages="chat.countUnreadMessages"
-                @click="setChat(chat)"
-            />
-        </div>
-        <div v-if="users.length && !unreadChats">
-            <div class="p-7 text-teal-600">
-                USERS
-            </div>
-            <HomeSidebarUser
-                v-for="(user, i) in users"
-                :key="i"
-                :name="user.name"
-                :about="user.about"
-                @click="setUser(user)"
-            />
-        </div>
-
+  <div>
+    <div v-if="loading" class="text-center py-[72px] text-sm text-gray-400">
+      Looking for chats or users
     </div>
+    <div
+      v-else-if="!chatsSection.length && !groupsInCommon.length && !users.length"
+      class="flex flex-col items-center gap-4 text-center py-[72px] text-base dark:text-gray-400 text-black/60"
+    >
+      <div class="font-semibold">No chats, contacts or messages found</div>
+    </div>
+
+    <div v-if="chatsSection.length">
+      <div class="py-7 pl-4 text-sm dark:text-white/60">Chats</div>
+      <HomeSidebarChat
+        v-for="chat in chatsSection"
+        :key="chat._id"
+        :name="getFirstUser(chat)?.name"
+        :is-group="chat.isGroup"
+        :users="chat.users"
+        :active="chatId === chat._id"
+        :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"
+        :last-message="chat.lastMessage"
+        :count-unread-messages="chat.countUnreadMessages"
+        @click="setChat(chat)"
+      />
+    </div>
+    <div v-if="groupsInCommon.length">
+      <div class="py-7 pl-4 text-sm dark:text-white/60">Groups in common</div>
+      <HomeSidebarChat
+        v-for="chat in groupsInCommon"
+        :key="chat._id"
+        :name="chat.name"
+        :is-group="chat.isGroup"
+        :users="chat.users"
+        :active="chatId === chat._id"
+        :is-clearing="clearingChatId === chat._id || deletingChatId === chat._id"
+        :last-message="chat.lastMessage"
+        :count-unread-messages="chat.countUnreadMessages"
+        @click="setChat(chat)"
+      />
+    </div>
+    <div v-if="users.length && !unreadChats && !props.groupChats">
+      <div class="p-7 text-teal-600">USERS</div>
+      <HomeSidebarUser
+        v-for="(user, i) in users"
+        :key="i"
+        :name="user.name"
+        :about="user.about"
+        @click="setUser(user)"
+      />
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapActions, mapState } from 'pinia'
-import { useUserStore } from '../../../store/user'
-import { useChatStore } from '../../../store/chat'
-import { useWsStore } from '../../../store/websocket'
+<script setup>
+  import { storeToRefs } from 'pinia'
+  import { useUserStore } from '../../../store/user'
+  import { useChatStore } from '../../../store/chat'
+  import { StatusMessage } from '../../../utils/status-message'
 
-export default {
-    props: ['text', 'unreadChats'],
-    data() {
-        return {
-            chats: [],
-            users: [],
-            loading: false
-        }
-    },
-    computed: {
-        ...mapState(useUserStore, {
-            userId: '_id'
+  const props = defineProps(['text', 'unreadChats', 'groupChats'])
+
+  const chats = ref([])
+  const users = ref([])
+  const loading = ref(false)
+
+  const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
+  const { deletingChatId, deletedChatState } = useDeleteChatState()
+
+  const userStore = useUserStore()
+  const chatStore = useChatStore()
+
+  const {
+    _id: userId,
+    name: userName,
+    about: userAbout,
+    email: userEmail,
+    blockedUsers: userBlockedUsers,
+    publicKey: userPublicKey,
+  } = storeToRefs(userStore)
+  const { _id: chatId } = storeToRefs(chatStore)
+  const { conn } = useWs()
+  const { setChat: setChatAction } = chatStore
+
+  const { decryptMessage } = useCrypto()
+  const { getKey: getPrivateKey } = useIndexedDB()
+
+  function getFirstUser(chat) {
+    return chat.users.find((u) => u._id !== userId.value)
+  }
+
+  async function decryptLastMessage(lm, chatEntry) {
+    if (!lm?.iv) return lm?.text ?? ''
+    try {
+      const privateKey = await getPrivateKey(userId.value, 'privateKey')
+      const encryptedAESKey = chatEntry?.encryptedKeys?.find(
+        (k) => k.userId === userId.value,
+      )?.encryptedKey
+      return await decryptMessage(lm.text, lm.iv, encryptedAESKey, privateKey)
+    } catch (error) {
+      console.trace('[FilteredChats] decryptLastMessage failed:', error?.message ?? error)
+      return '[encrypted]'
+    }
+  }
+
+  function getUserId(user) {
+    return user?._id || user
+  }
+
+  // Non-group chats + groups whose name matches the search → shown under "Chats"
+  const chatsSection = computed(() => {
+    const q = props.text?.toLowerCase() ?? ''
+    let result = chats.value.filter((chat) => {
+      if (chat?.isGroup) {
+        const u = getFirstUser(chat)
+        return u?.name?.toLowerCase().includes(q)
+      }
+      return !props.groupChats
+    })
+    if (props.unreadChats) {
+      result = result.filter((chat) => chat.countUnreadMessages || chat._id === chatId.value)
+    }
+    return result
+  })
+
+  // Groups where only a member's name matches (group name doesn't match) → shown under "Groups in common"
+  const groupsInCommon = computed(() => {
+    const q = props.text?.toLowerCase() ?? ''
+    let result = chats.value.filter(
+      (chat) => chat?.isGroup && !chat.name?.toLowerCase().includes(q),
+    )
+    if (props.unreadChats) {
+      result = result.filter((chat) => chat.countUnreadMessages || chat._id === chatId.value)
+    }
+    return result
+  })
+
+  const currentSelectedChatHasMessages = computed(() => {
+    const selectedChat = chats.value.find((chat) => chat._id === chatId.value)
+    return Boolean(selectedChat?.lastMessage?._id)
+  })
+
+  function emptyLastMessage() {
+    return {
+      _id: '',
+      text: '',
+      createdAt: '',
+      status: '',
+      isMine: false,
+    }
+  }
+
+  function handleEvent(event) {
+    const data = JSON.parse(event.data)
+
+    const name = data.name
+    const msg = data.data
+
+    if (name === 'new-message') {
+      newMessage(msg)
+    } else if (name === 'received-message') {
+      receivedMessage(msg)
+    } else if (name === 'read-message') {
+      readMessage(msg)
+    }
+  }
+
+  async function load() {
+    loading.value = true
+    try {
+      await Promise.all([getChats(), getUsers()])
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function getChats() {
+    try {
+      const response = await useMyAuthFetch('chat', {
+        method: 'GET',
+        query: { username: props.text },
+      })
+      const mapped = response.map((chat) => ({
+        _id: chat._id,
+        name: chat.name,
+        description: chat.description,
+        isGroup: chat.isGroup,
+        users: chat.users,
+        groupAdmins: chat.groupAdmins,
+        createdAt: chat.createdAt,
+        createdBy: chat.createdBy,
+        encryptedKeys: chat.encryptedKeys,
+        lastMessage: chat.lastMessage
+          ? (() => {
+              const fromId = getUserId(chat.lastMessage.from)
+              const isMine = fromId === userId.value
+              const senderName =
+                chat.lastMessage.from?.name ?? chat.users?.find((u) => u._id === fromId)?.name ?? ''
+              return {
+                _id: chat.lastMessage._id,
+                text: chat.lastMessage.text,
+                iv: chat.lastMessage.iv,
+                createdAt: chat.lastMessage.createdAt,
+                status: chat.lastMessage.status,
+                isMine,
+                senderName,
+              }
+            })()
+          : emptyLastMessage(),
+        countUnreadMessages: chat.countUnreadMessages || 0,
+      }))
+      await Promise.all(
+        mapped.map(async (chat) => {
+          if (chat.lastMessage?._id) {
+            chat.lastMessage.text = await decryptLastMessage(chat.lastMessage, chat)
+          }
         }),
-        ...mapState(useChatStore, {
-            chatId: '_id',
-            chatUser: 'user'
-        }),
-        ...mapState(useWsStore, ['conn']),
-        filteredChats() {
-            if (this.unreadChats) {
-                return this.chats.filter(chat => chat.countUnreadMessages || chat._id === this.chatId)
-            }
-            return this.chats
-        }
-    },
-    watch: {
-        text() {
-            this.load()
-        }
-    },
-    mounted() {
-        this.load()
-        this.conn.removeEventListener('message', this.handleEvent)
-        this.conn.addEventListener('message', this.handleEvent)
-    },
-    methods: {
-        ...mapActions(useChatStore, {
-            setChatAction: 'setChat'
-        }),
-        handleEvent(event) {
-            console.log('MSG RECEIVED (FILTEREDCHATS.VUE) -> ', JSON.parse(event.data))
-            const data = JSON.parse(event.data)
+      )
+      chats.value = mapped
+    } catch (error) {
+      const data = error?.data || {}
+      const message = Array.isArray(data.message) ? data.message[0] : data.message
+      useNuxtApp().$toast.error(message)
+    }
+  }
 
-            const name = data.name
-            const msg = data.data
+  function clearChatState(chatIdToClear) {
+    const matchedChat = chats.value.find((chat) => chat._id === chatIdToClear)
+    if (!matchedChat) {
+      return
+    }
 
-            if (name === 'new-message') {
-                this.newMessage(msg)
-            } else if (name === 'received-message') {
-                this.receivedMessage(msg)
-            } else if (name === 'read-message') {
-                this.readMessage(msg)
-            }
+    matchedChat.lastMessage = emptyLastMessage()
+    matchedChat.countUnreadMessages = 0
+  }
+
+  function removeChat(chatIdToDelete) {
+    chats.value = chats.value.filter((chat) => chat._id !== chatIdToDelete)
+  }
+
+  function setChat(chat) {
+    chat.countUnreadMessages = 0
+    const clonedChat = JSON.parse(JSON.stringify(chat))
+    setChatAction({
+      _id: clonedChat._id,
+      users: clonedChat.users,
+      encryptedKeys: clonedChat.encryptedKeys,
+      name: clonedChat.name,
+      description: clonedChat.description,
+      isGroup: clonedChat.isGroup,
+      groupAdmins: clonedChat.groupAdmins,
+      createdAt: clonedChat.createdAt,
+      createdBy: clonedChat.createdBy,
+    })
+  }
+
+  function setUser(user) {
+    const clonedUser = JSON.parse(JSON.stringify(user))
+    setChatAction({
+      _id: 'new-chat',
+      users: [
+        {
+          _id: userId.value,
+          name: userName.value,
+          about: userAbout.value,
+          email: userEmail.value,
+          blockedUsers: userBlockedUsers.value,
+          publicKey: userPublicKey.value,
         },
-        async load() {
-            this.loading = true
-            try {
-                await Promise.all([this.getChats(), this.getUsers()])
-            } finally {
-                this.loading = false
-            }
-        },
-        async getChats() {
-            try {
-                const chats = await useMyAuthFetch('chat', { method: 'GET', query: { username: this.text } })
-                this.chats = chats.map(chat => ({
-                    _id: chat._id,
-                    user: chat.users.find(user => user._id !== this.userId),
-                    lastMessage: {
-                        _id: chat.lastMessage?._id,
-                        text: chat.lastMessage?.text,
-                        createdAt: chat.lastMessage?.createdAt,
-                        status: chat.lastMessage?.status,
-                        isMine: chat.lastMessage?.from === this.userId
-                    },
-                    countUnreadMessages: chat.countUnreadMessages || 0
-                }))
-            } catch (error) {
-                const data = error?.data || {}
-                const message = Array.isArray(data.message) ? data.message[0] : data.message
-                useNuxtApp().$toast.error(message)
-            }
-        },
-        setChat(chat) {
-            chat.countUnreadMessages = 0
-            const clonedChat = JSON.parse(JSON.stringify(chat))
-            this.setChatAction({
-                _id: clonedChat._id,
-                user: clonedChat.user
-            })
-        },
-        setUser(user) {
-            const clonedUser = JSON.parse(JSON.stringify(user))
-            this.setChatAction({
-                _id: 'new-chat',
-                user: clonedUser
-            })
-        },
-        newMessage(message) {
-            const chat = this.chats.find(item => item._id === message.chat._id)
-            if (!chat) {
-                return
-            }
-            const isMine = message.from._id === this.userId
-            chat.lastMessage = {
-                _id: message._id,
-                text: message.text,
-                createdAt: message.createdAt,
-                status: message.status,
-                isMine
-            }
-            if (!isMine && this.chatId !== chat._id) {
-                chat.countUnreadMessages += 1
-            } else {
-                chat.countUnreadMessages = 0
-            }
-        },
-        receivedMessage(message) {
-            const chat = this.chats.find(item => item._id === message.chat)
-            
-            if (!(chat && message.messages.some(msg => msg._id === chat.lastMessage._id))) {
-                return
-            }
-            
-            chat.lastMessage.status = StatusMessage.RECEIVED
-        },
-        readMessage(message) {
-            const chat = this.chats.find(item => item._id === message.chat)
-            
-            if (!(chat && message.messages.some(msg => msg._id === chat.lastMessage._id))) {
-                return
-            }
-            
-            chat.lastMessage.status = StatusMessage.READ
-        },
-        async getUsers() {
-            const users = await useMyAuthFetch('user/no-chat', { method: 'GET', query: { username: this.text } })
-            this.users = users.map(user => ({
-                _id: user._id,
-                name: user.name,
-                about: user.about
-            }))
-        }
+        clonedUser,
+      ],
+    })
+  }
+
+  async function newMessage(message) {
+    const chat = chats.value.find((item) => item._id === message.chat._id)
+    if (!chat) {
+      return
+    }
+
+    const isMine = message.from._id === userId.value
+    const lm = { text: message.text, iv: message.iv }
+    const text = await decryptLastMessage(lm, chat)
+    chat.lastMessage = {
+      _id: message._id,
+      text,
+      createdAt: message.createdAt,
+      status: message.status,
+      isMine,
+    }
+    if (!isMine && chatId.value !== chat._id) {
+      chat.countUnreadMessages += 1
+    } else {
+      chat.countUnreadMessages = 0
+    }
+  }
+
+  function receivedMessage(message) {
+    const chat = chats.value.find((item) => item._id === message.chat)
+
+    if (!(chat && message.messages.some((msg) => msg._id === chat.lastMessage._id))) {
+      return
+    }
+
+    chat.lastMessage.status = StatusMessage.RECEIVED
+  }
+
+  function readMessage(message) {
+    const chat = chats.value.find((item) => item._id === message.chat)
+
+    if (!(chat && message.messages.some((msg) => msg._id === chat.lastMessage._id))) {
+      return
+    }
+
+    chat.lastMessage.status = StatusMessage.READ
+  }
+
+  async function getUsers() {
+    const response = await useMyAuthFetch('user/no-chat', {
+      method: 'GET',
+      query: { username: props.text },
+    })
+    users.value = response.map((user) => ({
+      _id: user._id,
+      name: user.name,
+      about: user.about,
+    }))
+  }
+
+  watch(
+    () => props.text,
+    () => {
+      load()
     },
-}
+  )
 
+  watch(
+    () => clearedChatState.value.nonce,
+    () => {
+      const clearedChatId = clearedChatState.value.chatId
+      if (!clearedChatId) {
+        return
+      }
+
+      clearChatState(clearedChatId)
+    },
+  )
+
+  watch(
+    () => deletedChatState.value.nonce,
+    () => {
+      const deletedChatId = deletedChatState.value.chatId
+      if (!deletedChatId) {
+        return
+      }
+
+      removeChat(deletedChatId)
+    },
+  )
+
+  watch(
+    currentSelectedChatHasMessages,
+    (value) => {
+      selectedChatHasMessages.value = value
+    },
+    { immediate: true },
+  )
+
+  onMounted(() => {
+    load()
+    conn.value?.removeEventListener('message', handleEvent)
+    conn.value?.addEventListener('message', handleEvent)
+  })
+
+  onBeforeUnmount(() => {
+    conn.value?.removeEventListener('message', handleEvent)
+  })
 </script>
 
-<style>
-
-</style>
+<style></style>

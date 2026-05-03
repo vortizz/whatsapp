@@ -6,11 +6,11 @@ export class TokenGuard implements CanActivate {
   constructor(private readonly userService: UserService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const { user, headers } = context.switchToHttp().getRequest()
+    const { user, cookies } = context.switchToHttp().getRequest()
 
-    const token = headers.authorization?.replace('Bearer ', '')
-    const userDb = await this.userService.findById(user._id)
+    const token = cookies?.token
+    const tokenDb = await this.userService.getSensitivePropsByIds<string>(user._id, 'token')
 
-    return token === userDb.token
+    return token === tokenDb
   }
 }

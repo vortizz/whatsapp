@@ -1,89 +1,175 @@
 <template>
-    <div class="px-4 py-2.5 bg-gray-100 flex items-center justify-between">
-        <div class="flex flex-row items-center gap-3 flex-1 cursor-pointer" @click="$emit('showContactInfo')">
-            <img src="~/assets/img/default_profile.png" width="40" height="40" />
-            <div class="text-base text-black">
-                {{ chatUser.name }}
-            </div>
+  <div class="px-4 py-2.5 bg-white dark:bg-neutral-900 flex items-center justify-between shadow-sm">
+    <div
+      aria-label="chat-header"
+      role="button"
+      class="flex flex-row items-center gap-3 flex-1 min-w-0 cursor-pointer"
+      @click="emit('showContactInfo')"
+    >
+      <GroupAvatarPlaceholder v-if="isChatGroup" :size="40" :users="chatUsers" />
+      <AvatarPlaceholder v-else :size="40" :name="chatFirstUser?.name" />
+      <div class="flex-1 min-w-0">
+        <div class="text-base font-semibold text-black dark:text-white leading-tight">
+          {{ isChatGroup ? groupName : chatFirstUser?.name }}
         </div>
-        <div class="flex flex-row items-center justify-center gap-2.5">
-            <div>
-                <button class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100'>
-                    <Icon name="material-symbols:search" />
-                </button>
-            </div>
-            <div class="relative inline-block">
-                <div>
-                    <button
-                        type="button"
-                        class='text-2xl px-2 py-1 rounded-full active:bg-gray-300 duration-100'
-                        @click="isMenuButton = !isMenuButton"
-                        @blur="blurMenuButton"
-                    >
-                        <Icon name="carbon:overflow-menu-vertical" />
-                    </button>
-                </div>
-                <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                    <div v-show="isMenuButton" class="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                        <div class="py-1">
-                            <button @click="$emit('showContactInfo')" class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Contact info
-                            </button>
-                            <button @click="closeChat" class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Close chat
-                            </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Clear chat
-                            </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Delete chat
-                            </button>
-                            <button class="text-gray-700 w-full text-left px-6 py-3 text-sm hover:bg-slate-100">
-                                Block
-                            </button>
-                        </div>
-                    </div>
-                </transition>
-            </div>
+        <div
+          v-if="isChatGroup"
+          class="text-xs truncate"
+          :class="isTypingInChat(chatId) ? 'text-emerald-500' : 'text-black/50 dark:text-white/50'"
+        >
+          {{
+            isTypingInChat(chatId)
+              ? getTypingUsers(chatId)
+                  .map((u) => u.name)
+                  .join(', ') + ' typing...'
+              : groupMembers
+          }}
         </div>
+        <div
+          v-else-if="chatFirstUser"
+          class="text-xs truncate"
+          :class="isTypingInChat(chatId) ? 'text-emerald-500' : 'text-black/50 dark:text-white/50'"
+        >
+          {{
+            isTypingInChat(chatId)
+              ? 'Typing...'
+              : chatFirstUser.isConnected
+                ? 'online'
+                : lastSeen(chatFirstUser.lastSeenAt)
+          }}
+        </div>
+      </div>
     </div>
+    <div class="flex flex-row items-center justify-center gap-2.5">
+      <div>
+        <button
+          class="flex items-center text-2xl p-2 rounded-full text-neutral-950 dark:text-white dark:hover:bg-white/5 hover:bg-stone-100 transition-colors"
+          @click="emit('showSearchMessages')"
+        >
+          <Icon name="material-symbols:search" />
+        </button>
+      </div>
+      <div class="relative inline-block">
+        <div>
+          <button
+            type="button"
+            class="flex items-center text-2xl p-2 rounded-full text-neutral-950 dark:text-white dark:hover:bg-white/5 hover:bg-stone-100 transition-colors"
+            @click="isMenuButton = !isMenuButton"
+            @blur="blurMenuButton"
+          >
+            <Icon name="carbon:overflow-menu-vertical" />
+          </button>
+        </div>
+        <HomeMainMenu
+          :is-menu-button="isMenuButton"
+          @show-contact-info="emit('showContactInfo')"
+          @close="closeMenuButton"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapActions, mapState } from 'pinia'
-import { useChatStore } from '../../../store/chat'
+<script setup>
+  import { storeToRefs } from 'pinia'
+  import { useChatStore } from '../../../store/chat'
+  import { useUserStore } from '../../../store/user'
 
-export default {
-    data() {
-        return {
-            isMenuButton: false
-        }
-    },
-    computed: {
-        ...mapState(useChatStore, {
-            chatId: '_id',
-            chatUser: 'user'
-        }),
-    },
-    methods: {
-        ...mapActions(useChatStore, {
-            setChatAction: 'setChat'
-        }),
-        blurMenuButton() {
-            setTimeout(() => {
-                this.isMenuButton = false
-            }, 100)
-        },
-        closeChat() {
-            this.setChatAction({
-                _id: '',
-                user: {}
-            })
-        }
+  const emit = defineEmits(['showContactInfo', 'showSearchMessages'])
+
+  const { setTyping, isTypingInChat, getTypingUsers } = useTypingState()
+
+  const { conn } = useWs()
+  const chatStore = useChatStore()
+  const userStore = useUserStore()
+  const {
+    users: chatUsers,
+    _id: chatId,
+    isGroup: isChatGroup,
+    name: groupName,
+  } = storeToRefs(chatStore)
+  const { _id: userId } = storeToRefs(userStore)
+  const isMenuButton = ref(false)
+
+  const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
+
+  function handleEvent(event) {
+    const { name, data } = JSON.parse(event.data)
+    if (name === 'user-status') {
+      chatStore.updateChatUserStatus(data.userId, data.isConnected, data.lastSeenAt)
+    } else if (name === 'typing') {
+      setTyping(data.chatId, data.from)
     }
-}
+  }
+
+  watch(chatId, async (value, oldValue) => {
+    if (!value || value === oldValue) {
+      return
+    }
+    conn.value?.removeEventListener('message', handleEvent)
+    conn.value?.addEventListener('message', handleEvent)
+  })
+
+  onBeforeUnmount(() => {
+    conn.value?.removeEventListener('message', handleEvent)
+  })
+
+  const groupMembers = computed(() => {
+    if (!isChatGroup.value) return ''
+    return (chatUsers.value ?? [])
+      .map((u) => (u._id?.toString() === userId.value ? 'You' : u.name))
+      .join(', ')
+  })
+
+  function closeMenuButton() {
+    isMenuButton.value = false
+  }
+
+  function blurMenuButton() {
+    setTimeout(() => {
+      closeMenuButton()
+    }, 100)
+  }
+
+  function lastSeen(date) {
+    if (!date) return ''
+    const now = new Date()
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return ''
+
+    const isToday =
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+
+    const isYesterday = (() => {
+      const y = new Date(now)
+      y.setDate(y.getDate() - 1)
+      return (
+        d.getFullYear() === y.getFullYear() &&
+        d.getMonth() === y.getMonth() &&
+        d.getDate() === y.getDate()
+      )
+    })()
+
+    const time = d.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+
+    if (isToday) return `last seen today at ${time}`
+    if (isYesterday) return `last seen yesterday at ${time}`
+
+    const sameYear = d.getFullYear() === now.getFullYear()
+    const dateStr = d.toLocaleDateString([], {
+      day: 'numeric',
+      month: 'short',
+      ...(sameYear ? {} : { year: 'numeric' }),
+    })
+
+    return `last seen ${dateStr} at ${time}`
+  }
 </script>
 
-<style>
-
-</style>
+<style></style>
