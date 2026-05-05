@@ -75,7 +75,7 @@ jobs:
           cat > .env << ENVEOF
           MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_USERNAME }}
           MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_PASSWORD }}
-          APP_MONGO_DATABASE=whatsapp
+          APP_MONGO_DATABASE=${{ secrets.MONGO_DATABASE_TEST }}
           APP_SALT_ROUND=10
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
           NUXT_BASE_URL_API_INTERNAL=http://backend:3000

@@ -199,6 +199,7 @@ Messages are encrypted client-side before being sent to the server. The server n
 ### Prerequisites
 
 - Docker and Docker Compose
+- Make
 
 ### Setup
 
@@ -207,11 +208,12 @@ Messages are encrypted client-side before being sent to the server. The server n
 git clone https://github.com/vortizz/whatsapp.git
 cd whatsapp
 
-# Copy environment file
+# Copy environment files
 cp .env.example .env
+cp .env.example .env.test  # used for running tests against a separate database
 
 # Start all services
-docker compose up --build
+make up
 ```
 
 ### Access
@@ -222,13 +224,15 @@ docker compose up --build
 | Backend API | http://localhost:3000          |
 | WebSocket   | ws://localhost:3000/entrypoint |
 
-### Stop
+### Common Commands
 
 ```bash
-docker compose down
-
-# Remove database volume too
-docker compose down -v
+make up           # start all services
+make down         # stop all services
+make down-v       # stop and remove volumes
+make logs         # follow logs
+make restart      # restart all services
+make db-reset     # wipe database and restart
 ```
 
 ---
@@ -248,38 +252,29 @@ The project has 161 tests across three suites.
 
 ### Running Tests
 
-**Backend unit tests:**
+**All tests:**
 
 ```bash
-cd backend
-npm install
-npm run test
-
-# With coverage
-npm run test:cov
+make test-all
 ```
 
-**Frontend unit tests:**
+**Backend:**
 
 ```bash
-cd fe
-npm install
-npm run test:run
-
-# Watch mode
-npm run test
-
-# With coverage
-npm run test:cov
+make test-backend-unit   # unit tests only
+make test-backend-e2e    # E2E tests only
+make test-backend-all    # both
 ```
 
-**Frontend E2E tests** (requires Docker services running):
+**Frontend:**
 
 ```bash
-docker compose up -d
-cd fe
-npm run test:e2e
+make test-frontend-unit  # unit tests only
+make test-frontend-e2e   # E2E tests (starts Docker with test database)
+make test-frontend-all   # both
 ```
+
+> E2E tests run against a separate database via `.env.test`.
 
 ### Notable Tests
 
@@ -346,5 +341,7 @@ whatsapp/
 │   └── workflows/
 │       └── test.yml            # CI pipeline
 │
-└── docker-compose.yml          # Local development setup
+├── Makefile                    # developer commands
+├── .env.example                # environment variables template
+└── docker-compose.yml          # local development setup
 ```
