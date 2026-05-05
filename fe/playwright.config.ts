@@ -16,7 +16,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     storageState: { cookies: [], origins: [] },
     launchOptions: {
-      slowMo: process.env.CI ? 0 : 500,
+      slowMo: 500,
     },
   },
   projects: [
