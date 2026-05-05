@@ -22,7 +22,7 @@
 
     <!-- Heading -->
     <Transition name="fade" mode="out-in">
-      <div :key="step" class="mt-5 text-center">
+      <div :key="step" :aria-label="heading.title" class="mt-5 text-center">
         <h2 class="text-xl font-semibold dark:text-zinc-200">{{ heading.title }}</h2>
         <p v-if="heading.subtitle" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
           {{ heading.subtitle }}

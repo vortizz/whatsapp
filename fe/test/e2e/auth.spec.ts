@@ -18,7 +18,7 @@ async function fillPassphrase(page: Page, passphrase: string) {
 }
 
 async function saveRecoveryCodes(page: Page) {
-  await page.getByLabel('I have saved my recovery codes in a safe place.').check()
+  await page.getByRole('checkbox', { name: 'saved-recovery-codes' }).check()
   await page.getByRole('button', { name: 'Finish' }).click()
 }
 
@@ -53,10 +53,10 @@ test.describe('Registration', () => {
   test('should show validation errors when form is empty', async ({ page }) => {
     await page.getByRole('button', { name: 'Next' }).click()
 
-    await expect(page.getByText('Name is required')).toBeVisible()
-    await expect(page.getByText('Email is required')).toBeVisible()
-    await expect(page.getByText('Password is required')).toBeVisible()
-    await expect(page.getByText('Please confirm your password')).toBeVisible()
+    await expect(page.getByLabel('Name is required')).toBeVisible()
+    await expect(page.getByLabel('Email is required')).toBeVisible()
+    await expect(page.getByLabel('Password is required')).toBeVisible()
+    await expect(page.getByLabel('Please confirm your password')).toBeVisible()
   })
 
   test('should show error when passwords do not match', async ({ page }) => {
@@ -66,16 +66,16 @@ test.describe('Registration', () => {
     await page.getByLabel('Confirm Password').fill('DifferentPassword')
     await page.getByRole('button', { name: 'Next' }).click()
 
-    await expect(page.getByText('Passwords do not match')).toBeVisible()
+    await expect(page.getByLabel('Passwords do not match')).toBeVisible()
   })
 
   test('should complete full registration flow', async ({ page }) => {
     await fillRegistrationStep1(page, userOne)
 
-    await expect(page.getByText('Set your encryption passphrase.')).toBeVisible()
+    await expect(page.getByLabel('set-encryption-passphrase-step')).toBeVisible()
     await fillPassphrase(page, userOne.passphrase)
 
-    await expect(page.getByText('Save your recovery codes.')).toBeVisible()
+    await expect(page.getByLabel('save-recovery-codes-step')).toBeVisible()
     await saveRecoveryCodes(page)
 
     await expect(page).toHaveURL('/auth/login')
@@ -93,24 +93,22 @@ test.describe('Login', () => {
   })
   test('should show error with wrong credentials', async ({ page }) => {
     await login(page, 'wrong@email.com', 'wrongpassword')
-    await expect(page.getByText('Email or password is incorrect')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Email or password is incorrect')).toBeVisible()
   })
   test('should proceed to passphrase step after correct credentials', async ({ page }) => {
     await login(page, userOne.email, userOne.password)
-    await expect(page.getByText('One more step')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByLabel('One more step')).toBeVisible()
   })
   test('should show error with wrong passphrase', async ({ page }) => {
     await login(page, userOne.email, userOne.password)
-    await expect(page.getByText('One more step')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByLabel('One more step')).toBeVisible()
     await page.getByLabel('Passphrase').fill('wrong-passphrase')
     await page.getByRole('button', { name: 'Confirm' }).click()
-    await expect(page.getByText('Incorrect passphrase or recovery code.')).toBeVisible({
-      timeout: 5000,
-    })
+    await expect(page.getByText('Incorrect passphrase or recovery code.')).toBeVisible()
   })
   test('should login successfully and redirect to home', async ({ page }) => {
     await login(page, userOne.email, userOne.password)
-    await expect(page.getByText('One more step')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByLabel('One more step')).toBeVisible()
     await page.getByLabel('Passphrase').fill(userOne.passphrase)
     await page.getByRole('button', { name: 'Confirm' }).click()
     await expect(page).toHaveURL('/', { timeout: 10000 })
