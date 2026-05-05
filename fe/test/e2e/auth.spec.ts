@@ -9,6 +9,7 @@ async function fillRegistrationStep1(
   await page.getByLabel('Password').first().fill(user.password)
   await page.getByLabel('Confirm Password').fill(user.password)
   await page.getByRole('button', { name: 'Next' }).click()
+  await page.waitForLoadState('networkidle')
 }
 
 async function fillPassphrase(page: Page, passphrase: string) {
