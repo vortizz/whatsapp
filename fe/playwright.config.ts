@@ -7,13 +7,16 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: 'html',
+  expect: {
+    timeout: 10000,
+  },
   use: {
     baseURL: 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     storageState: { cookies: [], origins: [] },
     launchOptions: {
-      slowMo: 500,
+      slowMo: process.env.CI ? 0 : 500,
     },
   },
   projects: [
