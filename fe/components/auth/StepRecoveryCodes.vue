@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div aria-label="save-recovery-codes-step">
     <span class="text-center text-lg mt-5 inline-block dark:text-zinc-300">
       Save your recovery codes.
     </span>
@@ -37,6 +37,7 @@
       <input
         v-model="savedCodes"
         type="checkbox"
+        aria-label="saved-recovery-codes"
         class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
       />
       I have saved my recovery codes in a safe place.

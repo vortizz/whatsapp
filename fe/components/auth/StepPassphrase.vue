@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div aria-label="set-encryption-passphrase-step">
     <span class="text-center text-lg mt-5 inline-block dark:text-zinc-300">
       Set your encryption passphrase.
     </span>

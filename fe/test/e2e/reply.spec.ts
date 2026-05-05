@@ -20,7 +20,7 @@ async function register(
   await page.getByLabel('Set Passphrase').fill(user.passphrase)
   await page.getByLabel('Confirm Passphrase').fill(user.passphrase)
   await page.getByRole('button', { name: 'Next' }).click()
-  await page.getByLabel('I have saved my recovery codes in a safe place.').check()
+  await page.getByRole('checkbox', { name: 'saved-recovery-codes' }).check()
   await page.getByRole('button', { name: 'Finish' }).click()
   await page.waitForURL('/auth/login')
 }

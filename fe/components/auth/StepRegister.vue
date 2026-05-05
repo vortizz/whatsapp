@@ -19,7 +19,9 @@
               : 'border-slate-300 focus:border-teal-600 dark:border-zinc-600'
           "
         />
-        <span v-if="errors.name" class="text-red-500 text-xs">{{ errors.name }}</span>
+        <span v-if="errors.name" :aria-label="errors.name" class="text-red-500 text-xs">{{
+          errors.name
+        }}</span>
       </div>
 
       <!-- Email -->
@@ -38,7 +40,9 @@
               : 'border-slate-300 focus:border-teal-600 dark:border-zinc-600'
           "
         />
-        <span v-if="errors.email" class="text-red-500 text-xs">{{ errors.email }}</span>
+        <span v-if="errors.email" :aria-label="errors.email" class="text-red-500 text-xs">{{
+          errors.email
+        }}</span>
       </div>
 
       <!-- Password -->
@@ -69,7 +73,9 @@
             />
           </button>
         </div>
-        <span v-if="errors.password" class="text-red-500 text-xs">{{ errors.password }}</span>
+        <span v-if="errors.password" :aria-label="errors.password" class="text-red-500 text-xs">{{
+          errors.password
+        }}</span>
       </div>
 
       <!-- Confirm Password -->
@@ -100,9 +106,12 @@
             />
           </button>
         </div>
-        <span v-if="errors.confirmPassword" class="text-red-500 text-xs">{{
-          errors.confirmPassword
-        }}</span>
+        <span
+          v-if="errors.confirmPassword"
+          :aria-label="errors.confirmPassword"
+          class="text-red-500 text-xs"
+          >{{ errors.confirmPassword }}</span
+        >
       </div>
     </div>
 
