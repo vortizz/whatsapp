@@ -1,6 +1,7 @@
 <template>
   <div ref="root" class="relative flex-none self-end">
     <button
+      ref="buttonEl"
       type="button"
       class="flex items-center justify-center p-2 mb-1.5 rounded-full text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
       :class="open ? 'text-emerald-500 dark:text-emerald-400' : ''"
@@ -18,61 +19,65 @@
       </svg>
     </button>
 
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 scale-95 translate-y-1"
-      enter-to-class="opacity-100 scale-100 translate-y-0"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 scale-100 translate-y-0"
-      leave-to-class="opacity-0 scale-95 translate-y-1"
-    >
-      <div
-        v-if="open"
-        class="absolute bottom-full left-0 mb-2 w-[560px] rounded-2xl shadow-2xl bg-white dark:bg-neutral-800 border border-black/10 dark:border-white/10 overflow-hidden z-50 origin-bottom-left"
-        @click.stop
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 scale-95 translate-y-1"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-95 translate-y-1"
       >
         <div
-          class="grid grid-cols-9 border-b border-black/10 dark:border-white/10 bg-gray-50 dark:bg-neutral-900 overflow-x-auto"
-          style="scrollbar-width: none"
+          v-if="open"
+          ref="pickerEl"
+          :style="pickerStyle"
+          class="fixed w-[560px] rounded-2xl shadow-2xl bg-white dark:bg-neutral-800 border border-black/10 dark:border-white/10 overflow-hidden z-[9999] origin-bottom-left"
+          @click.stop
         >
-          <button
-            v-for="cat in categories"
-            :key="cat.name"
-            type="button"
-            class="flex items-center justify-center py-2.5 transition-colors relative"
-            :class="
-              activeCategory === cat.name
-                ? 'text-emerald-500 dark:text-emerald-400 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-emerald-500 after:rounded-full'
-                : 'text-neutral-700 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/10'
-            "
-            :title="cat.name"
-            @click="activeCategory = cat.name"
+          <div
+            class="grid grid-cols-9 border-b border-black/10 dark:border-white/10 bg-gray-50 dark:bg-neutral-900 overflow-x-auto"
+            style="scrollbar-width: none"
           >
-            <Icon :name="cat.icon" class="text-2xl" />
-          </button>
-        </div>
-
-        <div
-          class="p-2 h-96 overflow-y-auto"
-          style="scrollbar-width: thin; scrollbar-color: #d1d5db transparent"
-        >
-          <div class="text-sm font-semibold text-black/60 dark:text-white/60 px-1 mt-1 mb-2">
-            {{ activeCategory }}
-          </div>
-          <div class="grid grid-cols-12 gap-0.5">
             <button
-              v-for="emoji in currentEmojis"
-              :key="emoji"
+              v-for="cat in categories"
+              :key="cat.name"
               type="button"
-              class="text-3xl p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors leading-none flex items-center justify-center aspect-square"
-              @click="selectEmoji(emoji)"
+              class="flex items-center justify-center py-2.5 transition-colors relative"
+              :class="
+                activeCategory === cat.name
+                  ? 'text-emerald-500 dark:text-emerald-400 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-emerald-500 after:rounded-full'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/10'
+              "
+              :title="cat.name"
+              @click="activeCategory = cat.name"
             >
-              {{ emoji }}
+              <Icon :name="cat.icon" class="text-2xl" />
             </button>
           </div>
+
+          <div
+            class="p-2 h-96 overflow-y-auto"
+            style="scrollbar-width: thin; scrollbar-color: #d1d5db transparent"
+          >
+            <div class="text-sm font-semibold text-black/60 dark:text-white/60 px-1 mt-1 mb-2">
+              {{ activeCategory }}
+            </div>
+            <div class="grid grid-cols-12 gap-0.5">
+              <button
+                v-for="emoji in currentEmojis"
+                :key="emoji"
+                type="button"
+                class="text-3xl p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors leading-none flex items-center justify-center aspect-square"
+                @click="selectEmoji(emoji)"
+              >
+                {{ emoji }}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -80,6 +85,9 @@
   const emit = defineEmits(['select'])
 
   const root = ref(null)
+  const buttonEl = ref(null)
+  const pickerEl = ref(null)
+  const pickerStyle = ref({})
   const open = ref(false)
   const activeCategory = ref('Smileys')
 
@@ -193,6 +201,22 @@
         '🙀',
         '😿',
         '😾',
+        '🔥',
+        '💥',
+        '✨',
+        '⚡',
+        '🌟',
+        '💫',
+        '🎉',
+        '🎊',
+        '🥹',
+        '🫠',
+        '🫣',
+        '🫡',
+        '🫢',
+        '🫥',
+        '🫤',
+        '🫨',
       ],
     },
     {
@@ -921,6 +945,13 @@
   )
 
   function toggle() {
+    if (!open.value && buttonEl.value) {
+      const rect = buttonEl.value.getBoundingClientRect()
+      pickerStyle.value = {
+        bottom: `${window.innerHeight - rect.top + 8}px`,
+        left: `${rect.left}px`,
+      }
+    }
     open.value = !open.value
   }
 
@@ -930,10 +961,11 @@
 
   function selectEmoji(emoji) {
     emit('select', emoji)
+    close()
   }
 
   function onDocumentClick(e) {
-    if (root.value && !root.value.contains(e.target)) {
+    if (root.value && !root.value.contains(e.target) && !pickerEl.value?.contains(e.target)) {
       close()
     }
   }

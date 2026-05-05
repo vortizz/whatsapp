@@ -181,13 +181,16 @@ export class WsClientManager {
     if (!user || !chat) return
 
     const memberIds = chat.users.map((u) => u._id?.toString() || u.toString())
+    const recipientIds = memberIds.filter((id) => id !== fromUserId)
+    const blockersSet = await this.userService.findWhoHasBlocked(recipientIds, fromUserId)
+
     const payload = JSON.stringify({
       name: 'typing',
       data: { chatId, from: { _id: fromUserId, name: user.name } },
     })
 
-    for (const memberId of memberIds) {
-      if (memberId === fromUserId) continue
+    for (const memberId of recipientIds) {
+      if (blockersSet.has(memberId)) continue
       const client = this.connectedClients.get(memberId)
       if (client) {
         client.send(payload)

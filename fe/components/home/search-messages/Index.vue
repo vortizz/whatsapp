@@ -113,7 +113,17 @@
   }
 
   function formatDate(dateStr) {
-    return new Date(dateStr).toLocaleDateString('en-GB')
+    const date = new Date(dateStr)
+    const today = new Date()
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const aWeekAgo = new Date()
+    aWeekAgo.setDate(aWeekAgo.getDate() - 7)
+
+    if (date.toLocaleDateString('en-GB') === today.toLocaleDateString('en-GB')) return 'Today'
+    if (date.toLocaleDateString('en-GB') === yesterday.toLocaleDateString('en-GB')) return 'Yesterday'
+    if (date >= aWeekAgo) return date.toLocaleString(navigator.language, { weekday: 'long' })
+    return date.toLocaleDateString(navigator.language)
   }
 
   async function decryptText(msg) {

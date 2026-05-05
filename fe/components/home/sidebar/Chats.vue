@@ -56,6 +56,7 @@
   const menuPosition = ref({ x: 0, y: 0 })
   const { clearingChatId, clearedChatState, selectedChatHasMessages } = useClearChatState()
   const { deletingChatId, deletedChatState } = useDeleteChatState()
+  const { deletedMessageState } = useDeleteMessageState()
 
   const userStore = useUserStore()
   const chatStore = useChatStore()
@@ -167,6 +168,7 @@
           }
         }),
       )
+      sortChats()
     } catch (error) {
       const data = error?.data || {}
       const message = Array.isArray(data.message) ? data.message[0] : data.message
@@ -356,12 +358,10 @@
 
   function sortChats() {
     chats.value.sort((a, b) => {
-      if (a.lastMessage?.createdAt > b.lastMessage?.createdAt) {
-        return -1
-      }
-      if (a.lastMessage?.createdAt < b.lastMessage?.createdAt) {
-        return 1
-      }
+      const aDate = a.lastMessage?.createdAt || a.createdAt || ''
+      const bDate = b.lastMessage?.createdAt || b.createdAt || ''
+      if (aDate > bDate) return -1
+      if (aDate < bDate) return 1
       return 0
     })
   }
@@ -412,6 +412,17 @@
       }
 
       removeChat(deletedChatState.value.chatId)
+    },
+  )
+
+  watch(
+    () => deletedMessageState.value.nonce,
+    () => {
+      if (!deletedMessageState.value.chatId) return
+      const chat = chats.value.find((c) => c._id === deletedMessageState.value.chatId)
+      if (!chat) return
+      chat.lastMessage = deletedMessageState.value.lastMessage ?? emptyLastMessage()
+      sortChats()
     },
   )
 

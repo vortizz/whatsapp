@@ -208,6 +208,7 @@
     try {
       await useMyAuthFetch('message/bulk', { method: 'DELETE', body: { ids } })
       messages.value = messages.value.filter((m) => !ids.includes(m._id))
+      notifyLastMessageChanged()
     } catch (error) {
       const data = error?.data || {}
       const message = Array.isArray(data.message) ? data.message[0] : data.message
@@ -300,6 +301,26 @@
   const { _id: userId } = storeToRefs(userStore)
   const { _id: chatId, isGroup: isChatGroup } = storeToRefs(chatStore)
 
+  const { deletedMessageState } = useDeleteMessageState()
+
+  function notifyLastMessageChanged() {
+    const lastMsg = messagesOnly.value[messagesOnly.value.length - 1] ?? null
+    deletedMessageState.value = {
+      chatId: chatId.value,
+      lastMessage: lastMsg
+        ? {
+            _id: lastMsg._id,
+            text: lastMsg.text,
+            createdAt: lastMsg.createdAt,
+            status: lastMsg.status,
+            isMine: lastMsg.isMine,
+            senderName: lastMsg.from?.name ?? '',
+          }
+        : null,
+      nonce: deletedMessageState.value.nonce + 1,
+    }
+  }
+
   async function resolveReplyTo(replyTo) {
     if (!replyTo) return null
     const fromId = replyTo.from?._id || replyTo.from
@@ -389,6 +410,7 @@
     try {
       await useMyAuthFetch(`message/${messageId}/single`, { method: 'DELETE' })
       messages.value = messages.value.filter((m) => m._id !== messageId)
+      notifyLastMessageChanged()
     } catch (error) {
       const data = error?.data || {}
       const message = Array.isArray(data.message) ? data.message[0] : data.message

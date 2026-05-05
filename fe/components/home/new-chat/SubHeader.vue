@@ -49,7 +49,6 @@
     if (newValue) {
       return rtextinput.value.focus()
     }
-    text.value = ''
     return rtextinput.value.blur()
   })
 
