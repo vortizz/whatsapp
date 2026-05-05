@@ -9,6 +9,7 @@ async function fillRegistrationStep1(
   await page.getByLabel('Password').first().fill(user.password)
   await page.getByLabel('Confirm Password').fill(user.password)
   await page.getByRole('button', { name: 'Next' }).click()
+  await page.waitForLoadState('networkidle')
 }
 
 async function fillPassphrase(page: Page, passphrase: string) {
@@ -26,6 +27,7 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Login' }).click()
+  await page.waitForLoadState('networkidle')
 }
 
 const timestamp = Date.now()

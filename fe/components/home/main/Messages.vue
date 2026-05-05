@@ -138,7 +138,7 @@
   import { useMessageReplyStore } from '../../../store/messageReply'
   import { StatusMessage } from '../../../utils/status-message'
 
-  const { typingChats, setTyping, isTypingInChat, getTypingUsers } = useTypingState()
+  const { typingChats, setTyping, clearTyping, isTypingInChat, getTypingUsers } = useTypingState()
   const crypto = useCrypto()
   const indexedDB = useIndexedDB()
   const { conn } = useWs()
@@ -480,6 +480,7 @@
 
   async function newMessage(message) {
     const text = await decryptText(message)
+    clearTyping(message.chat._id, message.from._id)
 
     if (message.chat._id === chatId.value) {
       const isMine = message.from._id === userId.value
@@ -487,11 +488,21 @@
       messages.value.push({ ...message, text, isMine, replyTo })
       messages.value = sortMessages(messages.value)
 
-      const receivedMessages = messages.value.filter(
-        (msg) => !msg.isMine && msg.status === StatusMessage.RECEIVED,
-      )
-      for (const msg of receivedMessages) {
-        msg.status = StatusMessage.READ
+      if (isChatGroup.value && isMine) {
+        for (const msg of messages.value) {
+          if (msg.isMine || msg.isEvent) continue
+          if (!(msg.readBy ?? []).some((r) => (r.user?._id ?? r.user) === userId.value)) {
+            if (!msg.readBy) msg.readBy = []
+            msg.readBy.push({ user: userId.value })
+          }
+        }
+      } else {
+        const receivedMessages = messages.value.filter(
+          (msg) => !msg.isMine && msg.status === StatusMessage.RECEIVED,
+        )
+        for (const msg of receivedMessages) {
+          msg.status = StatusMessage.READ
+        }
       }
     }
 
