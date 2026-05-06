@@ -26,12 +26,13 @@ async function saveRecoveryCodes(page: Page) {
 async function login(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Password').fill(password)
-  await page.getByRole('button', { name: 'Login' }).click()
-  await page.waitForFunction(
-    () =>
-      document.querySelector('[aria-label="One more step"]') !== null ||
-      document.querySelector('[aria-label="Welcome back"]') !== null,
+
+  const responsePromise = page.waitForResponse(
+    (response) => response.url().includes('/auth/login') && response.status() === 201,
   )
+
+  await page.getByRole('button', { name: 'Login' }).click()
+  await responsePromise
 }
 
 const timestamp = Date.now()
