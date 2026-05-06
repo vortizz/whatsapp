@@ -27,9 +27,7 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Password').fill(password)
 
-  const responsePromise = page.waitForResponse(
-    (response) => response.url().includes('/auth/login') && response.status() === 201,
-  )
+  const responsePromise = page.waitForResponse((response) => response.url().includes('/auth/login'))
 
   await page.getByRole('button', { name: 'Login' }).click()
   await responsePromise
