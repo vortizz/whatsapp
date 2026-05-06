@@ -1,5 +1,12 @@
 import { test, expect, type Page } from '@playwright/test'
 
+async function clearAndGoto(page: Page, url: string) {
+  await page.goto('/')
+  await page.evaluate(() => localStorage.clear())
+  await page.goto(url)
+  await page.waitForLoadState('networkidle')
+}
+
 async function fillRegistrationStep1(
   page: Page,
   user: { name: string; email: string; password: string },
@@ -27,7 +34,6 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Login' }).click()
-  await page.waitForLoadState('networkidle')
 }
 
 const timestamp = Date.now()
@@ -41,18 +47,25 @@ const userOne = {
 }
 
 test.describe('Registration', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/create-account')
+  let page: Page
+
+  test.beforeEach(async ({ browser }) => {
+    page = await browser.newPage()
+    await clearAndGoto(page, '/auth/create-account')
   })
 
-  test('should show the registration form', async ({ page }) => {
+  test.afterEach(async () => {
+    await page.close()
+  })
+
+  test('should show the registration form', async () => {
     await expect(page.getByLabel('Name')).toBeVisible()
     await expect(page.getByLabel('E-mail')).toBeVisible()
     await expect(page.getByLabel('Password').first()).toBeVisible()
     await expect(page.getByLabel('Confirm Password')).toBeVisible()
   })
 
-  test('should show validation errors when form is empty', async ({ page }) => {
+  test('should show validation errors when form is empty', async () => {
     await page.getByRole('button', { name: 'Next' }).click()
 
     await expect(page.getByLabel('Name is required')).toBeVisible()
@@ -61,7 +74,7 @@ test.describe('Registration', () => {
     await expect(page.getByLabel('Please confirm your password')).toBeVisible()
   })
 
-  test('should show error when passwords do not match', async ({ page }) => {
+  test('should show error when passwords do not match', async () => {
     await page.getByLabel('Name').fill('Victor')
     await page.getByLabel('E-mail').first().fill('victor@test.com')
     await page.getByLabel('Password').first().fill('Password123')
@@ -71,7 +84,7 @@ test.describe('Registration', () => {
     await expect(page.getByLabel('Passwords do not match')).toBeVisible()
   })
 
-  test('should complete full registration flow', async ({ page }) => {
+  test('should complete full registration flow', async () => {
     await fillRegistrationStep1(page, userOne)
 
     await expect(page.getByLabel('set-encryption-passphrase-step')).toBeVisible()
@@ -85,33 +98,39 @@ test.describe('Registration', () => {
 })
 
 test.describe('Login', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/auth/login')
+  let page: Page
+
+  test.beforeEach(async ({ browser }) => {
+    page = await browser.newPage()
+    await clearAndGoto(page, '/auth/login')
   })
-  test('should show the login form', async ({ page }) => {
+
+  test.afterEach(async () => {
+    await page.close()
+  })
+
+  test('should show the login form', async () => {
     await expect(page.getByLabel('E-mail')).toBeVisible()
     await expect(page.getByLabel('Password')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible()
   })
-  test('should show error with wrong credentials', async ({ page }) => {
+  test('should show error with wrong credentials', async () => {
     await login(page, 'wrong@email.com', 'wrongpassword')
     await expect(page.getByText('Email or password is incorrect')).toBeVisible()
   })
-  test('should proceed to passphrase step after correct credentials', async ({ page }) => {
+  test('should proceed to passphrase step after correct credentials', async () => {
     await login(page, userOne.email, userOne.password)
-    await expect(page.getByLabel('One more step')).toBeVisible()
+    await expect(page.getByLabel('Passphrase or Recovery Code')).toBeVisible()
   })
-  test('should show error with wrong passphrase', async ({ page }) => {
+  test('should show error with wrong passphrase', async () => {
     await login(page, userOne.email, userOne.password)
-    await expect(page.getByLabel('One more step')).toBeVisible()
-    await page.getByLabel('Passphrase').fill('wrong-passphrase')
+    await page.getByLabel('Passphrase or Recovery Code').fill('wrong-passphrase')
     await page.getByRole('button', { name: 'Confirm' }).click()
     await expect(page.getByText('Incorrect passphrase or recovery code.')).toBeVisible()
   })
-  test('should login successfully and redirect to home', async ({ page }) => {
+  test('should login successfully and redirect to home', async () => {
     await login(page, userOne.email, userOne.password)
-    await expect(page.getByLabel('One more step')).toBeVisible()
-    await page.getByLabel('Passphrase').fill(userOne.passphrase)
+    await page.getByLabel('Passphrase or Recovery Code').fill(userOne.passphrase)
     await page.getByRole('button', { name: 'Confirm' }).click()
     await expect(page).toHaveURL('/', { timeout: 10000 })
   })

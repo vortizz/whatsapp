@@ -64,4 +64,8 @@
   onMounted(() => {
     resetPage()
   })
+
+  useHead({
+    title: computed(() => userName.value || 'WhatsApp'),
+  })
 </script>

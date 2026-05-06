@@ -62,6 +62,7 @@
       isGroup: true,
       createdAt: chat.createdAt,
       createdBy: chat.createdBy,
+      groupAdmins: chat.groupAdmins,
       encryptedKeys: chat.encryptedKeys,
       description: chat.description,
     })

@@ -112,6 +112,8 @@
   const { isOpen, messages, closeModal } = useForwardMessageModal()
   const chatStore = useChatStore()
   const userStore = useUserStore()
+  const crypto = useCrypto()
+  const indexedDB = useIndexedDB()
 
   const search = ref('')
   const loading = ref(false)
@@ -143,6 +145,7 @@
         email: u.email,
         isConnected: u.isConnected,
         lastSeenAt: u.lastSeenAt,
+        publicKey: u.publicKey,
         chat: u.chat,
       }))
     } catch (error) {
@@ -166,15 +169,31 @@
       const targets = users.value.filter((u) => selectedUserIds.value.includes(u._id))
       let lastChat = null
       let lastUser = null
+      const privateKey = await indexedDB.getKey(userStore._id, 'privateKey')
       for (const user of targets) {
         let chat = user.chat
         if (!chat) {
-          chat = await useMyAuthFetch('chat', { method: 'POST', body: { user_id: user._id } })
+          const encryptedKeys = await crypto.generateSharedKeys([
+            { userId: userStore._id, publicKeyBase64: userStore.publicKey },
+            { userId: user._id, publicKeyBase64: user.publicKey },
+          ])
+          chat = await useMyAuthFetch('chat', {
+            method: 'POST',
+            body: { user_id: user._id, encryptedKeys },
+          })
         }
+        const encryptedAESKey = chat.encryptedKeys?.find(
+          (k) => k.userId === userStore._id,
+        )?.encryptedKey
         for (const msg of messages.value) {
+          const { ciphertext, iv } = await crypto.encryptMessage(
+            msg.text,
+            encryptedAESKey,
+            privateKey,
+          )
           await useMyAuthFetch('message', {
             method: 'POST',
-            body: { chat: chat._id, to: user._id, text: msg.text, forwarded: true },
+            body: { chat: chat._id, to: user._id, text: ciphertext, iv, forwarded: true },
           })
         }
         lastChat = chat

@@ -309,15 +309,12 @@ export class MessageService {
   }
 
   async deleteMessages(user: User, chat: string) {
-    await this.messageModel.updateMany(
-      { chat, $or: [{ from: user._id }, { to: user._id }] },
-      { $addToSet: { deletedBy: user } },
-    )
+    await this.messageModel.updateMany({ chat }, { $addToSet: { deletedBy: user } })
   }
 
   async deleteMultipleMessages(user: User, messageIds: string[]): Promise<void> {
     await this.messageModel.updateMany(
-      { _id: { $in: messageIds }, $or: [{ from: user._id }, { to: user._id }] },
+      { _id: { $in: messageIds } },
       { $addToSet: { deletedBy: user } },
     )
   }

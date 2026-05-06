@@ -325,6 +325,7 @@
       _id: user._id,
       name: user.name,
       about: user.about,
+      publicKey: user.publicKey,
     }))
   }
 

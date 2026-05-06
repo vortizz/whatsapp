@@ -126,6 +126,10 @@
   const chatFirstUser = computed(() => chatUsers.value?.find((u) => u._id !== userId.value))
   const replyTo = computed(() => replyStore.replyTo)
 
+  watch(replyTo, (val) => {
+    if (val) nextTick(() => rInput.value?.focus())
+  })
+
   watch(chatId, (newValue, oldValue) => {
     if (newValue && newValue !== oldValue) {
       message.value = ''
@@ -188,6 +192,7 @@
 
       if (chatId.value === 'new-chat') {
         newChat = await createChat()
+        if (!newChat) return
       }
 
       const privateKey = await indexedDB.getKey(userId.value, 'privateKey')

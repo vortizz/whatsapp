@@ -204,6 +204,14 @@ export class UserService {
     )
   }
 
+  async findWhoHasBlocked(recipientIds: string[], blockedUserId: string): Promise<Set<string>> {
+    const blockers = await this.userModel
+      .find({ _id: { $in: recipientIds }, blockedUsers: blockedUserId })
+      .select('_id')
+      .lean()
+    return new Set(blockers.map((u) => u._id.toString()))
+  }
+
   async userNewChat(user: User, username?: string): Promise<User[]> {
     const filter = { _id: { $ne: user._id } }
 

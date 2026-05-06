@@ -137,7 +137,6 @@ test.describe('Messaging', () => {
   test('userOne can send a message to userTwo', async () => {
     await pageOne.getByRole('button', { name: 'New Chat' }).click()
     await pageOne.getByRole('textbox', { name: 'search-name' }).fill(userTwo.name)
-    await pageOne.getByText(userTwo.name).click()
     await pageOne.locator(`[aria-label="${userTwo.name}"]`).dispatchEvent('click')
 
     const message = 'Hello from Victor!!!'
