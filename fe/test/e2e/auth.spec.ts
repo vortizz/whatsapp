@@ -28,6 +28,7 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Login' }).click()
   await page.waitForLoadState('networkidle')
+  await page.waitForTimeout(500)
 }
 
 const timestamp = Date.now()
